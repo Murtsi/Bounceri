@@ -1,6 +1,6 @@
 """C-kaistan tyypit — S2/S4/S5.
 
-S2 hyväksytty A:n kanssa (päätös 032): `Session.id` ja `Campaign.session_ids`
+S2 hyväksytty A:n kanssa (päätös 039): `Session.id` ja `Campaign.session_ids`
 ovat merkkijonoja. `Campaign` / perus-`IpIntel` tulevat `bouncer.contracts`:sta
 kun saatavilla; `threat_label` on C:n lisäkenttä S4:ään.
 """

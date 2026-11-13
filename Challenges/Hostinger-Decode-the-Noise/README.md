@@ -46,7 +46,7 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 
 - **A:** kaikki A-2…A-15 eivät ole valmiita. A-2:n julkinen deploy edellyttää vahvistettua pääsyä/domainin tilaa; A-3…A-6 ovat paikallisen päästä päähän -putken seuraava työ.
 - **B:** voi jatkaa piirre-/sääntö-/mallityökaluja synteettisillä testidatoilla; mittarit ja mallin tallennus odottavat riittävää ei-synteettistä labeloitua aineistoa.
-- **C:** S2 merkkijono-id:t hyväksytty (päätös 032); C-4 stuffing-fixture + A ingest-smoke valmis. Seuraavaksi A-8 stuffing-simu → metrics lock; C-8 kun dashboard.
+- **C:** S2 merkkijono-id:t hyväksytty (päätös 039); C-4 stuffing-fixture + A ingest-smoke valmis. Seuraavaksi A-8 stuffing-simu → metrics lock; C-8 kun dashboard.
 - **Kaikki:** S4 on sovittu (020 + 027); pidä Googlebot/Bingbot-listat samoina B:n ja C:n koodissa.
 
 ## Avoimet kysymykset

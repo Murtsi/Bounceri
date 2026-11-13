@@ -37,11 +37,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Piilotettu hyökkäys (`python -m bouncer.eval.hidden --run <ajo-id>`): jäädytetty malli ja kynnykset, ei uudelleenopetusta; tunnistusosuus ansat päällä ja ilman ansoja; `--write` lisää tuloksen `metrics.json`:n `split.hidden_attack`-kenttään muuttamatta muita lukuja eikä ylikirjoita aiempaa tulosta. Valmis T+34:ää varten (B-11, päätös 038)
 
 ### Changed
-- [C] BREAKING S2: `Campaign.session_ids` ja session-id:t C:ssä ovat `str` (A:n contracts); `make_campaign()` normalisoi; duck-type lukee `user_agent` + `X-Login-User` (C-4, päätös 032).
+- [C] BREAKING S2: `Campaign.session_ids` ja session-id:t C:ssä ovat `str` (A:n contracts); `make_campaign()` normalisoi; duck-type lukee `user_agent` + `X-Login-User` (C-4, päätös 039).
 - [C] C-4: stuffing-fixture + testi A:n `load_sample_data`-ingestiä vasten; A:n `access.sample.jsonl` smoke (ei stuffingia) (C-4).
 - [C] `network_pass()` / `intel_for_sessions()`: yksi kutsu A:n workerille (S4+S5+graafi).
 - [C] C-8 prep: `campaign_by_session`, `intel_by_ip_contract`, `campaign_to_api` B:n evaluateen ja A:n dashboardiin; C-11 pitch tiivistetty.
-- [C] `IpIntel.country` curated ASN-prefixeistä (FI); `ip_intel_contract()` B:n eval.runille (päätös 033).
+- [C] `IpIntel.country` curated ASN-prefixeistä (FI); `ip_intel_contract()` B:n eval.runille (päätös 040).
 - [C] C-10 prep: `python -m bouncer.network.hidden --run <id>` — piilotetun ajon kampanja-arvio ilman uudelleensäätöä.
 - [A] Local PostgreSQL/Adminer ports bind to loopback; ignore private traffic, database exports and credential files in Git and Docker build contexts. Public example credentials are explicitly marked for local development.
 - [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi
@@ -61,6 +61,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [X] `docs/DECISIONS.md`: kaistan C päätökset 032–034 numeroitu uudelleen 039–041:ksi, koska samat numerot olivat jo kaistan B käytössä; viittaukset korjattu (README, TEAM.md, C:n kommentit, CHANGELOG)
 - [B] Väärennetyn hakukonebotin sääntö tarkistaa vain Googlebotin ja Bingbotin, eli samat kuin C:n `ip_intel()` varmistaa; aiemmin oikea Applebot/DuckDuckBot/YandexBot/Baiduspider olisi leimautunut `bad_bot`iksi integraatiossa (B-4)
 - [X] Hostinger-haasteen README ajan tasalle: "Missä mennään" -osio (kaistojen tila, sopimukset S1–S11, seuraavat askeleet); roolit ja stack merkitty päätetyiksi
 - [X] "Missä mennään" päivitetty PR:ien #2–#5 mergen jälkeen: B-4 ja B-3/B-5-työkalut `main`issa

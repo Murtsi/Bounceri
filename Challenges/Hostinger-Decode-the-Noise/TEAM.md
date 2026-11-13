@@ -65,7 +65,7 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 | # | Sopimus | Tuottaja → käyttäjä | Stub T+1 | Oikea versio |
 |---|---|---|---|---|
 | S1 | `samples/access.sample.jsonl` — Caddyn JSON-lokin muoto | A → B, C | 50 riviä (nykyinen kuuden rivin JSONL on parserin fixture, ei korvaa sovittua stubia) | Oikea loki (T+7) |
-| S2 | `contracts.py` | A → B, C | Dataclassit | **ID:t `str` (032, C hyväksynyt)**; muutokset vain sopimalla |
+| S2 | `contracts.py` | A → B, C | Dataclassit | **ID:t `str` (039, C hyväksynyt)**; muutokset vain sopimalla |
 | S3 | `load_sessions(since)` + `load_labels()` | A → B, C | JSONL-fixture ja `load_sample_data()` kehitykseen (ei vielä sopimuksen tuotantolataaja) | Postgres (T+12) |
 | S4 | `ip_intel(ip) -> IpIntel` (`verified_bot: bool \| None`, `asn`, `asn_type`, `country`) | C → B, A | `verified_bot=None`, `asn_type="unknown"` | T+5 — **sovittu 020+027:** DNS-virhe → `None`; lista = Googlebot+Bingbot (026) |
 | S5 | `find_campaigns(sessions) -> list[Campaign]` (`id`, `kind`, `session_ids: tuple[str,…]`, `reasons`) | C → B, A | `[]` | Stuffing + behavior + NAT (C-3…C-5/C-9); C-4 fixture ok; live metrics → A-8 |
