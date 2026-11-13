@@ -1,97 +1,47 @@
-# Junction 2026 — <Project Name>
+# Junction 2026 — Bouncer
 
-> One-sentence pitch: what it does, for whom, and why it matters.
+> Bouncer kertoo sivuston omistajalle, kuka sivulla oikeasti käy — ihminen, hyvä botti vai hyökkääjä — ja **miksi**, ja näyttää rehellisesti, kuinka usein se on väärässä.
 
-[![CI](https://github.com/<owner>/<repo>/actions/workflows/ci.yml/badge.svg)](https://github.com/<owner>/<repo>/actions/workflows/ci.yml)
+[![CI](https://github.com/Murtsi/JunctionHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/Murtsi/JunctionHackathon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Hackathon-ready repository scaffold, **deliberately stack-agnostic**: put your code in `src/`, wire the four commands at the top of the `Makefile`, and everything around it (CI, git hooks, containers, docs, demo and submission checklists) already works.
+Haaste: **Hostinger — Decode the Noise**. Suunnitelma, kaistat ja tilanne: [`Challenges/Hostinger-Decode-the-Noise/`](Challenges/Hostinger-Decode-the-Noise/).
 
-## Quickstart
+## Mistä aloittaa
 
-Prereqs: Git, Docker Desktop/Engine, and on Linux/macOS/WSL `make`. On plain Windows (no `make`) use `scripts\win.ps1`, a thin wrapper around the same shell scripts and Compose commands:
+| Tiedosto | Mitä |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Säännöt kaikille (myös AI-agenteille): kaistat, työnkulku, changelog, rehellisyyssäännöt |
+| [Challenges/Hostinger-Decode-the-Noise/README.md](Challenges/Hostinger-Decode-the-Noise/README.md) | Missä mennään |
+| [TEAM.md](Challenges/Hostinger-Decode-the-Noise/TEAM.md) | Kuka tekee mitä, sopimukset S1–S11 |
+| [TODO.md](Challenges/Hostinger-Decode-the-Noise/TODO.md) | Kortit kaistoittain |
+| [IDEA.md](Challenges/Hostinger-Decode-the-Noise/IDEA.md) · [ARCHITECTURE.md](Challenges/Hostinger-Decode-the-Noise/ARCHITECTURE.md) | Idea ja rakenne |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Päätösloki |
+| [CHANGELOG.md](CHANGELOG.md) | Jokainen muutos |
+| [docs/PITCH.md](docs/PITCH.md) · [DEMO.md](docs/DEMO.md) · [JUDGING.md](docs/JUDGING.md) · [SUBMISSION.md](docs/SUBMISSION.md) | Pohjat loppuun (T+38 →) |
+
+## Rakenne
+
+```
+src/bouncer/session/   B: session piirteet, säännöt, score()
+src/bouncer/eval/      B: datasetti, arviointi, metrics.json
+models/                B: metrics.json + mallit
+tests/b/               B: testit
+deploy/, src/site/, src/bouncer/{ingest,db,api}/, frontend/, tools/sim/   A (tulossa)
+src/bouncer/{network,explain}/                                            C (tulossa)
+scripts/               check.sh, check-changelog.sh, git-hook
+```
+
+## Komennot
 
 ```bash
-# Linux / macOS / WSL / devcontainer
-bash scripts/setup.sh     # creates .env from .env.example, inits git if needed
-make hooks                # installs the pre-commit hook
-make up                   # Postgres + Adminer in the background
-make dev                  # starts your app (set DEV_CMD first)
+make check                                                       # repon tarkistukset + changelog (myös CI)
+uv run --no-project --python 3.12 --with pytest pytest tests/b   # kaistan B testit
+make up                                                          # Postgres paikallisesti
 ```
 
-```powershell
-# Windows without make
-powershell -ExecutionPolicy Bypass -File scripts\win.ps1 setup
-powershell -ExecutionPolicy Bypass -File scripts\win.ps1 up
-```
+`.env.example` → `.env`; `.env` ei koskaan mene gitiin.
 
-Either path calls the same scripts; CI runs `bash scripts/check.sh` directly.
+## Lisenssi
 
-App conventions live in [`CONTRIBUTING.md`](CONTRIBUTING.md); the demo-day plan in [`docs/DEMO.md`](docs/DEMO.md); the work queue in [`TODO.md`](TODO.md).
-
-## Repository layout
-
-```
-.
-├── .devcontainer/          # one-click dev environment (VS Code / Codespaces)
-├── .github/                # CI, PR template, issue forms
-├── .vscode/                # editor settings + recommended extensions
-├── docs/                   # idea, architecture, API, pitch, demo, judging, submission
-├── scripts/                # check.sh, setup.sh, install-hooks.sh, git hook
-├── src/                    # YOUR CODE GOES HERE
-├── tests/                  # YOUR TESTS GO HERE
-├── .editorconfig
-├── .env.example            # committed; .env never is
-├── .gitattributes
-├── .gitignore
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── docker-compose.yml      # Postgres + Adminer (Redis ready, commented out)
-├── LICENSE
-├── Makefile
-└── README.md
-```
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| `make help` | List targets |
-| `make setup` | Create `.env`, init git, print next steps |
-| `make hooks` | Install the pre-commit hook |
-| `make check` | Repo hygiene: conflicts, whitespace, JSON/YAML, secrets |
-| `make dev` / `test` / `lint` / `build` | Your stack — set the `*_CMD` variables in the Makefile |
-| `make up` / `down` / `logs` | docker-compose lifecycle |
-| `make psql` | Shell into Postgres |
-| `make reset-db` | Drop and recreate the database volume |
-| `make clean` | Remove common build artifacts |
-
-## Configuration
-
-Copy `.env.example` → `.env` and fill in what you need. `.env` is git-ignored and the pre-commit hook refuses to commit it. Never put real keys in the repo; rotate anything you paste into a demo.
-
-## Documentation
-
-| File | Use it for |
-|---|---|
-| [docs/IDEA.md](docs/IDEA.md) | Problem, user, scope, non-goals, stretch goals |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, data model, runtime diagram |
-| [docs/API.md](docs/API.md) | Endpoint contract and error format |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | ADR log: why we chose what we chose |
-| [docs/TEAM.md](docs/TEAM.md) | Roles, comms, standup, demo owner |
-| [docs/PITCH.md](docs/PITCH.md) | 3-minute pitch script and Q&A bank |
-| [docs/DEMO.md](docs/DEMO.md) | Demo runbook and failure plan |
-| [docs/JUDGING.md](docs/JUDGING.md) | Judging criteria mapped to evidence |
-| [docs/SUBMISSION.md](docs/SUBMISSION.md) | Deadline checklist |
-
-## Team norms
-
-- Trunk-based: short-lived branches, PRs merged within the hour, one reviewer is enough.
-- Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
-- The `main` branch always runs. If it doesn't, fixing it outranks your feature.
-- Whoever breaks the demo build owns the fix — no blame, just a fast revert.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+MIT — ks. [LICENSE](LICENSE).
