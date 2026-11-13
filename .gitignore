@@ -72,3 +72,28 @@ media/raw/
 # --- misc ---
 *.log
 .DS_Store?
+
+# --- private traffic, exports and machine state ---
+.envrc.*
+*.p12
+*.pfx
+*.keystore
+credentials.json
+credentials-*.json
+service-account*.json
+*.sql
+!src/bouncer/db/migrations/*.sql
+*.sql.gz
+*.dump
+*.backup
+*.har
+logs/
+data/raw/
+data/private/
+exports/
+backups/
+secrets.*
+*.tfstate
+*.tfstate.*
+.worktrees/
+graphify-out/

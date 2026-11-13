@@ -69,3 +69,10 @@ Revisit if: tiimissä ei ole ketään, joka osaa Reactia → vaihdetaan frontend
 | 031 | 2026-11-13 | **`metrics.json`:iin lisätään `human_fpr_ci95_upper` (Wilson), `confusion_axes` ja `data` (otoskoot, raja, `synthetic`, poistetut rivit)**; `write_metrics()` kieltäytyy synteettisestä datasta ja kalibroimattomista kynnyksistä | 0/40 ihmistä on 0 % mutta yläraja ~9 % → väite "FPR < 1 %" vaatii n ≳ 300 ihmissessiota; synteettinen tulos ei saa päätyä dashboardiin oikeana lukuna. Kentät ovat lisäyksiä, eivät muuta S8:n olemassa olevia kenttiä | Pelkkä pisteestimaatti |
 
 Huom: numerot 015–031 voivat törmätä muiden kaistojen samanaikaisiin merkintöihin; numeroidaan uudelleen mergessä tarvittaessa.
+
+
+## Public release preparation (2026-11-13)
+
+- Local PostgreSQL and Adminer host ports bind to `127.0.0.1`. The public example credentials are suitable only for local development; exposing these tools requires a separate deployment decision.
+- Keep raw visitor traffic, database exports and credentials outside Git and Docker build contexts. Commit synthetic fixtures for reproducibility.
+- Preserve Git history: the release audit found a historical Stripe publishable browser key in a deleted event-page snapshot, not a private API credential. No history rewrite is required for that finding. This audit is not a guarantee that every form of sensitive data has been detected.
