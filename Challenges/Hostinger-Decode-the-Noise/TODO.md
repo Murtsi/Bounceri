@@ -50,7 +50,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | B-1 | T+0 → 1 | `score()`-stub + `metrics.json`-stub — **tehty** (`b/session-features`, odottaa PR:ää) | P0 | S | S6, S8 `main`-haarassa |
 | B-2 | T+1 → 6 | Session piirteet: tahti, aikavälien vaihtelu, staattisten resurssien osuus, 4xx, haavoittuvuuspolut, otsakkeiden johdonmukaisuus, `robots.txt` — **tehty** (`b/session-features`, odottaa PR:ää; oikeaa lokia vasten B-3:ssa) | P0 | L | Piirrefunktiot + testit `tests/b` |
 | B-3 | T+6 → 8 | Piirteet oikeaa lokinäytettä vasten, korjaukset | P0 | M | |
-| B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` | P0 | M | **Integraatio T+12**: oikea `score()` |
+| B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` — **tehty** (`b/rules`, odottaa PR:ää; ansat aktivoituvat kun A:n `traps.txt` on olemassa) | P0 | M | **Integraatio T+12**: oikea `score()` |
 | B-5 | T+12 → 14 | Datasetti: `labels` + ansat + C:n varmistetut botit | P0 | M | Labeloitu datasetti |
 | B-6 | T+14 → 18 | Malli; syötteinä myös C:n `IpIntel` ja kampanjajäsenyys; 3 syytä per päätös | P0 | L | |
 | B-7 | T+18 → 20 | Arviointi: temporaalinen jako, simuloitu vs. oikea erikseen, kynnykset (ihmisten FPR < 1 %) | P0 | M | **Integraatio T+20**: oikea `metrics.json` |
