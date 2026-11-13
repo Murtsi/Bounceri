@@ -38,6 +38,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Piilotettu hyökkäys (`python -m bouncer.eval.hidden --run <ajo-id>`): jäädytetty malli ja kynnykset, ei uudelleenopetusta; tunnistusosuus ansat päällä ja ilman ansoja; `--write` lisää tuloksen `metrics.json`:n `split.hidden_attack`-kenttään muuttamatta muita lukuja eikä ylikirjoita aiempaa tulosta. Valmis T+34:ää varten (B-11, päätös 038)
 
 ### Changed
+- [C] BREAKING S2: `Campaign.session_ids` ja session-id:t C:ssä ovat `str` (A:n contracts); `make_campaign()` normalisoi; duck-type lukee `user_agent` + `X-Login-User` (C-4, päätös 032).
+- [C] C-4: stuffing-fixture + testi A:n `load_sample_data`-ingestiä vasten; A:n `access.sample.jsonl` smoke (ei stuffingia) (C-4).
+- [C] `network_pass()` / `intel_for_sessions()`: yksi kutsu A:n workerille (S4+S5+graafi).
+- [C] C-8 prep: `campaign_by_session`, `intel_by_ip_contract`, `campaign_to_api` B:n evaluateen ja A:n dashboardiin; C-11 pitch tiivistetty.
+- [C] `IpIntel.country` curated ASN-prefixeistä (FI); `ip_intel_contract()` B:n eval.runille (päätös 033).
+- [C] C-10 prep: `python -m bouncer.network.hidden --run <id>` — piilotetun ajon kampanja-arvio ilman uudelleensäätöä.
 - [A] Local PostgreSQL/Adminer ports bind to loopback; ignore private traffic, database exports and credential files in Git and Docker build contexts. Public example credentials are explicitly marked for local development.
 - [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi
 - [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon

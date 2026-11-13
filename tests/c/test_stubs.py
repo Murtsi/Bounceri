@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from bouncer.explain import explain
-from bouncer.network import Campaign, IpIntel, find_campaigns, ip_intel
+from bouncer.network import Campaign, IpIntel, find_campaigns, ip_intel, make_campaign
 from bouncer.network.eval import load_campaign_metrics
 
 
 def test_ip_intel_unknown_ip_without_dns() -> None:
     """Dokumentoitu TEST-NET IP: ei ASN-osumaa; DNS mockattu offlineksi."""
-    from unittest.mock import patch
-
     with patch(
         "bouncer.network.bots.socket.gethostbyaddr",
         side_effect=OSError("offline"),
@@ -26,7 +25,7 @@ def test_ip_intel_unknown_ip_without_dns() -> None:
 
 
 def test_find_campaigns_stub_returns_empty() -> None:
-    campaigns = find_campaigns([SimpleNamespace(id=1), SimpleNamespace(id=2)])
+    campaigns = find_campaigns([SimpleNamespace(id="1"), SimpleNamespace(id="2")])
     assert campaigns == []
     assert isinstance(campaigns, list)
 
@@ -41,12 +40,13 @@ def test_explain_stub_joins_reasons() -> None:
 
 def test_explain_stub_includes_campaign() -> None:
     verdict = SimpleNamespace(reasons=["credential stuffing pattern"])
-    campaign = Campaign(
+    campaign = make_campaign(
         id="camp-1",
         kind="credential_stuffing",
-        session_ids=[1, 2, 3],
+        session_ids=["1", "2", "3"],
         reasons=["same username across 3 IPs"],
     )
+    assert isinstance(campaign, Campaign)
     text = explain(verdict, session=None, campaign=campaign)
     assert "camp-1" in text
     assert "same username across 3 IPs" in text

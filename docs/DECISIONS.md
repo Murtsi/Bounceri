@@ -77,6 +77,28 @@ Revisit if: tiimissä ei ole ketään, joka osaa Reactia → vaihdetaan frontend
 
 Huom: numerot 015–038 voivat törmätä muiden kaistojen samanaikaisiin merkintöihin; numeroidaan uudelleen mergessä tarvittaessa.
 
+## Kaista C — verkosto / kampanjat (2026-11-14)
+
+### 032 — S2: session- ja kampanja-ID:t merkkijonoina
+Date: 2026-11-14
+Context: A:n `contracts.Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` on tyypitetty `str`:ksi; C:n aiemmat stubit ja testit käyttivät `int`-id:itä.
+Decision: C hyväksyy S2:n merkkijonoina. `session_view.as_session_view` stringifioi aina (`str(id)`), `make_campaign()` rakentaa `tuple[str, ...]`, evaluaattori vertaa `str`-avaimilla. A:n sample-ingest voi vielä syöttää int-id:itä runtimeen — C kestää sen.
+Consequences: B/A voivat käyttää UUID/hash-id:itä ilman C-muutosta; vanhat int-olettavat testit C:ssä päivitetty. Kampanja-metrics lukitaan vasta kun A:n login-stuffing -simu on merkitty `X-Sim-Run`:lla. B:n `eval.run.network_signals` voi pudottaa int-kommentin.
+Revisit if: A vaihtaa id-tyypin takaisin intiksi (epätodennäköistä) tai Postgres-sarake vaatii uuid.
+
+### 033 — IpIntel.country curated ASN-listasta, ei GeoIP
+Date: 2026-11-14
+Context: S4:ssä on `country`, mutta MaxMind/GeoLite lisäisi riippuvuuden ja lisenssikohinan 48 h:ssa.
+Decision: `country` täytetään vain kun `asn_prefixes.json`-rivillä on eksplisiittinen `country` (nyt FI-prefixit). Muuten `None`. B:lle `ip_intel_contract()` strippaa `threat_label`.
+Consequences: Demossa FI-koti/mobiili näyttää maan; globaalit cloud-IP:t jäävät ilman maata. Ei väitetä GeoIP-tarkkuutta.
+Revisit if: tarvitaan oikea GeoIP pitchiin tai Hostinger tarjoaa valmiin feedin.
+
+### 034 — C-10 hidden campaign eval ei saa uudelleensäätää
+Date: 2026-11-14
+Context: B-11 lukitsee mallin; C:n pitää raportoida löytyikö piilotettu ajo kampanjana ilman klusterointikynnysten säätöä.
+Decision: `bouncer.network.hidden` ajaa nykyisen `find_campaigns()`:n sellaisenaan paljastetuille ajo-ID:ille. `--write` kieltäytyy synteettiseltä datalta ja ylikirjoitukselta.
+Consequences: Jos kampanjaa ei löydy, se raportoidaan rehellisesti (`found_campaign: false`).
+Revisit if: A:n paljastus tuo uuden label-muodon.
 
 ## Public release preparation (2026-11-13)
 

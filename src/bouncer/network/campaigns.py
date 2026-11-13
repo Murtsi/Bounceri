@@ -15,7 +15,7 @@ from bouncer.network.stuffing import StuffingConfig, detect_credential_stuffing
 from bouncer.network.types import Campaign
 
 
-def _by_id(views: list[SessionView]) -> dict[int, SessionView]:
+def _by_id(views: list[SessionView]) -> dict[str, SessionView]:
     return {v.id: v for v in views}
 
 

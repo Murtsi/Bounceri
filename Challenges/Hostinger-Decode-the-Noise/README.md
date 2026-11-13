@@ -19,7 +19,7 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 |---|---|---|---|---|
 | **A** alusta + hyökkääjä | Murtsi | Ei A:n toteutuksia | `a/person-a-integration`-haarassa A-1:n luonnokset: sopimustyypit, Caddy JSONL -fixture, `X-Sim-Run`-parseri ja ansalista; ei vielä `main`issa | Vahvista PRE-1 (VPS/domain/AI Router). A-1:n S2-ID-muoto hyväksytettävä C:n kanssa. A-2…A-15 ovat vielä tekemättä; tarkka lista alla/TODO:ssa |
 | **B** session tunnistus + arviointi | Niko | **B-1** stubit (S6, S8); **B-2** session piirteet; **B-4** varmat säännöt + `reasons` (`rules-v1`); **B-3/B-5** datasetti + piirreraportti; fake-crawler = Googlebot+Bingbot (026); **B-7** arviointi: temporaalinen jako, kynnykset (ihmisten FPR ≤ 1 %), luvut + Wilson-yläraja, simuloitu/oikea/piilotettu erikseen; **B-8** ablaatio ilman C:n signaaleja (028–031) | B-6 mallikoodi (opetus vasta oikealla datalla) | A: `contracts.py` (S2), lokinäyte (S1), `load_sessions()`/`load_labels()` (S3), `traps.txt` (S11), simulaattoriluokkien nimet (S10) |
-| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9, threat-feed ja campaign graph: PR #2 mergetty | Ei vahvistettua uutta työtä | A:n S1/S3, C-4:n oikea liikenne, live AI Router -avain |
+| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9 + C-4 fixture/S2-align (`c/c4-s2-align`); threat-feed + campaign graph + `network_pass` | C-8 dashboard, C-10 piilotettu, live Router | A-8 stuffing-simu (metrics lock), A-11/A-12, PRE-1 avain |
 
 ### Sopimukset S1–S11
 
@@ -41,7 +41,7 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 
 - **A (Murtsi), jäljellä olevat tehtävät:** PRE-1 (VPS/domain/Router-avaimen tila, ulkoinen vahvistus); A-1 (S1:n 50 rivin sopimusfixture, S2/S10 ID- ja simuluokkien sopimus B/C:n kanssa, S11:n reitit myös demosivustoon); A-2 VPS/Caddy/TLS; A-3 demosivusto ja login/ansat; A-4 simulaattorit + oikea lokinäyte; A-5 ingest/sessionointi/labelien tallennus; A-6 Postgres-lukijat ja worker; A-7 deploy; A-8 täyssimulaattorit; A-9 ihmissimulaattori/QR; A-10 piilotettu hyökkäys; A-11 API; A-12 dashboard; A-13 AI Builder -etusivu; A-14 operointi/varmistukset/rate limit; A-15 paljastus ja integraatio. Toteutusjärjestys ja hyväksymiskriteerit ovat `TODO.md`:ssä. Sovi ensin S2:n ID-tyyppi: A/B käyttävät `str`, C:n nykyinen adapteri olettaa numeeriset ID:t. A-2 edellyttää PRE-1:n vahvistamista; A-3 tarvitsee toimivan demo-hostin. A-4:n oikea loki ja A-5/A-6:n tietokantaputki estävät B:n/C:n oikean datan integraatiota.
 - **B:** käytä nykyistä fixtureä yksikkötesteissä; B-3/B-5 tarvitsee live-lokin sekä A:n Postgres-lataajat (S3). Varmista A:n lopulliset simulaattoriluokat ennen labeloitua ajoa.
-- **C:** PR #2 on mergetty. Sovi S2:n session/campaign ID-esitys A:n kanssa; C-4 tarvitsee oikean lokin.
+- **C:** S2 merkkijono-id:t hyväksytty (päätös 032); C-4 stuffing-fixture + A ingest-smoke valmis. Seuraavaksi A-8 stuffing-simu → metrics lock; C-8 kun dashboard.
 - **Kaikki:** S4 on sovittu (020 + 027); pidä Googlebot/Bingbot-listat samoina B:n ja C:n koodissa.
 
 ## Avoimet kysymykset

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from bouncer.network import campaign_graph, find_campaigns, ip_intel, lookup_threat
-from bouncer.network.types import Campaign
+from bouncer.network.types import make_campaign
 
 
 def test_threat_prefix_hit() -> None:
@@ -30,7 +30,7 @@ def test_campaign_graph_shape() -> None:
     ts = datetime(2026, 11, 14, tzinfo=timezone.utc)
     sessions = [
         SimpleNamespace(
-            id=1,
+            id="1",
             ip="203.0.113.1",
             ua="curl/8",
             started_at=ts,
@@ -39,7 +39,7 @@ def test_campaign_graph_shape() -> None:
             headers={"user-agent": "curl/8"},
         ),
         SimpleNamespace(
-            id=2,
+            id="2",
             ip="203.0.113.2",
             ua="curl/8",
             started_at=ts,
@@ -49,10 +49,10 @@ def test_campaign_graph_shape() -> None:
         ),
     ]
     camps = [
-        Campaign(
+        make_campaign(
             id="stuffing:admin",
             kind="credential_stuffing",
-            session_ids=[1, 2],
+            session_ids=["1", "2"],
             reasons=["same username"],
         )
     ]
@@ -66,6 +66,5 @@ def test_campaign_graph_shape() -> None:
 
 
 def test_find_campaigns_still_works_with_graph_export() -> None:
-    # smoke: empty input
     assert find_campaigns([]) == []
     assert campaign_graph([])["nodes"] == []

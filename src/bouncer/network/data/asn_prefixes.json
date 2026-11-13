@@ -1,5 +1,5 @@
 {
-  "_comment": "Curated offline prefixes for demo ASN typing (C-2). Not exhaustive. Prefer longest-prefix match.",
+  "_comment": "Curated offline prefixes for demo ASN typing (C-2). Not exhaustive. Prefer longest-prefix match. Optional country = ISO-ish hint for IpIntel (not MaxMind).",
   "prefixes": [
     {"cidr": "8.8.8.0/24", "asn": 15169, "asn_type": "datacenter", "org": "Google DNS"},
     {"cidr": "8.8.4.0/24", "asn": 15169, "asn_type": "datacenter", "org": "Google DNS"},
@@ -21,15 +21,15 @@
     {"cidr": "65.108.0.0/16", "asn": 24940, "asn_type": "datacenter", "org": "Hetzner"},
     {"cidr": "167.99.0.0/16", "asn": 14061, "asn_type": "datacenter", "org": "DigitalOcean"},
     {"cidr": "164.90.0.0/16", "asn": 14061, "asn_type": "datacenter", "org": "DigitalOcean"},
-    {"cidr": "88.192.0.0/11", "asn": 1759, "asn_type": "residential", "org": "Elisa FI"},
-    {"cidr": "80.220.0.0/14", "asn": 1759, "asn_type": "residential", "org": "Elisa FI"},
-    {"cidr": "37.130.160.0/19", "asn": 16086, "asn_type": "residential", "org": "DNA FI"},
-    {"cidr": "85.76.0.0/14", "asn": 16086, "asn_type": "residential", "org": "DNA FI"},
-    {"cidr": "91.152.0.0/13", "asn": 719, "asn_type": "residential", "org": "Telia FI"},
-    {"cidr": "94.237.0.0/16", "asn": 202053, "asn_type": "datacenter", "org": "UpCloud"},
-    {"cidr": "83.136.240.0/21", "asn": 29432, "asn_type": "datacenter", "org": "Trex / FI hosts"},
-    {"cidr": "37.16.0.0/14", "asn": 16086, "asn_type": "mobile", "org": "DNA mobile FI"},
-    {"cidr": "188.238.0.0/16", "asn": 29422, "asn_type": "mobile", "org": "Telia mobile FI"},
-    {"cidr": "46.130.0.0/16", "asn": 719, "asn_type": "mobile", "org": "Telia/Sonera mobile FI"}
+    {"cidr": "88.192.0.0/11", "asn": 1759, "asn_type": "residential", "org": "Elisa FI", "country": "FI"},
+    {"cidr": "80.220.0.0/14", "asn": 1759, "asn_type": "residential", "org": "Elisa FI", "country": "FI"},
+    {"cidr": "37.130.160.0/19", "asn": 16086, "asn_type": "residential", "org": "DNA FI", "country": "FI"},
+    {"cidr": "85.76.0.0/14", "asn": 16086, "asn_type": "residential", "org": "DNA FI", "country": "FI"},
+    {"cidr": "91.152.0.0/13", "asn": 719, "asn_type": "residential", "org": "Telia FI", "country": "FI"},
+    {"cidr": "94.237.0.0/16", "asn": 202053, "asn_type": "datacenter", "org": "UpCloud", "country": "FI"},
+    {"cidr": "83.136.240.0/21", "asn": 29432, "asn_type": "datacenter", "org": "Trex / FI hosts", "country": "FI"},
+    {"cidr": "37.16.0.0/14", "asn": 16086, "asn_type": "mobile", "org": "DNA mobile FI", "country": "FI"},
+    {"cidr": "188.238.0.0/16", "asn": 29422, "asn_type": "mobile", "org": "Telia mobile FI", "country": "FI"},
+    {"cidr": "46.130.0.0/16", "asn": 719, "asn_type": "mobile", "org": "Telia/Sonera mobile FI", "country": "FI"}
   ]
 }

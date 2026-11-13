@@ -16,6 +16,7 @@ class AsnHit:
     asn: int | None
     asn_type: str  # unknown | datacenter | residential | mobile
     org: str | None = None
+    country: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +25,7 @@ class _PrefixRule:
     asn: int
     asn_type: str
     org: str | None
+    country: str | None
 
 
 @lru_cache(maxsize=1)
@@ -35,12 +37,14 @@ def _load_rules(path: str | None = None) -> tuple[_PrefixRule, ...]:
         net = ip_network(row["cidr"], strict=False)
         if not isinstance(net, IPv4Network):
             continue
+        country = row.get("country")
         rules.append(
             _PrefixRule(
                 network=net,
                 asn=int(row["asn"]),
                 asn_type=str(row["asn_type"]),
                 org=row.get("org"),
+                country=str(country) if country else None,
             )
         )
     # Longest prefix first
@@ -61,6 +65,11 @@ def lookup_asn(ip: str, data_path: str | None = None) -> AsnHit:
 
     for rule in _load_rules(data_path):
         if addr in rule.network:
-            return AsnHit(asn=rule.asn, asn_type=rule.asn_type, org=rule.org)
+            return AsnHit(
+                asn=rule.asn,
+                asn_type=rule.asn_type,
+                org=rule.org,
+                country=rule.country,
+            )
 
     return AsnHit(asn=None, asn_type="unknown")

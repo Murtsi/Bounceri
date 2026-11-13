@@ -6,12 +6,17 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from bouncer.explain.explain import explain, explanation_is_grounded, fallback_explain
-from bouncer.network.types import Campaign
+from bouncer.network.types import make_campaign
 
 
 def test_fallback_includes_reasons_and_campaign() -> None:
     verdict = SimpleNamespace(label="malicious_bot", reasons=["fast crawl", "no CSS"])
-    campaign = Campaign(id="camp-9", kind="behavior_cluster", session_ids=[1], reasons=["same paths"])
+    campaign = make_campaign(
+        id="camp-9",
+        kind="behavior_cluster",
+        session_ids=["1"],
+        reasons=["same paths"],
+    )
     text = fallback_explain(verdict, campaign=campaign)
     assert "malicious_bot" in text
     assert "fast crawl" in text

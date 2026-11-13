@@ -51,30 +51,30 @@ def write_stub_metrics(path: Path | None = None) -> Path:
 
 
 def _truth_map(
-    session_truth: Iterable[tuple[int, str | None]],
-) -> dict[str, set[int]]:
+    session_truth: Iterable[tuple[str | int, str | None]],
+) -> dict[str, set[str]]:
     """session_id → truth campaign id (None = ei kampanjaa) → invert."""
-    out: dict[str, set[int]] = defaultdict(set)
+    out: dict[str, set[str]] = defaultdict(set)
     for session_id, camp_id in session_truth:
         if camp_id:
-            out[str(camp_id)].add(int(session_id))
+            out[str(camp_id)].add(str(session_id))
     return dict(out)
 
 
 def evaluate_campaigns(
     predicted: list[Campaign],
-    session_truth: Iterable[tuple[int, str | None]],
+    session_truth: Iterable[tuple[str | int, str | None]],
     *,
     known_weaknesses: list[str] | None = None,
 ) -> dict[str, Any]:
     """Laske purity + coverage. `session_truth`: (session_id, truth_campaign_id|None)."""
-    truth_sessions = list(session_truth)
+    truth_sessions = [(str(sid), cid) for sid, cid in session_truth]
     truth_groups = _truth_map(truth_sessions)
-    session_to_truth = {int(sid): cid for sid, cid in truth_sessions if cid}
+    session_to_truth = {sid: cid for sid, cid in truth_sessions if cid}
 
     purities: list[float] = []
     for camp in predicted:
-        labels = [session_to_truth.get(sid) for sid in camp.session_ids]
+        labels = [session_to_truth.get(str(sid)) for sid in camp.session_ids]
         labeled = [lab for lab in labels if lab]
         if not camp.session_ids:
             continue
@@ -85,11 +85,10 @@ def evaluate_campaigns(
         _ = dominant
         purities.append(count / len(camp.session_ids))
 
-    covered: set[int] = set()
-    all_truth_sessions: set[int] = set()
+    all_truth_sessions: set[str] = set()
     for members in truth_groups.values():
         all_truth_sessions |= members
-    predicted_members = {sid for camp in predicted for sid in camp.session_ids}
+    predicted_members = {str(sid) for camp in predicted for sid in camp.session_ids}
     covered = all_truth_sessions & predicted_members
 
     purity = sum(purities) / len(purities) if purities else None

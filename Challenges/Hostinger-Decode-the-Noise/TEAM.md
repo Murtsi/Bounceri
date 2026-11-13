@@ -26,7 +26,7 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 | `src/site/` | A | Demosivusto, kirjautumislomake, ansapolut, QR-sivu |
 | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, **pipeline-worker** |
 | `src/bouncer/db/` | A | Skeema, migraatiot, `load_sessions()` |
-| `src/bouncer/contracts.py` | A (muutokset 3 hengen sopimuksella) | Jaetut tyypit: `Request`, `Session`, `IpIntel`, `Campaign`, `Verdict`, `SessionLabel`; session/campaign-ID:t ja kokoelmat ovat eri muotoiset B:n ja C:n luonnoksissa — hyväksyttävä yhdessä |
+| `src/bouncer/contracts.py` | A (muutokset 3 hengen sopimuksella) | Jaetut tyypit: `Request`, `Session`, `IpIntel`, `Campaign`, `Verdict`, `SessionLabel`; **S2 lukittu (032):** `Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` = `str` |
 | `samples/` | A | Lokinäytteet, joita vasten kaikki testaavat |
 | `tools/sim/` | A | Hyökkäys- ja ihmissimulaattorit |
 | `tools/sim/hidden/` | A (**ei B:lle eikä C:lle** ennen T+34) | Piilotettu hyökkäys — omassa yksityisessä haarassa/gistissä kunnes paljastetaan |
@@ -65,10 +65,10 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 | # | Sopimus | Tuottaja → käyttäjä | Stub T+1 | Oikea versio |
 |---|---|---|---|---|
 | S1 | `samples/access.sample.jsonl` — Caddyn JSON-lokin muoto | A → B, C | 50 riviä (nykyinen kuuden rivin JSONL on parserin fixture, ei korvaa sovittua stubia) | Oikea loki (T+7) |
-| S2 | `contracts.py` | A → B, C | Dataclassit | Muutokset vain sopimalla |
+| S2 | `contracts.py` | A → B, C | Dataclassit | **ID:t `str` (032, C hyväksynyt)**; muutokset vain sopimalla |
 | S3 | `load_sessions(since)` + `load_labels()` | A → B, C | JSONL-fixture ja `load_sample_data()` kehitykseen (ei vielä sopimuksen tuotantolataaja) | Postgres (T+12) |
 | S4 | `ip_intel(ip) -> IpIntel` (`verified_bot: bool \| None`, `asn`, `asn_type`, `country`) | C → B, A | `verified_bot=None`, `asn_type="unknown"` | T+5 — **sovittu 020+027:** DNS-virhe → `None`; lista = Googlebot+Bingbot (026) |
-| S5 | `find_campaigns(sessions) -> list[Campaign]` (`id`, `kind`, `session_ids`, `reasons`) | C → B, A | `[]` | Tunnusten kokeilu T+12, kampanjat T+20 |
+| S5 | `find_campaigns(sessions) -> list[Campaign]` (`id`, `kind`, `session_ids: tuple[str,…]`, `reasons`) | C → B, A | `[]` | Stuffing + behavior + NAT (C-3…C-5/C-9); C-4 fixture ok; live metrics → A-8 |
 | S6 | `score(session, intel, campaign) -> Verdict` (`label`, `score`, `reasons[3]`, `model_version`) | B → A | Aina `uncertain` | Säännöt T+12, malli T+20 |
 | S7 | `explain(verdict, session, campaign) -> str` | C → A | B:n `reasons` tekstinä | LLM T+28 |
 | S8 | `metrics.json` (koko järjestelmä) | B → A | `"stub": true` | T+20, lukittu T+42 |
