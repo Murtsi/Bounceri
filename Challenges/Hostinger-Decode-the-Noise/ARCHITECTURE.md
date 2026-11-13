@@ -11,27 +11,33 @@ flowchart LR
     V[Kävijät, botit, simulaattorit] -->|HTTPS| C[Caddy<br/>reverse proxy<br/>JSON access log]
     C --> S[Demosivusto<br/>+ kirjautuminen<br/>+ ansapolut]
     C --> API[FastAPI<br/>API + dashboard]
-    C -.->|access.log| I[Ingest-worker<br/>tail + sessiointi]
-    I --> F[Piirteet + pisteytys]
-    F --> DB[(Postgres)]
+    C -.->|access.log| I[A: Ingest + worker<br/>tail + sessiointi]
+    I --> DB[(Postgres<br/>vain A kirjoittaa)]
+    I -->|1. ip_intel| NET[C: verkosto<br/>IP-tiedot, tunnusten kokeilu,<br/>kampanjat]
+    I -->|2. find_campaigns| NET
+    I -->|3. score| SES[B: session tunnistus<br/>piirteet, säännöt, malli]
+    NET -.->|IpIntel + kampanja| SES
     API --> DB
-    API -->|vain selitykset| LLM[Hostinger AI Router]
-    U[Lokitiedoston lataus] --> API --> F
+    API -->|explain| EXP[C: selitykset] --> LLM[Hostinger AI Router]
 ```
+
+A omistaa *missä ja milloin* koodi ajetaan, B ja C omistavat *mitä* lasketaan (puhtaita funktioita ilman tietokantaa).
 
 ## Components
 
 | Component | Path | Owner | Responsibility |
 |---|---|---|---|
 | Proxy + demosivusto | `deploy/`, `src/site/` | A | Caddy, TLS, JSON-loki, rate limit, kirjautumislomake, ansapolut |
-| Ingest + worker | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, `X-Sim-Run` → `labels`, kutsuu B:n `score()` ja `find_campaigns()` |
+| Ingest + worker | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, `X-Sim-Run` → `labels`, kutsuu C:n ja B:n funktioita |
 | Tietokanta + sopimukset | `src/bouncer/db/`, `contracts.py`, `samples/` | A | Skeema, `load_sessions()`, jaetut tietotyypit |
-| Tunnistus | `src/bouncer/detect/`, `models/` | B | Piirteet, säännöt, malli, kynnykset, kampanjat — puhtaita funktioita ilman tietokantaa |
-| Arviointi | `src/bouncer/eval/`, `notebooks/` | B | Labelit, train/test-jako → `metrics.json` |
-| Simulaattorit | `tools/sim/` | C | Scraper, skanneri, tunnusten kokeilu, hidas skanneri, Playwright-"ihminen" |
-| API + dashboard + selitykset | `src/bouncer/api/`, `src/bouncer/web/`, `src/bouncer/explain/` | C | Endpointit, dashboard, `/metrics`-sivu, LLM-selitykset |
+| Simulaattorit (hyökkääjä) | `tools/sim/` | A | Scraper, skanneri, hidas skanneri, hajautettu tunnusten kokeilu, Playwright-"ihminen", piilotettu hyökkäys |
+| API + dashboard | `src/bouncer/api/`, `src/bouncer/web/` | A | Ohut API, dashboard, `/metrics`-sivu |
+| Session tunnistus | `src/bouncer/session/`, `models/` | B | Piirteet, säännöt, malli, kynnykset, lopullinen `score()` |
+| Arviointi | `src/bouncer/eval/` | B | Datasetti, train/test-jako, ablaatio → `metrics.json` |
+| Verkostotunnistus | `src/bouncer/network/` | C | `ip_intel()`, tunnusten kokeilu sessioiden yli, `find_campaigns()`, `campaign_metrics.json` |
+| Selitykset | `src/bouncer/explain/` | C | `explain()` AI Routerin kautta + varateksti |
 
-Tarkka omistajuus, taulut ja sopimukset S1–S8: `TEAM.md`.
+Tarkka omistajuus, taulut ja sopimukset S1–S11: `TEAM.md`.
 
 Stack: Python 3.12, FastAPI, Postgres 16, scikit-learn / LightGBM, Jinja + HTMX (ei SPA:ta), Caddy, Docker Compose.
 
@@ -42,6 +48,8 @@ Stack: Python 3.12, FastAPI, Postgres 16, scikit-learn / LightGBM, Jinja + HTMX 
 Pyynnöt ryhmitellään avaimella `(IP, User-Agent)`; sessio katkeaa 5 min hiljaisuuden jälkeen. Kaikki pisteytys tehdään sessiotasolla, ei yksittäisillä pyynnöillä.
 
 ### 2. Piirteet (jokainen selitettävissä yhdellä lauseella)
+
+Session piirteet (B) lasketaan yhdestä sessiosta. Verkostopiirteet (C) — IP-tiedot, tunnusten kokeilu sessioiden yli, kampanjajäsenyys — tulevat B:n `score()`-funktiolle valmiina syötteinä.
 
 | Ryhmä | Piirteet |
 |---|---|
@@ -61,7 +69,9 @@ Pyynnöt ryhmitellään avaimella `(IP, User-Agent)`; sessio katkeaa 5 min hilja
 
 LLM **ei tee päätöstä**. Se saa valmiin tuloksen + piirteet ja kirjoittaa selityksen ja suositellun toimenpiteen.
 
-### 4. Kampanjat (swarm)
+### 4. Kampanjat (swarm) — kaista C
+
+Tunnusten kokeilu sessioiden yli: sama käyttäjätunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti. Tunnettu väärien positiivisten lähde: jaettu IP (toimisto, venue-WiFi, mobiili-NAT), jossa monta ihmistä näyttää yhdeltä toimijalta.
 
 Sessiot, joilla on sama otsakesormenjälki + samankaltainen polkujärjestys (MinHash/Jaccard) + aikaikkunoiden päällekkäisyys, klusteroidaan (DBSCAN tai yksinkertainen union-find kynnyksellä). Tulos: "kampanja X: 37 IP:tä, 3 ASN:ää, sama polkujärjestys, alkoi 14:02".
 
@@ -77,7 +87,10 @@ Sessiot, joilla on sama otsakesormenjälki + samankaltainen polkujärjestys (Min
 
 Rehellisyyssäännöt:
 - **Temporaalinen jako**: opetus ennen ajanhetkeä T, testi sen jälkeen.
-- **Piilotettu hyökkäys**: yksi hyökkäysskripti ei ole opetusdatassa lainkaan — näyttää yleistymisen.
+- **Hyökkääjä ≠ puolustaja**: simulaattorit kirjoittaa A, tunnistimet B ja C.
+- **Piilotettu hyökkäys**: A kirjoittaa yhden hyökkäyksen, jota B ja C eivät näe ennen T+34; tulos raportoidaan sellaisenaan ilman uudelleenopetusta.
+- **Ablaatio**: B raportoi tuloksen myös ilman C:n verkostosignaaleja.
+- **Kampanjoiden totuus**: `X-Sim-Run` sisältää kampanja-id:n → C mittaa klusteroinnin puhtauden ja kattavuuden.
 - Metriikat raportoidaan **erikseen** simuloidulle ja oikealle liikenteelle.
 - Ansaosumia käytetään labeleina, joten ansapiirre **poistetaan** mallin syötteistä arvioinnissa (muuten malli "huijaa").
 
