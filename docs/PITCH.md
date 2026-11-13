@@ -44,3 +44,27 @@ Target: **3 minutes** + Q&A. Write it out, then cut 20%.
 - Rehearse twice out loud with a timer; cut anything that does not earn its seconds.
 - Never read slides. Never apologize for what is missing.
 - If the demo fails: switch to the backup video in 5 seconds, keep talking.
+
+---
+
+## Kaista C — Joonas (kampanjat + selitykset) · luonnos T+38
+
+**Beat (~30–40 s after demo session detail):**
+
+1. **Swarm:** "Yksi IP on helppo. Me yhdistämme kymmenet IP:t samaksi toimijaksi — sama käyttäjätunnus, sama polkujärjestys, sama ajoitus."
+2. **Live wow:** credential stuffing → kampanja ilmestyy dashboardiin (graafi: IP → session → campaign).
+3. **Honesty:** "Jaetun NAT:n / venue-WiFin takana monta ihmistä näyttää yhdeltä — sen me *tiedämme* ja suodatamme / kirjaamme `known_weaknesses`-listaan."
+4. **Explain:** "LLM ei päätä. Se vain selittää valmiit syyt Hostinger AI Routerilla — jos Router kaatuu, näytetään silti syyt."
+
+**Slide bullets (C):**
+- Kampanja = stuffing ∪ behavior-klusteri (header FP + path Jaccard)
+- `campaign_metrics`: purity / coverage vs A:n sim-kampanja-id
+- Known weakness: shared NAT
+- Selitys = grounded reasons only
+
+**Q&A (C):**
+| Question | Answer |
+|---|---|
+| How is this not just Cloudflare? | We publish FPR + known weaknesses; every decision has 3 readable reasons; we recommend, we don't silently block. |
+| What if DNS fails for real Googlebot? | `verified_bot=None` — we do **not** call it fake (S4). |
+| Why two detection lanes? | Ablation: session features alone vs + network/campaign signals. |
