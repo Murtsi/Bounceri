@@ -13,36 +13,41 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 
 ## Missä mennään
 
-*Päivitetty 2026-11-13 tämän repon `main`-haaran ja saatavilla olevien etähaarojen perusteella. A-haaran muutokset eivät ole vielä `main`issa. PR:t #1–#4 on tarkistettu: kaikki mergetty. A-haaran luonnokset eivät vielä ole mainissa.*
+*Päivitetty 2026-11-13 tarkistamalla `main` (PR #5 mergetty). A:n aloitusmuutokset ovat mainissa: kuuden rivin synteettinen Caddy-fixture, parseri/sessionointi ja ansalista. Julkista sovellusta ei ole vahvistettu toimivaksi.*
 
-| Kaista | Kuka | `main`issa | Työn alla | Odottaa |
+| Kaista | Kuka | `main`issa | Seuraava handoff | Odottaa |
 |---|---|---|---|---|
-| **A** alusta + hyökkääjä | Murtsi | Ei A:n toteutuksia | `a/person-a-integration`-haarassa A-1:n luonnokset: sopimustyypit, Caddy JSONL -fixture, `X-Sim-Run`-parseri ja ansalista; ei vielä `main`issa | Vahvista PRE-1 (VPS/domain/AI Router). A-1:n S2-ID-muoto hyväksytettävä C:n kanssa. A-2…A-15 ovat vielä tekemättä; tarkka lista alla/TODO:ssa |
-| **B** session tunnistus + arviointi | Niko | **B-1** stubit (S6, S8); **B-2** session piirteet; **B-4** varmat säännöt + `reasons` (`rules-v1`); **B-3/B-5** datasetti + piirreraportti; fake-crawler = Googlebot+Bingbot (026); **B-7** arviointi: temporaalinen jako, kynnykset (ihmisten FPR ≤ 1 %), luvut + Wilson-yläraja, simuloitu/oikea/piilotettu erikseen; **B-8** ablaatio ilman C:n signaaleja (028–031) | B-6 mallikoodi (opetus vasta oikealla datalla) | A: `contracts.py` (S2), lokinäyte (S1), `load_sessions()`/`load_labels()` (S3), `traps.txt` (S11), simulaattoriluokkien nimet (S10) |
-| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9, threat-feed ja campaign graph: PR #2 mergetty | Ei vahvistettua uutta työtä | A:n S1/S3, C-4:n oikea liikenne, live AI Router -avain |
+| **A** alusta + hyökkääjä | Murtsi | A-1:n luonnokset: sopimustyypit, 6-rivin Caddy JSONL -fixture, parseri/sessionointi ja ansalista | S2/S10 ja login-event-muoto B/C:n kanssa; sitten S3: Postgres-ingest ja `load_sessions()`/`load_labels()` | Hostinger-live-deploy ja AI Router -avain vahvistamatta; S2 ID-ristiriita alla |
+| **B** session tunnistus + arviointi | Niko | B-1…B-9; `lr-v1`, arviointiajo ja jäädytetyn mallin hidden-eval-työkalu | A:n Postgres-lataajat ja ei-synteettinen liikenne tarvitaan mallin opettamiseen ja oikeisiin mittareihin | S3; käyttökelpoinen live-data puuttuu |
+| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9, threat-feed ja campaign graph | Testaa login/campaign adapteri A:n vakaalla Session/ID/login-event-muodolla | A:n login-event/data-handoff; live AI Router -avain |
 
 ### Sopimukset S1–S11
 
 | # | Sopimus | Tila |
 |---|---|---|
-| S1 | `samples/access.sample.jsonl` (A) | A-haaran haarassa: 6 synteettistä Caddy JSON -riviä; ei vielä live-loki |
-| S2 | `src/bouncer/contracts.py` (A) | Session ID on A/B:n luonnoksessa `str` ja C:n adapterissa numeerinen; kampanja-ID ja kokoelmat eroavat myös. S2:n yhteinen muoto vaatii B:n/C:n hyväksynnän ennen mergeä |
-| S3 | `load_sessions()` + `load_labels()` Postgresista (A) | ❌ puuttuu; JSONL-fixture-parseri ei ole tietokantalataaja |
-| S4 | `ip_intel()` (C) | ✅ koodi [PR #2](https://github.com/Murtsi/Bounceri/pull/2) — **S4 sovittu (020+027):** `verified_bot: bool \| None`; DNS-virhe → `None`; lista = Googlebot + Bingbot (026) |
-| S5 | `find_campaigns()` (C) | ✅ koodi [PR #2](https://github.com/Murtsi/Bounceri/pull/2) (stuffing + behavior + NAT-suodatin) |
-| S6 | `score()` (B) | ✅ `main`issa: säännöt (`rules-v1`), ei vielä mallia/`human`-päätöstä |
-| S7 | `explain()` (C) | ✅ koodi [PR #2](https://github.com/Murtsi/Bounceri/pull/2) (Router + fallback) |
-| S8 | `metrics.json` (B) | ✅ arviointikoodi valmis (B-7/B-8); `models/metrics.json` on yhä stub — oikeat luvut lasketaan vasta A:n datalla |
-| S9 | `campaign_metrics.json` (C) | ✅ stub + evaluaattori [PR #2](https://github.com/Murtsi/Bounceri/pull/2) |
-| S10 | `X-Sim-Run`-muoto (A) | A-haaran fixture käyttää `run-id:class:campaign-id`-arvoa `X-Sim-Run`-pyyntöotsakkeessa; luokkien täydellinen lista sovittava C/B-simulaattorien kanssa |
-| S11 | `deploy/traps.txt` (A) | A-haaran luonnos; ansapolut eivät ole vielä demosivustossa |
+| S1 | `samples/access.sample.jsonl` | ✅ 6-rivinen synteettinen Caddy-fixture; live-loki puuttuu |
+| S2 | `src/bouncer/contracts.py` | ⚠️ Yhteinen päätös tarvitaan: sample-parseri tuottaa ajonaikaisia `int`-ID-arvoja vaikka annotaatiot ovat `str`; B:n datasetti käyttää string-avaimia ja C:n adapteri muuntaa ID:t `int`:ksi |
+| S3 | `load_sessions(since)` + `load_labels()` | ❌ Postgres-toteutus puuttuu |
+| S4 | `ip_intel()` | ✅ `verified_bot: bool \| None`; DNS-virhe → `None` (päätökset 020/027) |
+| S5 | `find_campaigns()` | ✅ stuffing, behavior-klusterit ja shared-NAT-suodatus |
+| S6 | `score()` | ✅ `rules-v1` + mallikäyttö, kun hyväksytty mallifile löytyy; todellinen opetus odottaa dataa |
+| S7 | `explain()` | ✅ Router-polku + fallback; live-avainta ei ole vahvistettu |
+| S8 | `metrics.json` | ⚠️ arviointityökalu on olemassa; repositoryssa oleva metrics-tiedosto on stub, ei mitattu suorituskyky |
+| S9 | `campaign_metrics.json` | ✅ stub + evaluaattori |
+| S10 | `X-Sim-Run` | ⚠️ `run-id:class[:campaign-id]` toimii fixture-parserissa; täydellinen luokkasanasto ja login-eventit vahvistettava B/C:n kanssa |
+| S11 | `deploy/traps.txt` | ✅ lista ja B:n testikäyttö; reitit eivät ole vielä demo-sivustossa |
 
 ### Seuraavaksi
 
-- **A (Murtsi), jäljellä olevat tehtävät:** PRE-1 (VPS/domain/Router-avaimen tila, ulkoinen vahvistus); A-1 (S1:n 50 rivin sopimusfixture, S2/S10 ID- ja simuluokkien sopimus B/C:n kanssa, S11:n reitit myös demosivustoon); A-2 VPS/Caddy/TLS; A-3 demosivusto ja login/ansat; A-4 simulaattorit + oikea lokinäyte; A-5 ingest/sessionointi/labelien tallennus; A-6 Postgres-lukijat ja worker; A-7 deploy; A-8 täyssimulaattorit; A-9 ihmissimulaattori/QR; A-10 piilotettu hyökkäys; A-11 API; A-12 dashboard; A-13 AI Builder -etusivu; A-14 operointi/varmistukset/rate limit; A-15 paljastus ja integraatio. Toteutusjärjestys ja hyväksymiskriteerit ovat `TODO.md`:ssä. Sovi ensin S2:n ID-tyyppi: A/B käyttävät `str`, C:n nykyinen adapteri olettaa numeeriset ID:t. A-2 edellyttää PRE-1:n vahvistamista; A-3 tarvitsee toimivan demo-hostin. A-4:n oikea loki ja A-5/A-6:n tietokantaputki estävät B:n/C:n oikean datan integraatiota.
-- **B:** käytä nykyistä fixtureä yksikkötesteissä; B-3/B-5 tarvitsee live-lokin sekä A:n Postgres-lataajat (S3). Varmista A:n lopulliset simulaattoriluokat ennen labeloitua ajoa.
-- **C:** PR #2 on mergetty. Sovi S2:n session/campaign ID-esitys A:n kanssa; C-4 tarvitsee oikean lokin.
-- **Kaikki:** S4 on sovittu (020 + 027); pidä Googlebot/Bingbot-listat samoina B:n ja C:n koodissa.
+1. **A+B+C:** lukitkaa S2:n string/numeric ID-esitys, `Campaign.session_ids`, simulaattoriluokat sekä login-eventtien minimiskeema. B:n testissä ID-tyypin vaatimus on yhä tiukasti `xfail`; C:n adapteri muuntaa ID:t `int`:ksi ja fallbackaa ei-numeerisen ID:n indeksiksi.
+2. **A:** rakenna paikallinen, idempotentti Caddy JSONL → Postgres ingest/sessionointi, migraatiot sekä `load_sessions(since)`/`load_labels()` ja worker. Synteettinen fixture riittää ohjelmistointegraatioon; älkää väittäkö siitä oikeita mittareita.
+3. **A+B+C:** testatkaa loader B:n datasettiä ja C:n stuffing/campaign-funktioita vasten. Älkää kerätkö tai lokittako salasanoja tai raakaa kirjautumisrunkoa.
+4. **A:** lisää demo-site/Caddy, simulaattoriliikenne ja tarkistettu redaktoitu dataesimerkki; tämän jälkeen live-deploy/dashboard.
+
+- **A:** kaikki A-2…A-15 eivät ole valmiita. A-2:n julkinen deploy edellyttää vahvistettua pääsyä/domainin tilaa; A-3…A-6 ovat paikallisen päästä päähän -putken seuraava työ.
+- **B:** voi jatkaa piirre-/sääntö-/mallityökaluja synteettisillä testidatoilla; mittarit ja mallin tallennus odottavat riittävää ei-synteettistä labeloitua aineistoa.
+- **C:** voi ajaa nykyiset offline- ja synteettiset testit; A:n todellisia login-eventtejä vaativa C-4 odottaa sovittua skeemaa ja ingestia.
+- **Kaikki:** pitäkää Googlebot/Bingbot-lista B:n ja C:n välillä synkassa (026).
 
 ## Avoimet kysymykset
 

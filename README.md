@@ -9,11 +9,11 @@ Bounceri is a Junction 2026 prototype for **Hostinger — Decode the Noise**. It
 
 ## Current state
 
-The repository contains session features and detection rules, temporal evaluation and threshold selection, IP intelligence, campaign detection, and optional explanations through Hostinger AI Router. Rule-based explanations work without an API key. The A-lane integration draft adds shared type proposals, a sample-log parser, synthetic traffic fixtures and a trap-path list.
+The repository contains session features and detection rules, temporal evaluation and threshold selection, IP intelligence, campaign detection, and optional explanations through Hostinger AI Router. Rule-based explanations work without an API key. A's starter integration draft is already on `main` via PR #5: shared type proposals, a six-row synthetic Caddy log, sample parser/sessionizer, and trap-path list.
 
-The complete application is still under development. A live ingestion pipeline, database loaders, API and dashboard are not implemented here. The scoring rules do not yet classify visitors as human. The committed metrics files are stubs, not measured accuracy results. Shared contract types still need team agreement before application integration.
+The application is not end-to-end yet. Postgres migrations, log ingestion and `load_sessions()`/`load_labels()`, demo site, API and dashboard are missing. B's evaluation tooling is implemented, but committed metrics remain stubs until sufficient non-synthetic data exists. Before changing shared contracts, A/B/C must resolve session/campaign ID types and the login-event shape; the current parser emits integer session IDs while the shared contract and B expect strings, and C's adapter assumes numeric IDs.
 
-Hostinger infrastructure exists for `bounceri.tech`, but this repository does not establish a working public application there. The local Compose file starts development database tools only.
+Hostinger VPS/domain are reported to exist, but a working public application and AI Router key are not verified. The local Compose file starts development database tools only.
 
 ## Run the tests
 
