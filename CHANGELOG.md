@@ -47,3 +47,4 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Väärennetyn hakukonebotin sääntö tarkistaa vain Googlebotin ja Bingbotin, eli samat kuin C:n `ip_intel()` varmistaa; aiemmin oikea Applebot/DuckDuckBot/YandexBot/Baiduspider olisi leimautunut `bad_bot`iksi integraatiossa (B-4)
 - [X] Hostinger-haasteen README ajan tasalle: "Missä mennään" -osio (kaistojen tila, sopimukset S1–S11, seuraavat askeleet); roolit ja stack merkitty päätetyiksi
 - [X] "Missä mennään" päivitetty PR:ien #2–#5 mergen jälkeen: B-4 ja B-3/B-5-työkalut `main`issa
+- [B] "Missä mennään": B-7 (arviointi) ja B-8 (ablaatio) merkitty valmiiksi; `metrics.json` yhä stub, kunnes A:n data on olemassa
