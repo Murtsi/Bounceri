@@ -18,11 +18,11 @@ def campaign_graph(
 ) -> dict[str, Any]:
     """Rakenna graafi: session/IP -solmut + campaign-klusterit."""
     views = iter_session_views(sessions or [])
-    by_id: dict[int, SessionView] = {v.id: v for v in views}
+    by_id: dict[str, SessionView] = {v.id: v for v in views}
 
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
-    seen_sessions: set[int] = set()
+    seen_sessions: set[str] = set()
     seen_ips: set[str] = set()
 
     for camp in campaigns:

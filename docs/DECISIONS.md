@@ -77,6 +77,14 @@ Revisit if: tiimissä ei ole ketään, joka osaa Reactia → vaihdetaan frontend
 
 Huom: numerot 015–038 voivat törmätä muiden kaistojen samanaikaisiin merkintöihin; numeroidaan uudelleen mergessä tarvittaessa.
 
+## Kaista C — verkosto / kampanjat (2026-11-14)
+
+### 032 — S2: session- ja kampanja-ID:t merkkijonoina
+Date: 2026-11-14
+Context: A:n `contracts.Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` on tyypitetty `str`:ksi; C:n aiemmat stubit ja testit käyttivät `int`-id:itä.
+Decision: C hyväksyy S2:n merkkijonoina. `session_view.as_session_view` stringifioi aina (`str(id)`), `make_campaign()` rakentaa `tuple[str, ...]`, evaluaattori vertaa `str`-avaimilla. A:n sample-ingest voi vielä syöttää int-id:itä runtimeen — C kestää sen.
+Consequences: B/A voivat käyttää UUID/hash-id:itä ilman C-muutosta; vanhat int-olettavat testit C:ssä päivitetty. Kampanja-metrics lukitaan vasta kun A:n login-stuffing -simu on merkitty `X-Sim-Run`:lla.
+Revisit if: A vaihtaa id-tyypin takaisin intiksi (epätodennäköistä) tai Postgres-sarake vaatii uuid.
 
 ## Public release preparation (2026-11-13)
 

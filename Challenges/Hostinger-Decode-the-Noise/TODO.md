@@ -72,7 +72,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | C-1 | T+0 → 1 | `ip_intel()`-, `find_campaigns()`- ja `explain()`-stubit + `campaign_metrics.json`-stub | P0 | S | **DONE** |
 | C-2 | T+1 → 5 | `ip_intel()`: hakukonebottien varmistus (käänteinen + eteenpäin DNS), offline-ASN-tietokanta, datakeskus / koti / mobiili | P0 | M | **DONE** |
 | C-3 | T+5 → 10 | Tunnusten kokeilu sessioiden yli: sama tunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti | P0 | L | **DONE** (syntettinen data; C-4 = oikea loki) |
-| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **BLOCKED** A:n samples/ingest (T+7/T+12) |
+| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **DONE** fixture + A ingest-smoke (`tests/c/test_c4_a_samples.py`); live lock odottaa A-8 stuffing-simua |
 | C-5 | T+12 → 20 | Kampanjat: otsakesormenjälki + polkujärjestys (MinHash) + ajoituksen synkronointi → klusterointi (union-find / DBSCAN) | P0 | L | **DONE** union-find+Jaccard/MinHash; DBSCAN skip |
 | C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | **DONE** evaluaattori; lukitus odottaa A:n labeleita |
 | C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | **DONE** koodi + fallback; live Router kun avain saadaan |
@@ -114,7 +114,6 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 |---|---|---|---|---|
 | PRE-1 | Hostinger-VPS, domain ja AI Router -avain | Tili-, domain- ja avaintilan vahvistus käyttäjältä | 2026-11-13 | Murtsi |
 | A-2 | Julkinen VPS-deploy (Docker/Caddy/TLS) | PRE-1:n valmistuminen ja julkisen endpointin saatavuus | 2026-11-13 | Murtsi |
-| C-4 | Stuffing oikeaa dataa vasten | A-4/A-5 samples + ingest + login fields | 2026-11-13 | Joonas |
 | C-8 | Integraatio dashboardiin | A-11/A-12 API + UI | — | Joonas |
 | C-10 | Piilotettu hyökkäys | A-15 paljastus T+34 | — | Joonas |
 | PRE-4 | Mentorivastaukset | Hostinger kick-off | — | Joonas |

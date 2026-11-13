@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from bouncer.network.session_view import LoginEvent, SessionView
-from bouncer.network.types import Campaign
+from bouncer.network.types import Campaign, make_campaign
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,7 +56,7 @@ def detect_username_stuffing(
         # Sliding window by time
         left = 0
         best_ips: set[str] = set()
-        best_sessions: set[int] = set()
+        best_sessions: set[str] = set()
         best_span = (events[0].ts, events[0].ts)
         for right, event in enumerate(events):
             while events[right].ts - events[left].ts > cfg.window:
@@ -73,7 +73,7 @@ def detect_username_stuffing(
 
         span_min = max((best_span[1] - best_span[0]).total_seconds() / 60.0, 0.01)
         campaigns.append(
-            Campaign(
+            make_campaign(
                 id=_campaign_id("stuffing", username),
                 kind="credential_stuffing",
                 session_ids=sorted(best_sessions),
@@ -102,7 +102,7 @@ def detect_distributed_spray(
     failed = sorted(failed, key=lambda e: e.ts)
     left = 0
     campaigns: list[Campaign] = []
-    seen: set[tuple[int, ...]] = set()
+    seen: set[tuple[str, ...]] = set()
 
     for right in range(len(failed)):
         while failed[right].ts - failed[left].ts > cfg.window:
@@ -121,10 +121,10 @@ def detect_distributed_spray(
         seen.add(session_ids)
         users = sorted({e.username for e in window})
         campaigns.append(
-            Campaign(
+            make_campaign(
                 id=_campaign_id("spray", f"{len(per_ip)}ips-{session_ids[0]}"),
                 kind="distributed_login_spray",
-                session_ids=list(session_ids),
+                session_ids=session_ids,
                 reasons=[
                     f"{len(per_ip)} IPs with ≤{cfg.spray_max_attempts_per_ip} failures each",
                     f"{len(users)} usernames targeted",
@@ -164,7 +164,7 @@ def detect_slow_stuffing(
         if rate > cfg.slow_max_rate_per_hour:
             continue
         campaigns.append(
-            Campaign(
+            make_campaign(
                 id=_campaign_id("slow-stuffing", username),
                 kind="slow_credential_stuffing",
                 session_ids=sorted({e.session_id for e in events}),

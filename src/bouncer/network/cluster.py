@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from hashlib import sha1
 
 from bouncer.network.session_view import SessionView
-from bouncer.network.types import Campaign
+from bouncer.network.types import Campaign, make_campaign
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,7 +153,7 @@ def find_behavior_campaigns(
             continue
         path_preview = list(member_sessions[0].paths[:5])
         campaigns.append(
-            Campaign(
+            make_campaign(
                 id=f"behavior:{member_sessions[0].id}-{len(members)}",
                 kind="behavior_cluster",
                 session_ids=sorted(s.id for s in member_sessions),
