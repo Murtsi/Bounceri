@@ -71,7 +71,15 @@ def load(
             raise SystemExit(
                 "bouncer.db.load_sessions/load_labels (A, S3) puuttuu vielä — käytä --source sample"
             ) from e
-        return list(load_sessions(since)), list(load_labels()), False
+        # A:n store kertoo, onko sisältö synteettistä (esim. `bouncer.db seed` näytteestä).
+        # Jos backend ei osaa kertoa, oletetaan oikea data (Postgres + oikea liikenne).
+        try:
+            from bouncer.db.store import is_synthetic
+        except ImportError:
+            synthetic = False
+        else:
+            synthetic = is_synthetic()
+        return list(load_sessions(since)), list(load_labels()), synthetic
     raise SystemExit(f"tuntematon lähde: {source}")
 
 
