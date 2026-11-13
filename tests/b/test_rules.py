@@ -87,6 +87,12 @@ def test_unchecked_googlebot_is_not_judged(intel):
     assert v.label == "uncertain"
 
 
+def test_crawler_that_c_does_not_verify_is_not_judged_fake():
+    ua = "Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 (KHTML, like Gecko) Applebot/0.1"
+    s = session([req(0, "/", ua=ua)], ua=ua)
+    assert rules.fake_crawler_rule(s, IpIntel(verified_bot=False)) is None
+
+
 def test_non_crawler_ua_with_failed_verification_is_not_fake_crawler():
     s = session([req(0, "/", ua=CURL_UA)], ua=CURL_UA)
     assert rules.fake_crawler_rule(s, IpIntel(verified_bot=False)) is None
