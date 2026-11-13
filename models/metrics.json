@@ -1,0 +1,28 @@
+{
+  "model_version": "stub-v0",
+  "test_window": {
+    "from": null,
+    "to": null
+  },
+  "threshold": {
+    "bot": null,
+    "human": null
+  },
+  "human_fpr": null,
+  "per_class": {},
+  "uncertain_share": null,
+  "confusion": [],
+  "split": {
+    "simulated": {},
+    "real": {},
+    "hidden_attack": {}
+  },
+  "ablation": {
+    "without_network_signals": {
+      "human_fpr": null,
+      "recall": null
+    }
+  },
+  "known_weaknesses": [],
+  "stub": true
+}

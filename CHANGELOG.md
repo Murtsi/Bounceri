@@ -13,6 +13,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Roolit päätetty (014): A = Murtsi, B = Niko, C = Joonas; nimet `TEAM.md`:hen, `TODO.md`:hen ja `AGENTS.md`:hen.
 - [X] `.github/CODEOWNERS`: kaistan polkujen PR:t pyytävät katselmoinnin automaattisesti omistajalta; yhteiset säännöt ja sopimukset kaikilta kolmelta.
 - [X] CI-tarkistus `scripts/check-changelog.sh`: push tai PR ilman `CHANGELOG.md`-merkintää hylätään (poikkeus: `[skip changelog]`); ajetaan myös `make check`:ssa.
+- [B] `score(session, intel, campaign) -> Verdict` -stub (S6), joka palauttaa aina `uncertain` (`model_version="stub-v0"`), ja `models/metrics.json`-stub (S8): skeeman kentät, kaikki luvut `null`, `"stub": true`. Väliaikaiset tyypit `src/bouncer/session/_provisional_types.py`:ssä, kunnes A:n `contracts.py` on olemassa (B-1, päätökset 015–016)
 
 ### Changed
 - [X] Hostinger-suunnitelman frontend Jinja + HTMX → React (`frontend/`), tietokanta → PostgreSQL + TimescaleDB.

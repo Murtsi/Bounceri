@@ -47,7 +47,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
-| B-1 | T+0 → 1 | `score()`-stub + `metrics.json`-stub | P0 | S | S6, S8 `main`-haarassa |
+| B-1 | T+0 → 1 | `score()`-stub + `metrics.json`-stub — **tehty** (`b/session-features`, odottaa PR:ää) | P0 | S | S6, S8 `main`-haarassa |
 | B-2 | T+1 → 6 | Session piirteet: tahti, aikavälien vaihtelu, staattisten resurssien osuus, 4xx, haavoittuvuuspolut, otsakkeiden johdonmukaisuus, `robots.txt` | P0 | L | Piirrefunktiot + testit `tests/b` |
 | B-3 | T+6 → 8 | Piirteet oikeaa lokinäytettä vasten, korjaukset | P0 | M | |
 | B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` | P0 | M | **Integraatio T+12**: oikea `score()` |
