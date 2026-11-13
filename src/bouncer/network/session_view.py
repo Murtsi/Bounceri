@@ -1,7 +1,7 @@
 """Duck-typing helpers: C ei omista Session-skeemaa (S2 = A).
 
-Hyväksyy dataclassit / SimpleNamespace / dict. Kun A:n `contracts.py`
-laskeutuu, nämä kentät peilaavat sitä.
+Hyväksyy A:n `contracts.Session` (`id: str`, `user_agent`, `requests`) sekä
+testien SimpleNamespace/dict. Session ID normalisoidaan aina merkkijonoksi.
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import parse_qs
 
 
 def _get(obj: Any, *names: str, default: Any = None) -> Any:
@@ -48,7 +49,7 @@ def _as_dt(value: Any) -> datetime | None:
 
 @dataclass(frozen=True, slots=True)
 class LoginEvent:
-    session_id: int
+    session_id: str
     ip: str
     username: str
     ts: datetime
@@ -58,7 +59,7 @@ class LoginEvent:
 
 @dataclass(frozen=True, slots=True)
 class SessionView:
-    id: int
+    id: str
     ip: str
     ua: str
     started_at: datetime | None
@@ -75,6 +76,11 @@ def _header_fingerprint(session: Any) -> str:
         return direct
 
     headers = _get(session, "headers", default=None)
+    if not isinstance(headers, dict):
+        requests = _get(session, "requests", default=[]) or []
+        if requests:
+            headers = _get(requests[0], "headers", default={}) or {}
+
     if isinstance(headers, dict):
         keys = []
         for key in ("user-agent", "accept", "accept-language", "accept-encoding", "sec-fetch-mode"):
@@ -104,7 +110,26 @@ def _paths_from(session: Any) -> tuple[str, ...]:
     return tuple(out)
 
 
-def _logins_from(session: Any, session_id: int, ip: str) -> tuple[LoginEvent, ...]:
+def _username_from_request(req: Any) -> str | None:
+    username = _get(req, "username", default=None)
+    body = _get(req, "body", "form", default={}) or {}
+    if username is None and isinstance(body, dict):
+        username = body.get("username") or body.get("user") or body.get("email")
+    headers = _get(req, "headers", default={}) or {}
+    if username is None and isinstance(headers, dict):
+        username = (
+            headers.get("x-login-user")
+            or headers.get("x-username")
+            or headers.get("X-Login-User")
+        )
+    query = _get(req, "query", default="") or ""
+    if username is None and isinstance(query, str) and query:
+        parsed = parse_qs(query)
+        username = (parsed.get("username") or parsed.get("user") or [None])[0]
+    return str(username) if username else None
+
+
+def _logins_from(session: Any, session_id: str, ip: str) -> tuple[LoginEvent, ...]:
     events: list[LoginEvent] = []
 
     embedded = _get(session, "login_attempts", "logins", default=None)
@@ -137,10 +162,7 @@ def _logins_from(session: Any, session_id: int, ip: str) -> tuple[LoginEvent, ..
         path = str(_get(req, "path", "uri", default="") or "")
         if method != "POST" or "/login" not in path.lower():
             continue
-        username = _get(req, "username", default=None)
-        body = _get(req, "body", "form", default={}) or {}
-        if username is None and isinstance(body, dict):
-            username = body.get("username") or body.get("user") or body.get("email")
+        username = _username_from_request(req)
         if not username:
             continue
         status = int(_get(req, "status", "status_code", default=401) or 401)
@@ -149,7 +171,7 @@ def _logins_from(session: Any, session_id: int, ip: str) -> tuple[LoginEvent, ..
             LoginEvent(
                 session_id=session_id,
                 ip=ip,
-                username=str(username).lower(),
+                username=username.lower(),
                 ts=ts,
                 success=200 <= status < 300,
                 path=path or "/login",
@@ -158,12 +180,9 @@ def _logins_from(session: Any, session_id: int, ip: str) -> tuple[LoginEvent, ..
     return tuple(events)
 
 
-def as_session_view(session: Any, fallback_id: int = 0) -> SessionView:
+def as_session_view(session: Any, fallback_id: str | int = 0) -> SessionView:
     sid_raw = _get(session, "id", "session_id", default=fallback_id)
-    try:
-        sid = int(sid_raw)
-    except (TypeError, ValueError):
-        sid = fallback_id
+    sid = str(sid_raw if sid_raw is not None else fallback_id)
     ip = str(_get(session, "ip", "client_ip", default="") or "")
     ua = str(_get(session, "ua", "user_agent", default="") or "")
     started = _as_dt(_get(session, "started_at", "start", "started"))

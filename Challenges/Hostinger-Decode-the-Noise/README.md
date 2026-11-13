@@ -18,8 +18,8 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 | Kaista | Kuka | `main`issa | Seuraava handoff | Odottaa |
 |---|---|---|---|---|
 | **A** alusta + hyökkääjä | Murtsi | A-1:n luonnokset: sopimustyypit, 6-rivin Caddy JSONL -fixture, parseri/sessionointi ja ansalista | S2/S10 ja login-event-muoto B/C:n kanssa; sitten S3: Postgres-ingest ja `load_sessions()`/`load_labels()` | Hostinger-live-deploy ja AI Router -avain vahvistamatta; S2 ID-ristiriita alla |
-| **B** session tunnistus + arviointi | Niko | B-1…B-9; `lr-v1`, arviointiajo ja jäädytetyn mallin hidden-eval-työkalu | A:n Postgres-lataajat ja ei-synteettinen liikenne tarvitaan mallin opettamiseen ja oikeisiin mittareihin | S3; käyttökelpoinen live-data puuttuu |
-| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9, threat-feed ja campaign graph | Testaa login/campaign adapteri A:n vakaalla Session/ID/login-event-muodolla | A:n login-event/data-handoff; live AI Router -avain |
+| **B** session tunnistus + arviointi | Niko | B-1…B-8 ja B-11 koodina: piirteet, säännöt, malli `lr-v1`, datasetti, arviointi + ablaatio, ajoskripti `bouncer.eval.run`, jäädytetyn mallin `bouncer.eval.hidden`; tunnetut heikkoudet (B-9 osittain) | A:n Postgres-lataajat (S3) → `bouncer.eval.run --source db` | S3 ja labeloitu ei-synteettinen liikenne (≥ 300 ihmissessiota FPR-väitteeseen) |
+| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9 + C-4 fixture + S2 merkkijono-ID:t (PR #8); threat-feed + campaign graph + `network_pass` | C-8 dashboard, C-10 piilotettu, live Router | A-8 stuffing-simu (metrics lock), A-11/A-12, PRE-1 avain |
 
 ### Sopimukset S1–S11
 
@@ -39,15 +39,15 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 
 ### Seuraavaksi
 
-1. **A+B+C:** lukitkaa S2:n string/numeric ID-esitys, `Campaign.session_ids`, simulaattoriluokat sekä login-eventtien minimiskeema. B:n testissä ID-tyypin vaatimus on yhä tiukasti `xfail`; C:n adapteri muuntaa ID:t `int`:ksi ja fallbackaa ei-numeerisen ID:n indeksiksi.
+1. **A+B+C:** lukitkaa S2/S10: merkkijono-ID:t on hyväksytty B:ltä (PR #11 kommentti) ja C:ltä (PR #8); jäljellä A:n lukijan ID-tyyppi (B:n testi on yhä strict-`xfail`), simulaattoriluokat ja login-eventtien minimiskeema.
 2. **A:** rakenna paikallinen, idempotentti Caddy JSONL → Postgres ingest/sessionointi, migraatiot sekä `load_sessions(since)`/`load_labels()` ja worker. Synteettinen fixture riittää ohjelmistointegraatioon; älkää väittäkö siitä oikeita mittareita.
 3. **A+B+C:** testatkaa loader B:n datasettiä ja C:n stuffing/campaign-funktioita vasten. Älkää kerätkö tai lokittako salasanoja tai raakaa kirjautumisrunkoa.
 4. **A:** lisää demo-site/Caddy, simulaattoriliikenne ja tarkistettu redaktoitu dataesimerkki; tämän jälkeen live-deploy/dashboard.
 
 - **A:** kaikki A-2…A-15 eivät ole valmiita. A-2:n julkinen deploy edellyttää vahvistettua pääsyä/domainin tilaa; A-3…A-6 ovat paikallisen päästä päähän -putken seuraava työ.
 - **B:** voi jatkaa piirre-/sääntö-/mallityökaluja synteettisillä testidatoilla; mittarit ja mallin tallennus odottavat riittävää ei-synteettistä labeloitua aineistoa.
-- **C:** voi ajaa nykyiset offline- ja synteettiset testit; A:n todellisia login-eventtejä vaativa C-4 odottaa sovittua skeemaa ja ingestia.
-- **Kaikki:** pitäkää Googlebot/Bingbot-lista B:n ja C:n välillä synkassa (026).
+- **C:** S2 merkkijono-id:t hyväksytty (päätös 032); C-4 stuffing-fixture + A ingest-smoke valmis. Seuraavaksi A-8 stuffing-simu → metrics lock; C-8 kun dashboard.
+- **Kaikki:** S4 on sovittu (020 + 027); pidä Googlebot/Bingbot-listat samoina B:n ja C:n koodissa.
 
 ## Avoimet kysymykset
 
