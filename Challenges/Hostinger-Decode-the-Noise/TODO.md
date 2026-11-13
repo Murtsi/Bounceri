@@ -53,7 +53,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` — **tehty** (`b/rules`, odottaa PR:ää; ansat aktivoituvat kun A:n `traps.txt` on olemassa) | P0 | M | **Integraatio T+12**: oikea `score()` |
 | B-5 | T+12 → 14 | Datasetti: `labels` + ansat + C:n varmistetut botit — **koodi valmis** (`b/dataset`); odottaa A:n `load_sessions()`/`load_labels()` (S3) ja simulaattoriluokkien nimiä | P0 | M | Labeloitu datasetti |
 | B-6 | T+14 → 18 | Malli; syötteinä myös C:n `IpIntel` ja kampanjajäsenyys; 3 syytä per päätös — **koodi valmis** (`b/model`, `lr-v1`); opetus oikealla datalla odottaa A:n liikennettä | P0 | L | |
-| B-7 | T+18 → 20 | Arviointi: temporaalinen jako, simuloitu vs. oikea erikseen, kynnykset (ihmisten FPR < 1 %) — **koodi valmis** (`main`); oikeat luvut odottavat A:n dataa (S1, S3) | P0 | M | **Integraatio T+20**: oikea `metrics.json` |
+| B-7 | T+18 → 20 | Arviointi: temporaalinen jako, simuloitu vs. oikea erikseen, kynnykset (ihmisten FPR < 1 %) — **koodi valmis** (`main`) + ajoskripti `python -m bouncer.eval.run`; oikeat luvut odottavat A:n dataa (S1, S3) | P0 | M | **Integraatio T+20**: oikea `metrics.json` |
 | B-8 | T+20 → 24 | Ablaatio: tulos ilman C:n verkostosignaaleja — **koodi valmis** (`main`, osa arviointia) | P1 | M | `ablation` `metrics.json`:issa |
 | B-9 | T+24 → 30 | Virheanalyysi: väärät positiiviset käsin läpi → `known_weaknesses`, piirteiden korjaus | P1 | L | |
 | B-10 | T+30 → 34 | Uudelleenopetus kertyneellä datalla, kalibrointi | P1 | M | |
