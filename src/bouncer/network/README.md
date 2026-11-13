@@ -8,6 +8,8 @@
 | `evaluate_campaigns(...)` | S9 | purity/coverage (C-6); live lock odottaa A:n stuffing-labeleita |
 | `network_pass(sessions)` | C-8 | S4+S5+graafi + B-maps (`intel_by_ip_contract`, `campaign_by_session`, `campaigns_api`) |
 | `python -m bouncer.network.hidden` | C-10 | Piilotettu ajo → löytyikö kampanja (ei retunea); `--write` vasta oikealla datalla |
+| `python -m bouncer.network.lock_fixture` | C-4/C-6 | Synteettiset purity/coverage → `campaign_metrics.fixture.json` (ei tuotanto-S9) |
+| `ExplainCache` (`bouncer.explain`) | C-8 | In-memory S7-välimuisti A:n API:lle |
 
 Puhtaita funktioita: **ei tietokantakirjoituksia**. A:n worker kutsuu näitä.
 
