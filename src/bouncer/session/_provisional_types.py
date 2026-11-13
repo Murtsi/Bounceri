@@ -55,7 +55,9 @@ class Session:
 class IpIntel:
     """C:n `ip_intel(ip)` (S4)."""
 
-    verified_bot: bool = False
+    # True = DNS-varmistettu hakukonebotti, False = tarkistettu eikä ole,
+    # None = ei tarkistettu (esim. C:n stub tai UA ei väitä olevansa crawler).
+    verified_bot: bool | None = None
     asn: int | None = None
     asn_type: AsnType = "unknown"
     country: str | None = None
