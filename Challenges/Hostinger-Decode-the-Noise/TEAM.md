@@ -2,17 +2,19 @@
 
 Kolme henkilöä, kolme kaistaa, **ei päällekkäisyyksiä**. Kaksi kolmesta tekee tunnistusta, koska tuomarit pisteyttävät ensisijaisesti tunnistuksen vahvuutta ja rehellisyyttä, eivät käyttöliittymää.
 
-## Yhdellä lauseella
+## Kuka tekee mitä
 
-| | Rooli | Vastaa kysymykseen |
-|---|---|---|
-| **A** | Alusta + hyökkääjä | *"Tuleeko liikenne sisään, ja tiedämmekö kuka sen lähetti?"* |
-| **B** | Session tunnistus + arviointi | *"Käyttäytyykö tämä yksi kävijä kuin botti?"* + koko järjestelmän luvut |
-| **C** | Verkosto- ja kampanjatunnistus + selitykset | *"Ovatko nämä kävijät sama toimija, ja kuka IP:n takana on?"* |
+| | Kuka | GitHub | Haaraetuliite | Rooli | Vastaa kysymykseen |
+|---|---|---|---|---|---|
+| **A** | **Murtsi** | `@Murtsi` | `a/…` | Alusta + hyökkääjä | *"Tuleeko liikenne sisään, ja tiedämmekö kuka sen lähetti?"* |
+| **B** | **Niko** | `@leppiskerttu` | `b/…` | Session tunnistus + arviointi | *"Käyttäytyykö tämä yksi kävijä kuin botti?"* + koko järjestelmän luvut |
+| **C** | **Joonas** | `@Joonaswaa` | `c/…` | Verkosto- ja kampanjatunnistus + selitykset | *"Ovatko nämä kävijät sama toimija, ja kuka IP:n takana on?"* |
 
-- **A** rakentaa palvelimen ja putken, ja on sen jälkeen **hyökkääjä**: kirjoittaa kaikki simulaattorit, myös yhden piilotetun hyökkäyksen, jota B ja C eivät näe ennen arviointia. Hyökkäyksiä ei siis kirjoita sama ihminen kuin tunnistimia → luvut ovat uskottavia. Lopuksi ohut API + dashboard valmiiden taulujen päälle.
-- **B** katsoo **yhtä sessiota kerrallaan**: piirteet, säännöt, malli, kynnykset, lopullinen päätös. Omistaa koko järjestelmän arvioinnin (`metrics.json`).
-- **C** katsoo **monta sessiota yhdessä**: tunnusten kokeilu monesta IP:stä, kampanjat, IP-tiedot (hakukonebottien varmistus, datakeskus vs. koti). Kirjoittaa LLM-selitykset. Mittaa omat kampanjansa A:n simulaattorien tietämää totuutta vasten.
+Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy automaattisesti `.github/CODEOWNERS`-tiedostosta.
+
+- **A (Murtsi)** rakentaa palvelimen ja putken, ja on sen jälkeen **hyökkääjä**: kirjoittaa kaikki simulaattorit, myös yhden piilotetun hyökkäyksen, jota B ja C eivät näe ennen arviointia. Hyökkäyksiä ei siis kirjoita sama ihminen kuin tunnistimia → luvut ovat uskottavia. Lopuksi ohut API + dashboard valmiiden taulujen päälle.
+- **B (Niko)** katsoo **yhtä sessiota kerrallaan**: piirteet, säännöt, malli, kynnykset, lopullinen päätös. Omistaa koko järjestelmän arvioinnin (`metrics.json`).
+- **C (Joonas)** katsoo **monta sessiota yhdessä**: tunnusten kokeilu monesta IP:stä, kampanjat, IP-tiedot (hakukonebottien varmistus, datakeskus vs. koti). Kirjoittaa LLM-selitykset. Mittaa omat kampanjansa A:n simulaattorien tietämää totuutta vasten.
 
 ## Omistajuus
 
@@ -119,8 +121,8 @@ Yhteinen. T+38 jälkeen jokainen kirjoittaa omat diansa: **A** demo ja arkkiteht
 - **Jumissa > 15 min?** Sano ääneen.
 - Päätökset `../../docs/DECISIONS.md`:hen.
 
-## Kuka sopii mihinkin
+## Vastuut tiivistettynä
 
-- **A:** on säätänyt Linux-palvelimia ja Dockeria, tykkää rikkoa asioita. Pitää demon pystyssä.
-- **B:** on tehnyt dataa, tilastoja tai koneoppimista. Epäluuloinen omia lukujaan kohtaan.
-- **C:** tykkää verkoista, graafeista ja klusteroinnista; osaa käyttää LLM-rajapintoja.
+- **Murtsi (A):** demo pysyy pystyssä, vain hän kirjoittaa tietokantaan, integroi kaistat (T+1, T+12, T+20, T+30, T+34), pitää piilotetun hyökkäyksen salassa T+34 asti, tekee palautuksen.
+- **Niko (B):** `score()` ja `metrics.json`; kukaan muu ei muuta lukuja. Lukitsee luvut T+42.
+- **Joonas (C):** `ip_intel()`, `find_campaigns()`, `explain()` ja `campaign_metrics.json`. Hoitaa kysymykset Hostingerin mentoreille (PRE-4).

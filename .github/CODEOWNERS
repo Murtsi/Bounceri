@@ -1,0 +1,39 @@
+# Kaistojen omistajat (päätös 014, ks. Challenges/Hostinger-Decode-the-Noise/TEAM.md).
+# GitHub pyytää katselmoinnin automaattisesti, kun PR koskee näitä polkuja.
+# Viimeinen osuva rivi voittaa.
+
+# Oletus: integraattori (A) omistaa kaiken, millä ei ole muuta omistajaa
+*                               @Murtsi
+
+# Yhteiset säännöt ja sopimukset: kaikki kolme
+/AGENTS.md                      @Murtsi @leppiskerttu @Joonaswaa
+/CLAUDE.md                      @Murtsi @leppiskerttu @Joonaswaa
+/docs/DECISIONS.md              @Murtsi @leppiskerttu @Joonaswaa
+/src/bouncer/contracts.py       @Murtsi @leppiskerttu @Joonaswaa
+/Challenges/                    @Murtsi @leppiskerttu @Joonaswaa
+/CHANGELOG.md                   @Murtsi @leppiskerttu @Joonaswaa
+
+# A — Murtsi: alusta + hyökkääjä
+/deploy/                        @Murtsi
+/src/site/                      @Murtsi
+/src/bouncer/ingest/            @Murtsi
+/src/bouncer/db/                @Murtsi
+/src/bouncer/api/               @Murtsi
+/samples/                       @Murtsi
+/tools/sim/                     @Murtsi
+/frontend/                      @Murtsi
+/tests/a/                       @Murtsi
+/.github/                       @Murtsi
+
+# B — Niko: session tunnistus + arviointi
+/src/bouncer/session/           @leppiskerttu
+/src/bouncer/eval/              @leppiskerttu
+/models/                        @leppiskerttu
+/notebooks/b/                   @leppiskerttu
+/tests/b/                       @leppiskerttu
+
+# C — Joonas: verkosto, kampanjat, selitykset
+/src/bouncer/network/           @Joonaswaa
+/src/bouncer/explain/           @Joonaswaa
+/notebooks/c/                   @Joonaswaa
+/tests/c/                       @Joonaswaa

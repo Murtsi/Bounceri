@@ -10,14 +10,14 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Card | Size | Owner | Notes |
 |---|---|---|---|---|
-| PRE-1 | Hostinger-VPS, domain ja AI Router -avain käsiin | S | A | Kick-off / Hostingerin piste |
-| PRE-2 | Käydään `TEAM.md` läpi, nimet A/B/C:lle | S | kaikki | 30 min |
+| PRE-1 | Hostinger-VPS, domain ja AI Router -avain käsiin | S | Murtsi | Kick-off / Hostingerin piste |
+| PRE-2 | Käydään `TEAM.md` läpi yhdessä | S | kaikki | 30 min — roolit päätetty (014) |
 | PRE-3 | Python 3.12 + Docker toimii jokaisella | S | kaikki | |
-| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? | S | C | |
+| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | |
 
 ---
 
-## Kaista A — Alusta + hyökkääjä
+## Kaista A — Alusta + hyökkääjä · Murtsi
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
@@ -43,7 +43,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 ---
 
-## Kaista B — Session tunnistus + arviointi
+## Kaista B — Session tunnistus + arviointi · Niko
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
@@ -65,7 +65,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 ---
 
-## Kaista C — Verkosto- ja kampanjatunnistus + selitykset
+## Kaista C — Verkosto- ja kampanjatunnistus + selitykset · Joonas
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
@@ -89,11 +89,11 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Card | Owner | Notes |
 |---|---|---|---|
-| X-1 | Demokäsikirjoitus `docs/DEMO.md` + harjoitus ×2 | A vetää, kaikki | |
-| X-2 | 90 s varavideo | A | Heti kun demopolku toimii |
+| X-1 | Demokäsikirjoitus `docs/DEMO.md` + harjoitus ×2 | Murtsi vetää, kaikki | |
+| X-2 | 90 s varavideo | Murtsi | Heti kun demopolku toimii |
 | X-3 | Pitch `docs/PITCH.md`: ongelma → demo → luvut → kampanjat → rajoitukset | kaikki omat osionsa | |
-| X-4 | README: URL, arkkitehtuuri, miten luvut lasketaan | A | |
-| X-5 | Palautus | A | |
+| X-4 | README: URL, arkkitehtuuri, miten luvut lasketaan | Murtsi | |
+| X-5 | Palautus | Murtsi | |
 
 ---
 

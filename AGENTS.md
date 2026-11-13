@@ -63,10 +63,16 @@ Siirrä kortti tilasta toiseen, kun aloitat tai lopetat sen. Jos jäät jumiin y
 
 Lue aktiivisen haasteen `TEAM.md`. Tiivistettynä:
 
+| Kaista | Kuka | GitHub | Haarat | Omistaa |
+|---|---|---|---|---|
+| A — alusta + hyökkääjä | Murtsi | `@Murtsi` | `a/…` | `deploy/`, `src/site/`, `src/bouncer/{ingest,db,api}/`, `contracts.py`, `samples/`, `tools/sim/`, `frontend/`, CI |
+| B — session tunnistus + arviointi | Niko | `@leppiskerttu` | `b/…` | `src/bouncer/{session,eval}/`, `models/`, `notebooks/b/`, `tests/b/` |
+| C — verkosto + kampanjat + selitykset | Joonas | `@Joonaswaa` | `c/…` | `src/bouncer/{network,explain}/`, `notebooks/c/`, `tests/c/` |
+
 - **Muokkaa vain oman kaistasi polkuja.** Tarvitsetko muutoksen toisen kaistan tiedostoon? Pyydä omistajaa — sopimus puuttuu.
 - **Vain kaista A kirjoittaa tietokantaan.** B ja C tekevät puhtaita funktioita.
 - **Sopimukset (S1–S11)** muuttuvat vain kaikkien kolmen hyväksynnällä → `BREAKING:` changelogiin + päätösmerkintä.
-- AI-agentti: kysy käyttäjältä, mikä kaista hän on, jos se ei käy ilmi haarasta (`a/…`, `b/…`, `c/…`).
+- AI-agentti: päättele kaista haarasta (`a/…`, `b/…`, `c/…`) tai git-käyttäjästä yllä olevan taulukon mukaan; jos ei selviä, kysy.
 
 ## 5. Työnkulku
 
