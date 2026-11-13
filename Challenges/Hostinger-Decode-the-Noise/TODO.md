@@ -47,8 +47,8 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
-| B-1 | T+0 → 1 | `score()`-stub + `metrics.json`-stub — **tehty** (`b/session-features`, odottaa PR:ää) | P0 | S | S6, S8 `main`-haarassa |
-| B-2 | T+1 → 6 | Session piirteet: tahti, aikavälien vaihtelu, staattisten resurssien osuus, 4xx, haavoittuvuuspolut, otsakkeiden johdonmukaisuus, `robots.txt` — **tehty** (`b/session-features`, odottaa PR:ää; oikeaa lokia vasten B-3:ssa) | P0 | L | Piirrefunktiot + testit `tests/b` |
+| B-1 | T+0 → 1 | `score()`-stub + `metrics.json`-stub — **tehty** (`main`, PR #1) | P0 | S | S6, S8 `main`-haarassa |
+| B-2 | T+1 → 6 | Session piirteet: tahti, aikavälien vaihtelu, staattisten resurssien osuus, 4xx, haavoittuvuuspolut, otsakkeiden johdonmukaisuus, `robots.txt` — **tehty** (`main`, PR #1; oikeaa lokia vasten B-3:ssa) | P0 | L | Piirrefunktiot + testit `tests/b` |
 | B-3 | T+6 → 8 | Piirteet oikeaa lokinäytettä vasten, korjaukset — **työkalu valmis** (`b/dataset`: piirreraportti + ihmishälytykset); odottaa A:n lokinäytettä (A-4) | P0 | M | |
 | B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` — **tehty** (`b/rules`, odottaa PR:ää; ansat aktivoituvat kun A:n `traps.txt` on olemassa) | P0 | M | **Integraatio T+12**: oikea `score()` |
 | B-5 | T+12 → 14 | Datasetti: `labels` + ansat + C:n varmistetut botit — **koodi valmis** (`b/dataset`); odottaa A:n `load_sessions()`/`load_labels()` (S3) ja simulaattoriluokkien nimiä | P0 | M | Labeloitu datasetti |
