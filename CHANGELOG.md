@@ -7,8 +7,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ### Added
 - [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
 - [A] Public-release preparation: English setup/status README and private vulnerability-reporting guidance; preserve synthetic ingestion fixtures and tests in Git.
-- [A] S2-datatyyppien alustava ehdotus, kuuden rivin Caddy JSONL -testifixture, fixture-parseri (sessiointi + `X-Sim-Run`) ja stub-ansalista; session/campaign ID-muodot vaativat B/C-hyväksynnän ja 50 rivin stub, Postgres-ingest, live-loki ja palvelu ovat vielä kesken (A-1, luonnos `a/person-a-integration`-haarassa)
-- [A] `deploy/traps.txt` lisätty B:n sääntöjen kehitystestejä varten; polut eivät ole vielä demosivustossa (A-1)
+- [A] S2-tyyppien ehdotus, kuuden rivin synteettinen Caddy JSONL -fixture ja parseri/sessionointi sekä `traps.txt` ovat mainissa (PR #5); yhteinen S2/S10-hyväksyntä, 50-rivin sopimusfixture, Postgres-ingest, live-loki ja sovelluspalvelu puuttuvat vielä (A-1).
 - [C] Stubit S4/S5/S7/S9: `ip_intel` → `asn_type=unknown`, `find_campaigns` → `[]`, `explain` reasons-tekstinä, `campaign_metrics.json` stub (C-1).
 - [C] `ip_intel` C-2: Googlebot/Bingbot käänteinen+forward DNS -varmistus; offline CIDR→ASN-tyyppi (datacenter/residential/mobile).
 - [C] `find_campaigns` C-3: credential stuffing / distributed spray / low-and-slow sessioiden yli (C-3).
