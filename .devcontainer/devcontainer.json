@@ -1,0 +1,35 @@
+{
+  "name": "Junction",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": false
+    }
+  },
+  "postCreateCommand": "bash scripts/setup.sh",
+  "postStartCommand": "bash scripts/install-hooks.sh",
+  "forwardPorts": [3000, 5173, 8000, 5432, 8080],
+  "portsAttributes": {
+    "3000": { "label": "app" },
+    "5173": { "label": "vite" },
+    "8000": { "label": "api" },
+    "5432": { "label": "postgres" },
+    "8080": { "label": "adminer" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

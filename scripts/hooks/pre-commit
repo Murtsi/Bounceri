@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Blocks .env commits and runs repository checks. Bypass: git commit --no-verify
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+if git diff --cached --name-only | grep -qE '(^|/)\.env$'; then
+  echo "pre-commit: refusing to commit .env (use .env.example)" >&2
+  exit 1
+fi
+
+if ! bash "$ROOT/scripts/check.sh"; then
+  echo >&2
+  echo "pre-commit: checks failed. Fix them, or bypass with: git commit --no-verify" >&2
+  exit 1
+fi

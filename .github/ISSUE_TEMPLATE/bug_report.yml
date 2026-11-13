@@ -1,0 +1,31 @@
+name: Bug report
+description: Something is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Expected vs actual, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `make dev`
+        2. Open /dashboard
+        3. Click "Export"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: Windows 11, Chrome 141, commit abc1234
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshot
+      render: shell

@@ -1,0 +1,27 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+
+*.md text eol=lf
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+poetry.lock linguist-generated=true
+uv.lock linguist-generated=true
+Cargo.lock linguist-generated=true
+go.sum linguist-generated=true
+
+*.ipynb diff=ipynb

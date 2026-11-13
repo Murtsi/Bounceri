@@ -1,0 +1,74 @@
+# --- secrets & local config ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+.vscode/*.local.json
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- editors ---
+.idea/
+*.swp
+*.swo
+*~
+
+# --- node ---
+node_modules/
+.next/
+.nuxt/
+.output/
+dist/
+build/
+coverage/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.envrc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+*.egg-info/
+
+# --- go / rust / java / dotnet ---
+bin/
+target/
+*.class
+*.jar
+obj/
+
+# --- databases & runtime data ---
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+redisdata/
+uploads/
+tmp/
+.cache/
+
+# --- media (keep demos out of git; link them instead) ---
+*.mp4
+*.mov
+*.webm
+media/raw/
+
+# --- misc ---
+*.log
+.DS_Store?
