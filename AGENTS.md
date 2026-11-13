@@ -59,25 +59,25 @@ Kirjaa uusi rivi, kun valitset teknologian, muutat sopimusta, kynnystä, train/t
 
 Siirrä kortti tilasta toiseen, kun aloitat tai lopetat sen. Jos jäät jumiin yli 15 minuutiksi, kirjaa se *Blocked*-osioon.
 
-## 4. Kaistat ja omistajuus
+## 4. Kaistat (suositus, ei esto)
 
-Lue aktiivisen haasteen `TEAM.md`. Tiivistettynä:
+Kaistat kuvaavat **osaamisalueita ja oletusvastuita**, eivät kieltoa koskettaa toisen polkuja. Hackathonissa kuka tahansa saa korjata pullonkaulan millä tahansa kaistalla — kirjaa muutos changelogiin oikealla `[A]`/`[B]`/`[C]`/`[X]`-tunnisteella.
 
-| Kaista | Kuka | GitHub | Haarat | Omistaa |
+| Kaista | Kuka (oletus) | GitHub | Haarat | Tyypilliset polut |
 |---|---|---|---|---|
 | A — alusta + hyökkääjä | Murtsi | `@Murtsi` | `a/…` | `deploy/`, `src/site/`, `src/bouncer/{ingest,db,api}/`, `contracts.py`, `samples/`, `tools/sim/`, `frontend/`, CI |
 | B — session tunnistus + arviointi | Niko | `@leppiskerttu` | `b/…` | `src/bouncer/{session,eval}/`, `models/`, `notebooks/b/`, `tests/b/` |
 | C — verkosto + kampanjat + selitykset | Joonas | `@Joonaswaa` | `c/…` | `src/bouncer/{network,explain}/`, `notebooks/c/`, `tests/c/` |
 
-- **Muokkaa vain oman kaistasi polkuja.** Tarvitsetko muutoksen toisen kaistan tiedostoon? Pyydä omistajaa — sopimus puuttuu.
-- **Vain kaista A kirjoittaa tietokantaan.** B ja C tekevät puhtaita funktioita.
-- **Sopimukset (S1–S11)** muuttuvat vain kaikkien kolmen hyväksynnällä → `BREAKING:` changelogiin + päätösmerkintä.
-- AI-agentti: päättele kaista haarasta (`a/…`, `b/…`, `c/…`) tai git-käyttäjästä yllä olevan taulukon mukaan; jos ei selviä, kysy.
+- **CODEOWNERS** pyytää edelleen katselmointia omistajalta — se on review-apuri, ei merge-kielto.
+- **Tietokantaan kirjoitus** pidetään yhdessä paikassa (`bouncer.db` / ingest-worker), jotta rivit eivät kilpaile.
+- **Sopimukset (S1–S11)** muuttuvat mieluiten kaikkien kolmen hyväksynnällä → `BREAKING:` changelogiin + päätösmerkintä. Kiireessä tee muutos ja merkitse päätökseen `needs-ack`.
+- AI-agentti: auta käyttäjän prioriteetin mukaan; älä jää odottamaan kaistarajaa jos käyttäjä pyytää toisen kaistan työtä.
 
 ## 5. Työnkulku
 
 1. `git switch main && git pull --rebase`
-2. `git switch -c <kaista>/<lyhyt-nimi>` — esim. `b/session-features`
+2. `git switch -c <kaista>/<lyhyt-nimi>` — esim. `b/session-features` tai `a/s3-loader`
 3. Pienet commitit, Conventional Commits kaistan kanssa: `feat(b/session): add inter-arrival CV feature`
 4. Päivitä `CHANGELOG.md` (+ `DECISIONS.md` / `TODO.md` tarvittaessa) **samassa commitissa**
 5. `make check` ennen pushia
@@ -88,7 +88,7 @@ Lue aktiivisen haasteen `TEAM.md`. Tiivistettynä:
 ## 6. Valmis kun
 
 - [ ] Toimii puhtaasta checkoutista
-- [ ] `make check` ja oman kaistan testit menevät läpi
+- [ ] `make check` ja kosketettujen kaistojen testit menevät läpi
 - [ ] `CHANGELOG.md` päivitetty (ja `DECISIONS.md`, jos tehtiin valinta)
 - [ ] `.env.example` päivitetty, jos lisättiin ympäristömuuttuja
 - [ ] Ei salaisuuksia, ei debug-jäänteitä
@@ -106,7 +106,7 @@ Haasteessa pisteytetään tunnistuksen **rehellisyyttä**. Siksi:
 ## 8. AI-agenteille erikseen
 
 - Lue ennen työtä: tämä tiedosto, aktiivisen haasteen `TEAM.md` ja `TODO.md`, `CHANGELOG.md`:n `[Unreleased]`.
-- Pysy käyttäjän kaistassa ja kortissa. Älä "siivoa" muiden kaistojen koodia.
+- Tee käyttäjän pyytämä työ; kaistarajat eivät estä A/B/C-polkuja.
 - Älä pushaa `main`-haaraan äläkä tee force-pushia ilman käyttäjän lupaa.
 - Älä commitoi `.env`-tiedostoa, API-avaimia tai AI Routerin avainta.
 - Pidä muutokset pieninä ja kirjaa ne (kohta 3) samassa commitissa.

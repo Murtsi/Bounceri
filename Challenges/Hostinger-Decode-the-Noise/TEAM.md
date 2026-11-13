@@ -1,6 +1,6 @@
 # Team — Hostinger: Decode the Noise
 
-Kolme henkilöä, kolme kaistaa, **ei päällekkäisyyksiä**. Kaksi kolmesta tekee tunnistusta, koska tuomarit pisteyttävät ensisijaisesti tunnistuksen vahvuutta ja rehellisyyttä, eivät käyttöliittymää.
+Kolme henkilöä, kolme kaistaa (oletusvastuut). Hackathonissa kaistarajat **eivät estä** toisen polun korjausta (päätös 044); CODEOWNERS pyytää silti review’ta. Kaksi kolmesta tekee tunnistusta, koska tuomarit pisteyttävät ensisijaisesti tunnistuksen vahvuutta ja rehellisyyttä, eivät käyttöliittymää.
 
 ## Kuka tekee mitä
 

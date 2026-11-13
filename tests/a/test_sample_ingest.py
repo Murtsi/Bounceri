@@ -44,7 +44,7 @@ def test_shared_contract_types_match_b_provisional_field_names() -> None:
         assert [field.name for field in fields(canonical)] == [
             field.name for field in fields(provisional)
         ]
-    assert Campaign("c1", "test", (1,)).session_ids == (1,)
+    assert Campaign("c1", "test", ("1",)).session_ids == ("1",)
 
 
 def test_fixture_is_valid_caddy_jsonl_and_sessionizes_to_expected_types() -> None:
@@ -79,7 +79,7 @@ def test_sample_loader_does_not_treat_header_as_forwarded_client_ip() -> None:
 
 def test_sim_run_parser_handles_missing_campaign_and_rejects_malformed_marker() -> None:
     assert parse_sim_run("run-1:human_playwright", 7) == SessionLabel(
-        7, "run-1", "human_playwright", None
+        "7", "run-1", "human_playwright", None
     )
     with pytest.raises(ValueError, match="Invalid X-Sim-Run"):
         parse_sim_run("run-only", "7")
