@@ -19,6 +19,23 @@ def test_asn_elisa_prefix_is_residential() -> None:
     hit = lookup_asn("88.200.10.5")
     assert hit.asn_type == "residential"
     assert hit.asn == 1759
+    assert hit.country == "FI"
+
+
+def test_ip_intel_sets_country_for_fi_prefix() -> None:
+    from bouncer.network import ip_intel_contract
+    from bouncer.contracts import IpIntel as ContractIpIntel
+
+    with patch(
+        "bouncer.network.bots.socket.gethostbyaddr",
+        side_effect=OSError("offline"),
+    ):
+        intel = ip_intel("88.200.10.5")
+        contract = ip_intel_contract("88.200.10.5")
+    assert intel.country == "FI"
+    assert isinstance(contract, ContractIpIntel)
+    assert contract.country == "FI"
+    assert not hasattr(contract, "threat_label")
 
 
 def test_asn_unknown_ip() -> None:

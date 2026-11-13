@@ -15,7 +15,8 @@ from bouncer.network.types import IpIntel
 def ip_intel(ip: str) -> IpIntel:
     """Palauta IP-tiedot: verified_bot, ASN, asn_type, country, threat_label.
 
-    `country` jätetään toistaiseksi None (ei GeoIP-tietokantaa C-2:ssa).
+    `country` tulee curated ASN-prefixeistä (ei MaxMind/GeoIP) — vain kun
+    listassa on eksplisiittinen `country`-kenttä (päätös 033).
     """
     bot = verify_search_bot(ip)
     asn = lookup_asn(ip)
@@ -35,6 +36,11 @@ def ip_intel(ip: str) -> IpIntel:
         verified_bot=bot.verified,
         asn=asn_num,
         asn_type=asn_type,
-        country=None,
+        country=asn.country,
         threat_label=threat.label if threat else None,
     )
+
+
+def ip_intel_contract(ip: str) -> object:
+    """S4-muoto B:n `score` / `eval.run` -polulle (ilman threat_label)."""
+    return ip_intel(ip).as_contract()

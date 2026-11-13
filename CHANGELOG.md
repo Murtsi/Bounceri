@@ -42,6 +42,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [C] C-4: stuffing-fixture + testi A:n `load_sample_data`-ingestiä vasten; A:n `access.sample.jsonl` smoke (ei stuffingia) (C-4).
 - [C] `network_pass()` / `intel_for_sessions()`: yksi kutsu A:n workerille (S4+S5+graafi).
 - [C] C-8 prep: `campaign_by_session`, `intel_by_ip_contract`, `campaign_to_api` B:n evaluateen ja A:n dashboardiin; C-11 pitch tiivistetty.
+- [C] `IpIntel.country` curated ASN-prefixeistä (FI); `ip_intel_contract()` B:n eval.runille (päätös 033).
 - [A] Local PostgreSQL/Adminer ports bind to loopback; ignore private traffic, database exports and credential files in Git and Docker build contexts. Public example credentials are explicitly marked for local development.
 - [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi
 - [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon
