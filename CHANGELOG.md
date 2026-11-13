@@ -20,6 +20,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Piirreraportti `bouncer.eval.feature_report`: piirteiden jakaumat (p10/mediaani/p90, True-osuus) erikseen simuloidulle ja oikealle liikenteelle luokittain, sekä lista ihmisiksi labeloiduista sessioista, joista löytyy bottihavaintoja (väärien positiivisten ehdokkaat). B-3:n työkalu; ajetaan oikeaa lokinäytettä vasten, kun se on olemassa (B-3)
 
 ### Changed
+- [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon
 - [B] Ehdotus `IpIntel.verified_bot` → `bool | None` (`None` = ei tarkistettu), ettei C:n stub leimaa oikeita Googlebotteja väärennöksiksi; vaatii S4-sopimuksen hyväksynnän (B-4, päätös 020)
 - [B] `models/metrics.json` on edelleen stub, mutta `model_version` on nyt `rules-v1`; lukuja ei ole vielä mitattu (B-4)
 - [X] Hostinger-suunnitelman frontend Jinja + HTMX → React (`frontend/`), tietokanta → PostgreSQL + TimescaleDB.
