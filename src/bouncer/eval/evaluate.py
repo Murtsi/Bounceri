@@ -31,6 +31,11 @@ from bouncer.eval.split import Split, temporal_split
 from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
 
 Scorer = Callable[..., Verdict]
+#: `fit(opetusrivit, network) -> (scorer, malli)`. Malli palautetaan tallennusta varten.
+Fit = Callable[[Sequence[DatasetRow], bool], tuple[Scorer, Any]]
+
+#: Opetusjakson myöhäisin osa, jolla kynnykset valitaan, kun mallia opetetaan (päätös 035).
+DEFAULT_CALIB_FRACTION = 0.25
 
 #: Ihmisten FPR:n yläraja botti-kynnykselle (IDEA.md: < 1 %).
 MAX_HUMAN_FPR = 0.01
@@ -165,6 +170,7 @@ class EvalResult:
     split: Split
     thresholds: Thresholds
     synthetic: bool
+    model: Any = None
 
 
 def _predict(
@@ -196,12 +202,20 @@ def run_evaluation(
     hidden: Dataset | None = None,
     known_weaknesses: Sequence[str] | None = None,
     test_fraction: float = 0.3,
+    fit: Fit | None = None,
+    calib_fraction: float = DEFAULT_CALIB_FRACTION,
 ) -> EvalResult:
     """Koko B-7-arviointi. `scorer(session, intel, campaign, *, traps)` → Verdict.
 
     `synthetic=True` merkitsee, ettei luvuilla ole todistusarvoa (testidata).
     `hidden`: piilotetun hyökkäyksen datasetti (B-11) — ei käytetä kynnyksiin.
     `known_weaknesses=None` → `weaknesses.KNOWN_WEAKNESSES`.
+
+    `fit` annettu (malli, B-6): opetusjakso jaetaan ajan mukaan opetukseen ja
+    kalibrointiin; malli opetetaan vain opetusosalla ja kynnykset valitaan
+    kalibrointiosalla, jota malli ei ole nähnyt. Ablaatiossa malli opetetaan
+    uudelleen ilman verkostosignaaleja ja sille valitaan omat kynnykset.
+    `fit=None` (säännöt): kynnykset valitaan koko opetusjaksolla.
     """
     intel_by_ip = intel_by_ip or {}
     campaign_by_session = campaign_by_session or {}
@@ -209,26 +223,41 @@ def run_evaluation(
     excluded_dns = len(dataset.rows) - len(usable)
     split = temporal_split(usable, test_fraction=test_fraction)
 
-    def scored(rows: Sequence[DatasetRow], network: bool = True) -> dict[str, Verdict]:
-        return _predict(rows, sessions, scorer, intel_by_ip, campaign_by_session, network)
+    def scored(rows: Sequence[DatasetRow], sc: Scorer, network: bool = True) -> dict[str, Verdict]:
+        return _predict(rows, sessions, sc, intel_by_ip, campaign_by_session, network)
 
-    train_v = scored(split.train)
-    th = choose_thresholds(
-        [train_v[r.session_id].score for r in split.train if r.truth == "human"],
-        [train_v[r.session_id].score for r in split.train if r.truth != "human"],
-    )
+    n_fit = n_calib = None
 
-    test_v = scored(split.test)
-    preds = {sid: apply_thresholds(v, th) for sid, v in test_v.items()}
+    def pipeline(network: bool) -> tuple[Scorer, Thresholds, Any]:
+        nonlocal n_fit, n_calib
+        if fit is None:
+            calib, sc, mdl = split.train, scorer, None
+        else:
+            inner = temporal_split(split.train, test_fraction=calib_fraction)
+            sc, mdl = fit(inner.train, network)
+            calib = inner.test
+            n_fit, n_calib = len(inner.train), len(inner.test)
+        v = scored(calib, sc, network)
+        th = choose_thresholds(
+            [v[r.session_id].score for r in calib if r.truth == "human"],
+            [v[r.session_id].score for r in calib if r.truth != "human"],
+        )
+        return sc, th, mdl
+
+    sc, th, mdl = pipeline(network=True)
+    preds = {sid: apply_thresholds(v, th) for sid, v in scored(split.test, sc).items()}
     overall = metrics_for(split.test, preds)
 
-    test_nonet = scored(split.test, network=False)
-    ablation = metrics_for(split.test, {k: apply_thresholds(v, th) for k, v in test_nonet.items()})
+    sc_nonet, th_nonet = (sc, th) if fit is None else pipeline(network=False)[:2]
+    test_nonet = scored(split.test, sc_nonet, network=False)
+    ablation = metrics_for(
+        split.test, {k: apply_thresholds(v, th_nonet) for k, v in test_nonet.items()}
+    )
 
     hidden_metrics: dict[str, Any] = {}
     if hidden is not None and hidden.rows:
         hidden_rows = [r for r in hidden.rows if r.source != "dns"]
-        hv = scored(hidden_rows)
+        hv = scored(hidden_rows, sc)
         hidden_metrics = metrics_for(
             hidden_rows, {k: apply_thresholds(v, th) for k, v in hv.items()}
         )
@@ -261,6 +290,8 @@ def run_evaluation(
         "data": {
             "synthetic": synthetic,
             "n_train": len(split.train),
+            "n_fit": n_fit,
+            "n_calib": n_calib,
             "n_test": len(split.test),
             "cutoff": split.cutoff.isoformat(),
             "straddling_runs": list(split.straddling_runs),
@@ -270,7 +301,7 @@ def run_evaluation(
         },
         "stub": False,
     }
-    return EvalResult(metrics, split, th, synthetic)
+    return EvalResult(metrics, split, th, synthetic, mdl)
 
 
 def write_metrics(result: EvalResult, path: Path = METRICS_PATH) -> None:
