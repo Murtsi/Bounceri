@@ -57,7 +57,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | B-8 | T+20 → 24 | Ablaatio: tulos ilman C:n verkostosignaaleja — **koodi valmis** (`main`, osa arviointia) | P1 | M | `ablation` `metrics.json`:issa |
 | B-9 | T+24 → 30 | Virheanalyysi: väärät positiiviset käsin läpi → `known_weaknesses`, piirteiden korjaus | P1 | L | |
 | B-10 | T+30 → 34 | Uudelleenopetus kertyneellä datalla, kalibrointi | P1 | M | |
-| B-11 | T+34 → 36 | Piilotettu hyökkäys läpi **ilman uudelleenopetusta** → `split.hidden_attack` | P0 | M | **Integraatio T+34** — tulos raportoidaan sellaisenaan |
+| B-11 | T+34 → 36 | Piilotettu hyökkäys läpi **ilman uudelleenopetusta** → `split.hidden_attack` — **koodi valmis** (`b/hidden`, `python -m bouncer.eval.hidden`); ajetaan T+34 | P0 | M | **Integraatio T+34** — tulos raportoidaan sellaisenaan |
 | B-12 | T+38 → 40 | Omat diat: luvut, ablaatio, heikkoudet | P0 | M | |
 | B-13 | T+42 | **Lukitse** `metrics.json` + `model_version` | P0 | S | |
 
