@@ -8,7 +8,14 @@ from bouncer.network.campaigns import find_campaigns
 from bouncer.network.eval import evaluate_campaigns, load_campaign_metrics
 from bouncer.network.graph import campaign_graph
 from bouncer.network.intel import ip_intel
-from bouncer.network.pipeline import intel_for_sessions, network_pass
+from bouncer.network.pipeline import (
+    campaign_to_api,
+    campaigns_by_session,
+    contract_intel_by_ip,
+    intel_by_ip,
+    intel_for_sessions,
+    network_pass,
+)
 from bouncer.network.threat import lookup_threat
 from bouncer.network.types import Campaign, IpIntel, make_campaign
 
@@ -17,8 +24,12 @@ __all__ = [
     "Campaign",
     "IpIntel",
     "campaign_graph",
+    "campaign_to_api",
+    "campaigns_by_session",
+    "contract_intel_by_ip",
     "evaluate_campaigns",
     "find_campaigns",
+    "intel_by_ip",
     "intel_for_sessions",
     "ip_intel",
     "load_campaign_metrics",

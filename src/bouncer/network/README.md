@@ -6,7 +6,7 @@
 | `find_campaigns(sessions)` | S5 | stuffing (C-3/C-4) + behavior (C-5) + NAT-suodatin (C-9) |
 | `campaign_graph(...)` | — | nodes/edges A:n dashboardille |
 | `evaluate_campaigns(...)` | S9 | purity/coverage (C-6); live lock odottaa A:n stuffing-labeleita |
-| `network_pass(sessions)` | — | S4+S5+graafi yhdellä kutsulla A:n workerille |
+| `network_pass(sessions)` | C-8 | S4+S5+graafi + B-maps (`intel_by_ip_contract`, `campaign_by_session`, `campaigns_api`) |
 
 Puhtaita funktioita: **ei tietokantakirjoituksia**. A:n worker kutsuu näitä.
 

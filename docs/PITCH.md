@@ -47,24 +47,27 @@ Target: **3 minutes** + Q&A. Write it out, then cut 20%.
 
 ---
 
-## Kaista C — Joonas (kampanjat + selitykset) · luonnos T+38
+## Kaista C — Joonas (kampanjat + selitykset) · C-11 luonnos
 
-**Beat (~30–40 s after demo session detail):**
+**Spoken beat (~35 s, after session detail in demo):**
 
-1. **Swarm:** "Yksi IP on helppo. Me yhdistämme kymmenet IP:t samaksi toimijaksi — sama käyttäjätunnus, sama polkujärjestys, sama ajoitus."
-2. **Live wow:** credential stuffing → kampanja ilmestyy dashboardiin (graafi: IP → session → campaign).
-3. **Honesty:** "Jaetun NAT:n / venue-WiFin takana monta ihmistä näyttää yhdeltä — sen me *tiedämme* ja suodatamme / kirjaamme `known_weaknesses`-listaan."
-4. **Explain:** "LLM ei päätä. Se vain selittää valmiit syyt Hostinger AI Routerilla — jos Router kaatuu, näytetään silti syyt."
+1. **Swarm:** "One IP is easy. We stitch dozens of IPs into one actor — same username, same path order, same timing window."
+2. **Live wow:** Point at stuffing campaign on the graph (IP → session → campaign). "That is not one bot. That is a campaign."
+3. **Honesty:** "Shared NAT and venue Wi-Fi look like one actor — we detect that pattern, suppress the false campaign, and list it under known weaknesses."
+4. **Explain:** "The LLM never decides. Hostinger AI Router only narrates B and C reasons; if the router is down, you still see the reasons."
 
-**Slide bullets (C):**
-- Kampanja = stuffing ∪ behavior-klusteri (header FP + path Jaccard)
-- `campaign_metrics`: purity / coverage vs A:n sim-kampanja-id
-- Known weakness: shared NAT
-- Selitys = grounded reasons only
+**Slide bullets (C) — one slide:**
+- Campaign = credential stuffing ∪ behavior cluster (header FP + path Jaccard + time overlap)
+- Metrics: purity / coverage vs simulator `campaign_id` (S9) — locked only on labeled traffic
+- Known weakness: shared NAT / venue Wi-Fi / mobile carrier NAT
+- Explain = grounded reasons only (fallback without API key)
+
+**Integration note for demo (A):** `network_pass(sessions)` → `campaigns_api` + `graph` for UI; B gets `intel_by_ip_contract` + `campaign_by_session`.
 
 **Q&A (C):**
 | Question | Answer |
 |---|---|
-| How is this not just Cloudflare? | We publish FPR + known weaknesses; every decision has 3 readable reasons; we recommend, we don't silently block. |
+| How is this not just Cloudflare? | We publish FPR + known weaknesses; every decision has ≤3 readable reasons; we recommend, we don't silently block. |
 | What if DNS fails for real Googlebot? | `verified_bot=None` — we do **not** call it fake (S4). |
-| Why two detection lanes? | Ablation: session features alone vs + network/campaign signals. |
+| Why two detection lanes? | Ablation: session features alone vs + network/campaign signals — C's value is one number. |
+| Can the LLM invent threats? | Groundedness check rejects text outside the reason tokens; otherwise fallback. |
