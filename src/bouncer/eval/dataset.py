@@ -21,8 +21,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
 
+from bouncer.contracts import IpIntel, Label, Session, SessionLabel
 from bouncer.session import rules
-from bouncer.session._provisional_types import IpIntel, Label, Session, SessionLabel
 from bouncer.session.features import SessionFeatures, compute_features
 
 TruthSource = Literal["sim", "trap", "dns"]

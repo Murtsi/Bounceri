@@ -31,6 +31,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Piirreraportti `bouncer.eval.feature_report`: piirteiden jakaumat (p10/mediaani/p90, True-osuus) erikseen simuloidulle ja oikealle liikenteelle luokittain, sekä lista ihmisiksi labeloiduista sessioista, joista löytyy bottihavaintoja (väärien positiivisten ehdokkaat). B-3:n työkalu; ajetaan oikeaa lokinäytettä vasten, kun se on olemassa (B-3)
 - [B] Arviointi (`bouncer.eval.evaluate.run_evaluation`): temporaalinen train/test-jako, kynnykset vain opetusjoukolla (ihmisten FPR ≤ 1 %), luvut testijoukolla S8-muodossa: ihmisten FPR + 95 %:n Wilson-yläraja, luokka- ja alaluokkakohtaiset luvut, sekaannusmatriisi, simuloitu/oikea/piilotettu hyökkäys erikseen ja ablaatio ilman C:n verkostosignaaleja. Ansat pois päältä arvioinnissa; synteettisen datan lukuja ei voi kirjoittaa `metrics.json`:iin. `metrics.json` on yhä stub, koska oikeaa dataa ei ole (B-7, B-8, päätökset 028–031)
 
+- [B] B käyttää nyt A:n `bouncer.contracts`-tyyppejä (S2); integraatiotesti ajaa A:n lokinäytteen, lukijan ja `traps.txt`:n B:n putken läpi (datasetti, `score()`, piirreraportti). Havainto A:lle: lukija antaa `Session.id`:n int-arvona, vaikka S2 sanoo str (strict-xfail-testi) (päätös 032)
+- [B] Tunnetut heikkoudet (`bouncer.eval.weaknesses`): 9 kohtaa, jotka arviointi kirjoittaa oletuksena `metrics.json`:n `known_weaknesses`-kenttään (B-9, päätös 033)
+
 ### Changed
 - [A] Local PostgreSQL/Adminer ports bind to loopback; ignore private traffic, database exports and credential files in Git and Docker build contexts. Public example credentials are explicitly marked for local development.
 - [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi

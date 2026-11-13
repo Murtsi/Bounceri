@@ -1,7 +1,7 @@
 import pytest
 
+from bouncer.contracts import IpIntel
 from bouncer.session import rules, score
-from bouncer.session._provisional_types import IpIntel
 from bouncer.session.score import NO_SIGNAL_REASON
 
 from .synthetic import (

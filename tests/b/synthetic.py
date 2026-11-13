@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from bouncer.session._provisional_types import Request, Session
+from bouncer.contracts import Request, Session
 
 T0 = datetime(2026, 11, 14, 12, 0, 0, tzinfo=UTC)
 

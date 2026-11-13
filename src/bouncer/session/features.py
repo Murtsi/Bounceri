@@ -17,7 +17,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from bouncer.session._provisional_types import Request, Session
+from bouncer.contracts import Request, Session
 
 # --- vakiot -------------------------------------------------------------------
 

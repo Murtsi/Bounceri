@@ -6,8 +6,8 @@ syinä. Malli (B-6) korvaa `uncertain`-haaran.
 
 from __future__ import annotations
 
+from bouncer.contracts import Campaign, IpIntel, Session, Verdict
 from bouncer.session import rules
-from bouncer.session._provisional_types import Campaign, IpIntel, Session, Verdict
 from bouncer.session.features import compute_features
 
 MODEL_VERSION = "rules-v1"
