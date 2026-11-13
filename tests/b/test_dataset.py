@@ -2,9 +2,9 @@ import dataclasses
 
 import pytest
 
+from bouncer.contracts import IpIntel, SessionLabel
 from bouncer.eval.dataset import build_dataset, sim_class_label
 from bouncer.eval.feature_report import feature_report, human_alarms, to_markdown
-from bouncer.session._provisional_types import IpIntel, SessionLabel
 
 from .synthetic import (
     GOOGLEBOT_UA,

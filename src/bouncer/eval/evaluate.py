@@ -24,10 +24,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from bouncer.contracts import Campaign, IpIntel, Label, Session, Verdict
 from bouncer.eval.dataset import Dataset, DatasetRow
 from bouncer.eval.metrics import METRICS_PATH, validate
 from bouncer.eval.split import Split, temporal_split
-from bouncer.session._provisional_types import Campaign, IpIntel, Label, Session, Verdict
+from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
 
 Scorer = Callable[..., Verdict]
 
@@ -193,13 +194,14 @@ def run_evaluation(
     intel_by_ip: Mapping[str, IpIntel] | None = None,
     campaign_by_session: Mapping[str, Campaign] | None = None,
     hidden: Dataset | None = None,
-    known_weaknesses: Sequence[str] = (),
+    known_weaknesses: Sequence[str] | None = None,
     test_fraction: float = 0.3,
 ) -> EvalResult:
     """Koko B-7-arviointi. `scorer(session, intel, campaign, *, traps)` → Verdict.
 
     `synthetic=True` merkitsee, ettei luvuilla ole todistusarvoa (testidata).
     `hidden`: piilotetun hyökkäyksen datasetti (B-11) — ei käytetä kynnyksiin.
+    `known_weaknesses=None` → `weaknesses.KNOWN_WEAKNESSES`.
     """
     intel_by_ip = intel_by_ip or {}
     campaign_by_session = campaign_by_session or {}
@@ -253,7 +255,9 @@ def run_evaluation(
                 "recall": ablation["bot_recall"],
             }
         },
-        "known_weaknesses": list(known_weaknesses),
+        "known_weaknesses": list(
+            KNOWN_WEAKNESSES if known_weaknesses is None else known_weaknesses
+        ),
         "data": {
             "synthetic": synthetic,
             "n_train": len(split.train),

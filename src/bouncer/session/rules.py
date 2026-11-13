@@ -15,8 +15,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from bouncer.contracts import IpIntel, Label, Session
 from bouncer.session import features as f
-from bouncer.session._provisional_types import IpIntel, Label, Session
 
 #: A:n ansalista (S11). Polku per rivi, `#` = kommentti. Puuttuu → ei ansoja.
 TRAPS_PATH = Path(__file__).resolve().parents[3] / "deploy" / "traps.txt"

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from bouncer.contracts import IpIntel, Session, SessionLabel, Verdict
 from bouncer.eval.dataset import build_dataset
 from bouncer.eval.evaluate import (
     Thresholds,
@@ -17,7 +18,6 @@ from bouncer.eval.evaluate import (
 from bouncer.eval.metrics import REQUIRED_KEYS
 from bouncer.eval.split import temporal_split
 from bouncer.session import MODEL_VERSION, score
-from bouncer.session._provisional_types import IpIntel, Session, SessionLabel, Verdict
 
 from .synthetic import (
     T0,
@@ -213,6 +213,17 @@ def test_hidden_attack_is_reported_separately():
     assert res.metrics["split"]["hidden_attack"]["n"] == 1
     assert res.metrics["split"]["hidden_attack"]["bot_recall"] == 1.0
     assert "hid0" not in {r.session_id for r in res.split.train + res.split.test}
+
+
+def test_known_weaknesses_are_reported_by_default():
+    from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
+
+    sessions, ds, intel = _dataset()
+    m = run_evaluation(
+        ds, sessions, score, MODEL_VERSION, synthetic=True, intel_by_ip=intel
+    ).metrics
+    assert m["known_weaknesses"] == list(KNOWN_WEAKNESSES)
+    assert len(m["known_weaknesses"]) >= 5
 
 
 def test_write_metrics_refuses_synthetic(tmp_path):
