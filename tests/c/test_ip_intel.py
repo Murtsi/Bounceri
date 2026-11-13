@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from bouncer.network import ip_intel
+from bouncer.network import VERIFIABLE_CRAWLER_TOKENS, ip_intel
 from bouncer.network.asn import lookup_asn
 from bouncer.network.bots import verify_search_bot
 
@@ -79,11 +79,37 @@ def test_ip_intel_wires_bot_and_asn() -> None:
     assert intel.asn == 15169
 
 
-def test_ip_intel_datacenter_without_bot() -> None:
+def test_dns_failure_returns_none_not_false() -> None:
+    """Oikea Googlebot + DNS-timeout ei saa laukaista B:n fake-crawler -sääntöä."""
+    with patch(
+        "bouncer.network.bots.socket.gethostbyaddr",
+        side_effect=OSError("timeout"),
+    ):
+        check = verify_search_bot("66.249.66.1")
+        intel = ip_intel("66.249.66.1")
+    assert check.verified is None
+    assert intel.verified_bot is None
+
+
+def test_ptr_without_search_bot_suffix_is_false() -> None:
+    ip = "203.0.113.40"
+    with patch(
+        "bouncer.network.bots.socket.gethostbyaddr",
+        return_value=("host.example.net", [], [ip]),
+    ):
+        check = verify_search_bot(ip)
+    assert check.verified is False
+
+
+def test_ip_intel_datacenter_dns_fail_still_has_asn() -> None:
     with patch(
         "bouncer.network.bots.socket.gethostbyaddr",
         side_effect=OSError("no ptr"),
     ):
         intel = ip_intel("167.99.10.20")
-    assert intel.verified_bot is False
+    assert intel.verified_bot is None
     assert intel.asn_type == "datacenter"
+
+
+def test_verifiable_tokens_match_b_contract() -> None:
+    assert VERIFIABLE_CRAWLER_TOKENS == ("googlebot", "bingbot")

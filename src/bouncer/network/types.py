@@ -11,9 +11,15 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True, slots=True)
 class IpIntel:
-    """S4: `ip_intel(ip) -> IpIntel`."""
+    """S4: `ip_intel(ip) -> IpIntel` (päätökset 020 + 027).
 
-    verified_bot: bool = False
+    verified_bot:
+      True  — DNS-varmistettu hakukonebotti
+      False — tarkistettu, ei ole (tai spoofattu PTR)
+      None  — ei tarkistettu / DNS-haku epäonnistui
+    """
+
+    verified_bot: bool | None = None
     asn: int | None = None
     asn_type: str = "unknown"  # unknown | datacenter | residential | mobile
     country: str | None = None

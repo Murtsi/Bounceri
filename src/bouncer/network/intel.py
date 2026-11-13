@@ -1,6 +1,7 @@
 """S4 — `ip_intel(ip) -> IpIntel`.
 
 C-1 stub → C-2: DNS-varmistetut hakukonebotit + offline ASN-tyyppi.
+S4 hyväksytty: `verified_bot: bool | None` (päätökset 020 + 027).
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ def ip_intel(ip: str) -> IpIntel:
 
     asn_type = asn.asn_type
     # Varmistettu hakukonebotti on aina datacenter-luokkaa demossa
-    if bot.verified and asn_type == "unknown":
+    if bot.verified is True and asn_type == "unknown":
         asn_type = "datacenter"
 
     return IpIntel(

@@ -19,7 +19,7 @@ def test_ip_intel_unknown_ip_without_dns() -> None:
     ):
         intel = ip_intel("203.0.113.10")
     assert isinstance(intel, IpIntel)
-    assert intel.verified_bot is False
+    assert intel.verified_bot is None  # DNS epäonnistui → ei tarkistettu (S4)
     assert intel.asn is None
     assert intel.asn_type == "unknown"
     assert intel.country is None

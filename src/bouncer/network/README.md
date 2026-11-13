@@ -2,7 +2,7 @@
 
 | Funktio | Sopimus | Status |
 |---|---|---|
-| `ip_intel(ip)` | S4 | DNS bot-verify + offline ASN (C-2); `country` vielä None |
+| `ip_intel(ip)` | S4 | DNS bot-verify + offline ASN; `verified_bot: bool \| None` (DNS-virhe → `None`); `country` vielä None |
 | `find_campaigns(sessions)` | S5 | stuffing (C-3) + behavior clusters (C-5) |
 | `evaluate_campaigns(...)` | S9 | purity/coverage (C-6); live lock odottaa A:n labeleita |
 

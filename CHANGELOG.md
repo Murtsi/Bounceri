@@ -28,6 +28,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 - [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon
+- [C] BREAKING S4: `IpIntel.verified_bot: bool | None`; DNS-virhe → `None` (ei `False`); spoofattu PTR → `False`; lista Googlebot+Bingbot synkassa B:n kanssa (`VERIFIABLE_CRAWLER_TOKENS`, päätökset 020/026/027).
+- [X] Hostinger README "Missä mennään": B-4 ja B-3/B-5 mergetty mainiin; C C-1…C-7 haarassa `c/stubs-c1`; S4 merkitty sovituksi.
 - [B] Ehdotus `IpIntel.verified_bot` → `bool | None` (`None` = ei tarkistettu), ettei C:n stub leimaa oikeita Googlebotteja väärennöksiksi; vaatii S4-sopimuksen hyväksynnän (B-4, päätös 020)
 - [B] `models/metrics.json` on edelleen stub, mutta `model_version` on nyt `rules-v1`; lukuja ei ole vielä mitattu (B-4)
 - [X] Hostinger-suunnitelman frontend Jinja + HTMX → React (`frontend/`), tietokanta → PostgreSQL + TimescaleDB.
