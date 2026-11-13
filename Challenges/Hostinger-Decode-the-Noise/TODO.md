@@ -78,7 +78,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | **DONE** koodi + fallback; live Router kun avain saadaan |
 | C-8 | T+28 → 30 | Integraatio dashboardiin (A) | P1 | S | **PREP** `network_pass` → API/graph maps; odottaa A-11/A-12 UI |
 | C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | **DONE** suodatin + `known_weaknesses` (oikea data myöhemmin) |
-| C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **Integraatio T+34** |
+| C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **PREP** `bouncer.network.hidden` valmis; ajo odottaa A-15 paljastusta |
 | C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | **DRAFT** valmis puhuttavaksi (`docs/PITCH.md` C-osio); diat A:n kanssa T+38 |
 
 **Jos aikaa jää (vain C):**

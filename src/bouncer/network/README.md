@@ -7,6 +7,7 @@
 | `campaign_graph(...)` | — | nodes/edges A:n dashboardille |
 | `evaluate_campaigns(...)` | S9 | purity/coverage (C-6); live lock odottaa A:n stuffing-labeleita |
 | `network_pass(sessions)` | C-8 | S4+S5+graafi + B-maps (`intel_by_ip_contract`, `campaign_by_session`, `campaigns_api`) |
+| `python -m bouncer.network.hidden` | C-10 | Piilotettu ajo → löytyikö kampanja (ei retunea); `--write` vasta oikealla datalla |
 
 Puhtaita funktioita: **ei tietokantakirjoituksia**. A:n worker kutsuu näitä.
 

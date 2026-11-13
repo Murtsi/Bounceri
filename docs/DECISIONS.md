@@ -93,6 +93,13 @@ Decision: `country` täytetään vain kun `asn_prefixes.json`-rivillä on ekspli
 Consequences: Demossa FI-koti/mobiili näyttää maan; globaalit cloud-IP:t jäävät ilman maata. Ei väitetä GeoIP-tarkkuutta.
 Revisit if: tarvitaan oikea GeoIP pitchiin tai Hostinger tarjoaa valmiin feedin.
 
+### 034 — C-10 hidden campaign eval ei saa uudelleensäätää
+Date: 2026-11-14
+Context: B-11 lukitsee mallin; C:n pitää raportoida löytyikö piilotettu ajo kampanjana ilman klusterointikynnysten säätöä.
+Decision: `bouncer.network.hidden` ajaa nykyisen `find_campaigns()`:n sellaisenaan paljastetuille ajo-ID:ille. `--write` kieltäytyy synteettiseltä datalta ja ylikirjoitukselta.
+Consequences: Jos kampanjaa ei löydy, se raportoidaan rehellisesti (`found_campaign: false`).
+Revisit if: A:n paljastus tuo uuden label-muodon.
+
 ## Public release preparation (2026-11-13)
 
 - Local PostgreSQL and Adminer host ports bind to `127.0.0.1`. The public example credentials are suitable only for local development; exposing these tools requires a separate deployment decision.

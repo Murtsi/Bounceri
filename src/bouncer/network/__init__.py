@@ -7,6 +7,7 @@ from bouncer.network.bots import VERIFIABLE_CRAWLER_TOKENS, verify_search_bot
 from bouncer.network.campaigns import find_campaigns
 from bouncer.network.eval import evaluate_campaigns, load_campaign_metrics
 from bouncer.network.graph import campaign_graph
+from bouncer.network.hidden import evaluate_hidden_campaigns
 from bouncer.network.intel import ip_intel, ip_intel_contract
 from bouncer.network.pipeline import (
     campaign_to_api,
@@ -28,6 +29,7 @@ __all__ = [
     "campaigns_by_session",
     "contract_intel_by_ip",
     "evaluate_campaigns",
+    "evaluate_hidden_campaigns",
     "find_campaigns",
     "intel_by_ip",
     "intel_for_sessions",
