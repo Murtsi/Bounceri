@@ -124,9 +124,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     sessions, labels, synthetic = load(a.source)
     intel_fn = campaigns_fn = None
     if not a.offline:
-        from bouncer.network import find_campaigns, ip_intel
+        from bouncer.network import find_campaigns, ip_intel_contract
 
-        intel_fn, campaigns_fn = ip_intel, find_campaigns
+        # C:n virallinen B-polku: S4-muoto ilman C:n sisäistä threat_labelia (päätös 040)
+        intel_fn, campaigns_fn = ip_intel_contract, find_campaigns
     intel, camps = network_signals(sessions, intel_fn, campaigns_fn)
     try:
         h = evaluate_hidden(

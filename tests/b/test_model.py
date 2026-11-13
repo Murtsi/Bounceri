@@ -105,6 +105,24 @@ def test_score_with_model_gives_three_reasons(trained):
     assert all("laski bottitodennäköisyyttä" in r for r in h.reasons)
 
 
+def test_reasons_skip_unmeasurable_features(trained):
+    from .synthetic import CURL_UA, req, session
+
+    _, _, m = trained
+    one = session([req(0, "/login", ua=CURL_UA, status=401, content_type="text/plain")], ua=CURL_UA)
+    v = score(one, None, None, traps=frozenset(), model=m)
+    joined = " ".join(v.reasons)
+    for word in (
+        "Keskitahti",
+        "Huipputahti",
+        "Session kesto",
+        "välien vaihtelu",
+        "Referer",
+        "otsakkeita",
+    ):
+        assert word not in joined, (word, v.reasons)
+
+
 def test_rules_still_win_over_model(trained):
     sessions, _, m = trained
     v = score(sessions["scan19"], None, None, traps=frozenset(), model=m)

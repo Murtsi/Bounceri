@@ -36,6 +36,9 @@ from bouncer.session import rules
 #: Vähimmäismäärä kumpaakin luokkaa, jotta opetus/kalibrointi/testi -jako on mahdollinen.
 MIN_PER_CLASS = 10
 
+#: Kun sessio kuuluu moneen C:n kampanjaan, B käyttää tarkinta (pienempi = ensin).
+CAMPAIGN_PRIORITY = {"credential_stuffing": 0}
+
 IntelFn = Callable[[str], Any]
 CampaignsFn = Callable[[Sequence[Session]], Iterable[Any]]
 
@@ -81,8 +84,11 @@ def network_signals(
     koska C:n `Campaign.session_ids` voi olla int (S2-linjaus kesken)."""
     intel_by_ip = {ip: intel_fn(ip) for ip in sorted({s.ip for s in sessions})} if intel_fn else {}
     by_str = {str(s.id): s.id for s in sessions}
+    camps = list(campaigns_fn(sessions)) if campaigns_fn else []
+    # Sama sessio voi kuulua moneen kampanjaan; tarkin tyyppi voittaa (päätös 042).
+    camps.sort(key=lambda c: CAMPAIGN_PRIORITY.get(getattr(c, "kind", ""), len(CAMPAIGN_PRIORITY)))
     campaign_by_session: dict[Any, Any] = {}
-    for camp in campaigns_fn(sessions) if campaigns_fn else ():
+    for camp in camps:
         for sid in camp.session_ids:
             if str(sid) in by_str:
                 campaign_by_session.setdefault(by_str[str(sid)], camp)
@@ -184,9 +190,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     sessions, labels, synthetic = load(a.source, a.since)
     intel_fn = campaigns_fn = None
     if not a.offline:
-        from bouncer.network import find_campaigns, ip_intel
+        from bouncer.network import find_campaigns, ip_intel_contract
 
-        intel_fn, campaigns_fn = ip_intel, find_campaigns
+        # C:n virallinen B-polku: S4-muoto ilman C:n sisäistä threat_labelia (päätös 040)
+        intel_fn, campaigns_fn = ip_intel_contract, find_campaigns
     r = run(
         sessions, labels, synthetic=synthetic, intel_fn=intel_fn, campaigns_fn=campaigns_fn,
         exclude_runs=a.exclude_run, write=a.write,

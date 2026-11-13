@@ -39,24 +39,47 @@ class Feature:
     value: Callable[[SessionFeatures, IpIntel | None, Campaign | None], float]
     describe: Callable[[SessionFeatures, IpIntel | None, Campaign | None], str]
     network: bool = False  # C:n signaali → pois ablaatiossa
+    #: Onko piirre mitattavissa tästä sessiosta. Ei → ei käytetä syynä (arvo
+    #: menee silti malliin). Esim. tahti yhdestä pyynnöstä ei kerro mitään.
+    applies: Callable[[SessionFeatures], bool] = lambda f: True
 
 
 def _b(x: bool) -> float:
     return 1.0 if x else 0.0
 
 
+def _pace(f: SessionFeatures) -> bool:
+    return f.n_requests >= 2
+
+
+def _cv(f: SessionFeatures) -> bool:
+    return f.interarrival_cv is not None
+
+
+def _pages(f: SessionFeatures) -> bool:
+    return f.html_share * f.n_requests >= 2
+
+
+def _browser_pages(f: SessionFeatures) -> bool:
+    return not f.ua_is_tool and f.html_share > 0
+
+
 FEATURES: tuple[Feature, ...] = (
     Feature("log_n_requests", lambda f, i, c: math.log1p(f.n_requests),
             lambda f, i, c: f"{f.n_requests} pyyntöä sessiossa"),
     Feature("log_duration", lambda f, i, c: math.log1p(f.duration_s),
-            lambda f, i, c: f"Session kesto {f.duration_s:.0f} s"),
+            lambda f, i, c: f"Session kesto {f.duration_s:.0f} s",
+            applies=_pace),
     Feature("log_rpm", lambda f, i, c: math.log1p(f.requests_per_min),
-            lambda f, i, c: f"Keskitahti {f.requests_per_min:.0f} pyyntöä/min"),
+            lambda f, i, c: f"Keskitahti {f.requests_per_min:.0f} pyyntöä/min",
+            applies=_pace),
     Feature("log_peak_rpm", lambda f, i, c: math.log1p(f.peak_requests_per_min),
-            lambda f, i, c: f"Huipputahti {f.peak_requests_per_min} pyyntöä/min"),
+            lambda f, i, c: f"Huipputahti {f.peak_requests_per_min} pyyntöä/min",
+            applies=_pace),
     Feature("interarrival_cv", lambda f, i, c: f.interarrival_cv or 0.0,
             lambda f, i, c: "Pyyntöjen välien vaihtelu "
-            + ("ei mitattavissa" if f.interarrival_cv is None else f"{f.interarrival_cv:.2f}")),
+            + ("ei mitattavissa" if f.interarrival_cv is None else f"{f.interarrival_cv:.2f}"),
+            applies=_cv),
     Feature("cv_missing", lambda f, i, c: _b(f.interarrival_cv is None),
             lambda f, i, c: "Alle 3 pyyntöä: välien vaihtelua ei voi mitata"),
     Feature("static_share", lambda f, i, c: f.static_share,
@@ -76,9 +99,11 @@ FEATURES: tuple[Feature, ...] = (
             lambda f, i, c: f"{f.vuln_path_hits} haavoittuvuuspolkua"),
     Feature("header_inconsistency", lambda f, i, c: f.header_inconsistency_share,
             lambda f, i, c: "Selaimen otsakkeita puuttui "
-            f"{f.header_inconsistency_share:.0%} sivuista"),
+            f"{f.header_inconsistency_share:.0%} sivuista",
+            applies=_browser_pages),
     Feature("missing_referer", lambda f, i, c: f.missing_referer_share,
-            lambda f, i, c: f"Referer puuttui {f.missing_referer_share:.0%} sisäsivuista"),
+            lambda f, i, c: f"Referer puuttui {f.missing_referer_share:.0%} sisäsivuista",
+            applies=_pages),
     Feature("ua_is_tool", lambda f, i, c: _b(f.ua_is_tool),
             lambda f, i, c: "User-Agent on työkalu tai kirjasto" if f.ua_is_tool
             else "User-Agent on selain"),
@@ -259,6 +284,8 @@ def reasons(
     for name, c in ranked:
         if sign * c <= 0 or len(out) == k:
             break
+        if not by_name[name].applies(feats):
+            continue
         verb = "nosti" if c > 0 else "laski"
         out.append(
             f"{by_name[name].describe(feats, intel, campaign)} ({verb} bottitodennäköisyyttä)"
