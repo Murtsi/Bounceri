@@ -11,7 +11,7 @@ Bounceri is a Junction 2026 prototype for **Hostinger — Decode the Noise**. It
 
 The repository contains session features and detection rules, temporal evaluation and threshold selection, IP intelligence, campaign detection, and optional explanations through Hostinger AI Router. Rule-based explanations work without an API key. A's starter integration draft is already on `main` via PR #5: shared type proposals, a six-row synthetic Caddy log, sample parser/sessionizer, and trap-path list.
 
-The application is not end-to-end yet. Postgres migrations, log ingestion and `load_sessions()`/`load_labels()`, demo site, API and dashboard are missing. B's evaluation tooling is implemented, but committed metrics remain stubs until sufficient non-synthetic data exists. Before changing shared contracts, A/B/C must resolve session/campaign ID types and the login-event shape; the current parser emits integer session IDs while the shared contract and B expect strings, and C's adapter assumes numeric IDs.
+The application is not end-to-end yet. Postgres migrations, log ingestion and `load_sessions()`/`load_labels()`, demo site, API and dashboard are missing. B's evaluation tooling is implemented, but committed metrics remain stubs until sufficient non-synthetic data exists. Session/campaign IDs are strings at the Python boundary (S2). Seed a local store with `PYTHONPATH=src python -m bouncer.db seed`, then B can use `--source db`. Login-event schema and Postgres writer are still open.
 
 Hostinger VPS/domain are reported to exist, but a working public application and AI Router key are not verified. The local Compose file starts development database tools only.
 

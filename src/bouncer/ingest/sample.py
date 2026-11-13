@@ -89,13 +89,13 @@ def parse_access_record(record: Mapping[str, Any]) -> tuple[Request, str | None]
     return request, marker or None
 
 
-def parse_sim_run(value: str, session_id: int) -> SessionLabel:
+def parse_sim_run(value: str, session_id: str | int) -> SessionLabel:
     """Parse ``run-id:class[:campaign-id]`` without guessing unknown classes."""
     parts = value.split(":", 2)
     if len(parts) < 2 or not parts[0] or not parts[1]:
         raise ValueError(f"Invalid X-Sim-Run marker: {value!r}")
     campaign_id = parts[2] if len(parts) == 3 and parts[2] not in {"", "-"} else None
-    return SessionLabel(session_id, parts[0], parts[1], campaign_id)
+    return SessionLabel(str(session_id), parts[0], parts[1], campaign_id)
 
 
 def parse_access_records(
@@ -125,7 +125,8 @@ def parse_access_records(
                 batches[-1].append(entry)
 
         for index, batch in enumerate(batches, start=1):
-            session_id = len(sessions) + 1
+            # S2: stable string IDs at the Python boundary (DB ints → str later).
+            session_id = str(len(sessions) + 1)
             requests = tuple(item[0] for item in batch)
             sessions.append(
                 Session(

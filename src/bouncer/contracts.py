@@ -54,7 +54,7 @@ class IpIntel:
 
 @dataclass(frozen=True, slots=True)
 class Campaign:
-    """C's S5 result. ID and collection shapes need confirmation with C."""
+    """C's S5 result. ``session_ids`` are strings (S2 / päätös 039)."""
 
     id: str
     kind: str

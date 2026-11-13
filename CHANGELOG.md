@@ -39,6 +39,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 - [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)
+- [X] `AGENTS.md`: kaistarajat eivät enää estä toisen polun muokkausta; CODEOWNERS on review-apuri (päätös 044).
+- [A] BREAKING S2: sample-ingest/`SessionLabel` käyttävät `str`-session-id:itä; B:n strict-xfail poistettu (A-1/S2).
+- [A] S3: `bouncer.db.load_sessions` / `load_labels` + paikallinen JSON-store + `python -m bouncer.db seed` (Postgres-migraatio 001 valmis; live-writer myöhemmin) (A-5/A-6, päätös 045).
 - [C] BREAKING S2: `Campaign.session_ids` ja session-id:t C:ssä ovat `str` (A:n contracts); `make_campaign()` normalisoi; duck-type lukee `user_agent` + `X-Login-User` (C-4, päätös 039).
 - [C] C-4: stuffing-fixture + testi A:n `load_sample_data`-ingestiä vasten; A:n `access.sample.jsonl` smoke (ei stuffingia) (C-4).
 - [C] `network_pass()` / `intel_for_sessions()`: yksi kutsu A:n workerille (S4+S5+graafi).

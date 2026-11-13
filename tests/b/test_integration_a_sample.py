@@ -74,10 +74,6 @@ def test_feature_report_runs_on_sample(sample):
     assert "## simulated/bad_bot" in to_markdown(rep)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="S2: Session.id on str, mutta A:n lukija antaa int (PR #5). Poista, kun korjattu.",
-)
 def test_session_ids_are_strings_per_contract(sample):
     sessions, labels = sample
     assert all(isinstance(s.id, str) for s in sessions)

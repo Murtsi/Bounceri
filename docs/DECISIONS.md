@@ -86,8 +86,8 @@ Huom: numerot 015–043 voivat törmätä muiden kaistojen samanaikaisiin merkin
 ### 039 — S2: session- ja kampanja-ID:t merkkijonoina
 Date: 2026-11-14
 Context: A:n `contracts.Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` on tyypitetty `str`:ksi; C:n aiemmat stubit ja testit käyttivät `int`-id:itä.
-Decision: C hyväksyy S2:n merkkijonoina. `session_view.as_session_view` stringifioi aina (`str(id)`), `make_campaign()` rakentaa `tuple[str, ...]`, evaluaattori vertaa `str`-avaimilla. A:n sample-ingest voi vielä syöttää int-id:itä runtimeen — C kestää sen.
-Consequences: B/A voivat käyttää UUID/hash-id:itä ilman C-muutosta; vanhat int-olettavat testit C:ssä päivitetty. Kampanja-metrics lukitaan vasta kun A:n login-stuffing -simu on merkitty `X-Sim-Run`:lla. B:n `eval.run.network_signals` voi pudottaa int-kommentin.
+Decision: C hyväksyy S2:n merkkijonoina. `session_view.as_session_view` stringifioi aina (`str(id)`), `make_campaign()` rakentaa `tuple[str, ...]`, evaluaattori vertaa `str`-avaimilla. A:n sample-ingest stringifioi ID:t (korjattu).
+Consequences: B/A voivat käyttää UUID/hash-id:itä ilman C-muutosta. Kampanja-metrics lukitaan vasta kun A:n login-stuffing -simu on merkitty `X-Sim-Run`:lla.
 Revisit if: A vaihtaa id-tyypin takaisin intiksi (epätodennäköistä) tai Postgres-sarake vaatii uuid.
 
 ### 040 — IpIntel.country curated ASN-listasta, ei GeoIP
@@ -103,6 +103,20 @@ Context: B-11 lukitsee mallin; C:n pitää raportoida löytyikö piilotettu ajo 
 Decision: `bouncer.network.hidden` ajaa nykyisen `find_campaigns()`:n sellaisenaan paljastetuille ajo-ID:ille. `--write` kieltäytyy synteettiseltä datalta ja ylikirjoitukselta.
 Consequences: Jos kampanjaa ei löydy, se raportoidaan rehellisesti (`found_campaign: false`).
 Revisit if: A:n paljastus tuo uuden label-muodon.
+
+### 044 — Kaistarajat eivät estä toisen polun työtä
+Date: 2026-11-13
+Context: Hackathonissa pullonkaula (A:n S3) esti B/C:tä; tiimi pyysi, että AI/tekijä saa tehdä A-työtä C-kaistalta.
+Decision: `AGENTS.md` §4/§8: kaistat = oletusvastuut + CODEOWNERS-review, ei kieltoa. Kuka tahansa saa korjata toisen polun; changelog-tunniste kertoo kaistan.
+Consequences: Nopeampi integraatio; riskinä päällekkäiset editit — pidä PR:t pieninä ja pyydä omistajan review.
+Revisit if: tiimi haluaa tiukan omistajuuden takaisin sunnuntaina.
+
+### 045 — S3 paikallinen JSON-store ennen Postgres-writeria
+Date: 2026-11-13
+Context: B:n `eval.run --source db` tarvitsee `load_sessions`/`load_labels` heti; Compose-Postgres + writer vie kauemmin.
+Decision: Ensimmäinen S3 = `.bouncer_store.json` + `python -m bouncer.db seed`. SQL-migraatio `001_init.sql` on valmiina; writer kytketään samaan rajapintaan myöhemmin.
+Consequences: B/C voivat integroida ilman live-DB:tä; synteettinen store merkitään `synthetic: true`.
+Revisit if: Postgres-writer on valmis → store jää vain offline-fallbackiksi.
 
 ## Public release preparation (2026-11-13)
 

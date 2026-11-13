@@ -6,6 +6,7 @@
 *.key
 secrets/
 .vscode/*.local.json
+.bouncer_store.json
 
 # --- OS ---
 .DS_Store
