@@ -14,6 +14,9 @@ KNOWN_WEAKNESSES: tuple[str, ...] = (
     "opetettu oikealla datalla ja tallennettu (models/model.json).",
     "Säännöt eivät koskaan päätä 'human'; ihmiseksi luokittelu vaatii mallin ja kalibroidut "
     "kynnykset.",
+    "Malli oppii C:n kampanjajäsenyyden painon vain, jos opetusdatassa on kampanjoita: "
+    "PoC:ssa (synteettinen data) C löysi tunnusten kokeilun, mutta B jätti sessiot "
+    "'uncertain'-luokkaan.",
     "Malli (lr-v1) on lineaarinen: piirteiden yhteisvaikutukset (esim. nopea tahti vain "
     "ilman CSS/JS-pyyntöjä) eivät näy, ellei niitä lisätä piirteiksi.",
     "Väärennetty Googlebot/Bingbot IP-osoitteesta, jolla ei ole PTR-tietuetta, saa "

@@ -35,8 +35,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Malli `lr-v1` (`bouncer.session.model`): logistinen regressio puhtaalla Pythonilla 20 piirteen päällä, 3 syytä jokaiselle päätökselle kertoimista. `score()` ajaa varmat säännöt ensin ja sitten mallin, jos `models/model.json` on olemassa; muuten käytös on ennallaan (`rules-v1`). `bouncer.eval.train.train_and_evaluate`: opetus, kalibrointi ja testi ajan mukaan, ablaatio uudelleenopetuksella. Synteettisellä datalla malli tunnistaa scraperit, jotka säännöiltä jäävät ohi; mallia ei ole tallennettu eikä `metrics.json`:ia päivitetty, koska oikeaa dataa ei ole (B-6, päätökset 034–036)
 - [B] Ajoskripti `python -m bouncer.eval.run`: yksi komento lataa sessiot ja labelit (A:n näyte nyt, A:n tietokanta myöhemmin), hakee C:n IP-tiedot ja kampanjat, kokoaa datasetin, kirjoittaa piirreraportin ja opettaa ja arvioi mallin; `--write` tallentaa `metrics.json`:n ja mallin vain oikealla datalla. A:n näytteellä se kertoo, että labeloitua dataa on liian vähän (B-7, päätös 037)
 - [B] Piilotettu hyökkäys (`python -m bouncer.eval.hidden --run <ajo-id>`): jäädytetty malli ja kynnykset, ei uudelleenopetusta; tunnistusosuus ansat päällä ja ilman ansoja; `--write` lisää tuloksen `metrics.json`:n `split.hidden_attack`-kenttään muuttamatta muita lukuja eikä ylikirjoita aiempaa tulosta. Valmis T+34:ää varten (B-11, päätös 038)
+- [B] Proof of concept `notebooks/b/poc.py`: A:n parseri → C:n IP-tiedot ja kampanjat → B:n säännöt ja malli → C:n selitys ilman LLM:ää, A:n näytteellä ja C:n tunnusten kokeilun fixturella (synteettinen data, ei tietokantaa). B:n ja C:n integraatiotesti `tests/b/test_integration_c.py` (DNS mockattuna) (päätökset 042–043)
 
 ### Changed
+- [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)
 - [C] BREAKING S2: `Campaign.session_ids` ja session-id:t C:ssä ovat `str` (A:n contracts); `make_campaign()` normalisoi; duck-type lukee `user_agent` + `X-Login-User` (C-4, päätös 039).
 - [C] C-4: stuffing-fixture + testi A:n `load_sample_data`-ingestiä vasten; A:n `access.sample.jsonl` smoke (ei stuffingia) (C-4).
 - [C] `network_pass()` / `intel_for_sessions()`: yksi kutsu A:n workerille (S4+S5+graafi).
@@ -62,6 +64,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [B] Mallin syistä jätetään pois piirteet, joita sessiosta ei voi mitata (esim. tahti yhdestä pyynnöstä, otsakkeet työkalu-UA:lta) (päätös 043)
 - [X] `docs/DECISIONS.md`: kaistan C päätökset 032–034 numeroitu uudelleen 039–041:ksi, koska samat numerot olivat jo kaistan B käytössä; viittaukset korjattu (README, TEAM.md, C:n kommentit, CHANGELOG)
 - [B] Väärennetyn hakukonebotin sääntö tarkistaa vain Googlebotin ja Bingbotin, eli samat kuin C:n `ip_intel()` varmistaa; aiemmin oikea Applebot/DuckDuckBot/YandexBot/Baiduspider olisi leimautunut `bad_bot`iksi integraatiossa (B-4)
 - [X] Hostinger-haasteen README ajan tasalle: "Missä mennään" -osio (kaistojen tila, sopimukset S1–S11, seuraavat askeleet); roolit ja stack merkitty päätetyiksi
