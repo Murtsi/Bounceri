@@ -6,7 +6,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 - [C] Stubit S4/S5/S7/S9: `ip_intel` → `asn_type=unknown`, `find_campaigns` → `[]`, `explain` reasons-tekstinä, `campaign_metrics.json` stub (C-1).
-- [C] `ip_intel` C-2: Googlebot/Bingbot käänteinen+forward DNS -varmistus; offline CIDR→ASN-tyyppi (datacenter/residential).
+- [C] `ip_intel` C-2: Googlebot/Bingbot käänteinen+forward DNS -varmistus; offline CIDR→ASN-tyyppi (datacenter/residential/mobile).
+- [C] `find_campaigns` C-3: credential stuffing / distributed spray / low-and-slow sessioiden yli (C-3).
+- [C] `find_campaigns` C-5: behavior-klusterointi (header FP + path Jaccard/MinHash + union-find).
+- [C] `evaluate_campaigns` C-6: purity/coverage truth-kampanja-id:itä vasten.
+- [C] `explain` C-7: AI Router -polku + groundedness-guardrail + fallback ilman avainta.
+- [C] PRE-4 mentori­kysymykset: `Challenges/Hostinger-Decode-the-Noise/MENTOR_QUESTIONS.md`.
 - Hackathon scaffold: docs, CI, docker-compose, pre-commit hook, devcontainer.
 - [X] `Challenges/`-kansio: idea-tason suunnitelmat Hostinger (Decode the Noise) ja Valio Aimo (Trusted Trade Agents) -haasteille.
 - [X] Hostinger-suunnitelma: kolme kaistaa ilman päällekkäisyyksiä — A alusta + hyökkääjä, B session tunnistus + arviointi, C verkosto- ja kampanjatunnistus + selitykset; sopimukset S1–S11.

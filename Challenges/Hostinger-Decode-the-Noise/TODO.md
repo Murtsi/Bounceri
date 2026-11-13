@@ -13,7 +13,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | PRE-1 | Hostinger-VPS, domain ja AI Router -avain käsiin | S | Murtsi | Kick-off / Hostingerin piste |
 | PRE-2 | Käydään `TEAM.md` läpi yhdessä | S | kaikki | 30 min — roolit päätetty (014) |
 | PRE-3 | Python 3.12 + Docker toimii jokaisella | S | kaikki | |
-| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | |
+| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | Kysymykset valmiina `MENTOR_QUESTIONS.md` — vastaukset kick-offissa |
 
 ---
 
@@ -69,13 +69,13 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
-| C-1 | T+0 → 1 | `ip_intel()`-, `find_campaigns()`- ja `explain()`-stubit + `campaign_metrics.json`-stub | P0 | S | **DONE** (haara `c/stubs-c1`) — S4, S5, S7, S9 |
-| C-2 | T+1 → 5 | `ip_intel()`: hakukonebottien varmistus (käänteinen + eteenpäin DNS), offline-ASN-tietokanta, datakeskus / koti / mobiili | P0 | M | **DONE** (DNS + curated CIDR; mobile ASN myöhemmin) |
-| C-3 | T+5 → 10 | Tunnusten kokeilu sessioiden yli: sama tunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti | P0 | L | Testit `tests/c` stub-dataa vasten |
-| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **Integraatio T+12** |
-| C-5 | T+12 → 20 | Kampanjat: otsakesormenjälki + polkujärjestys (MinHash) + ajoituksen synkronointi → klusterointi (union-find / DBSCAN) | P0 | L | **Integraatio T+20** |
-| C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | `campaign_metrics.json` |
-| C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | |
+| C-1 | T+0 → 1 | `ip_intel()`-, `find_campaigns()`- ja `explain()`-stubit + `campaign_metrics.json`-stub | P0 | S | **DONE** |
+| C-2 | T+1 → 5 | `ip_intel()`: hakukonebottien varmistus (käänteinen + eteenpäin DNS), offline-ASN-tietokanta, datakeskus / koti / mobiili | P0 | M | **DONE** |
+| C-3 | T+5 → 10 | Tunnusten kokeilu sessioiden yli: sama tunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti | P0 | L | **DONE** (syntettinen data; C-4 = oikea loki) |
+| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **BLOCKED** A:n samples/ingest (T+7/T+12) |
+| C-5 | T+12 → 20 | Kampanjat: otsakesormenjälki + polkujärjestys (MinHash) + ajoituksen synkronointi → klusterointi (union-find / DBSCAN) | P0 | L | **DONE** union-find+Jaccard/MinHash; DBSCAN skip |
+| C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | **DONE** evaluaattori; lukitus odottaa A:n labeleita |
+| C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | **DONE** koodi + fallback; live Router kun avain saadaan |
 | C-8 | T+28 → 30 | Integraatio dashboardiin (A) | P1 | S | **Integraatio T+30** |
 | C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | Kirjattu `known_weaknesses`:iin |
 | C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **Integraatio T+34** |
@@ -110,4 +110,7 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 
 | ID | Card | Blocked on | Since | Owner |
 |---|---|---|---|---|
-| | | | | |
+| C-4 | Stuffing oikeaa dataa vasten | A-4/A-5 samples + ingest + login fields | 2026-11-13 | Joonas |
+| C-8 | Integraatio dashboardiin | A-11/A-12 API + UI | — | Joonas |
+| C-10 | Piilotettu hyökkäys | A-15 paljastus T+34 | — | Joonas |
+| PRE-4 | Mentorivastaukset | Hostinger kick-off | — | Joonas |
