@@ -16,7 +16,7 @@ concurrency:
 jobs:
   hygiene:
     name: Repo hygiene
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Run repository checks
@@ -24,7 +24,7 @@ jobs:
 
   compose:
     name: Compose config
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Validate docker-compose.yml
@@ -33,7 +33,7 @@ jobs:
   # Enable this once the stack is chosen and the Makefile commands are set.
   # stack:
   #   name: Stack checks
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-24.04
   #   steps:
   #     - uses: actions/checkout@v4
   #     - uses: actions/setup-node@v4
