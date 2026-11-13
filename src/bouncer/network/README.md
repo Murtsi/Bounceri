@@ -11,4 +11,4 @@
 
 Puhtaita funktioita: **ei tietokantakirjoituksia**. A:n worker kutsuu näitä.
 
-S2: session-/campaign-id:t `str` (päätös 032). Duck-typing: `session_view.py` lukee `id`/`user_agent`/`ua`/`paths`/`headers`/`login_attempts`/`requests` (+ `X-Login-User`).
+S2: session-/campaign-id:t `str` (päätös 039). Duck-typing: `session_view.py` lukee `id`/`user_agent`/`ua`/`paths`/`headers`/`login_attempts`/`requests` (+ `X-Login-User`).

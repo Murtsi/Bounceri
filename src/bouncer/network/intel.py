@@ -16,7 +16,7 @@ def ip_intel(ip: str) -> IpIntel:
     """Palauta IP-tiedot: verified_bot, ASN, asn_type, country, threat_label.
 
     `country` tulee curated ASN-prefixeistä (ei MaxMind/GeoIP) — vain kun
-    listassa on eksplisiittinen `country`-kenttä (päätös 033).
+    listassa on eksplisiittinen `country`-kenttä (päätös 040).
     """
     bot = verify_search_bot(ip)
     asn = lookup_asn(ip)
