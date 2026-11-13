@@ -27,7 +27,7 @@ powershell -ExecutionPolicy Bypass -File scripts\win.ps1 up
 
 Either path calls the same scripts; CI runs `bash scripts/check.sh` directly.
 
-App conventions live in [`CONTRIBUTING.md`](CONTRIBUTING.md); the demo-day plan in [`docs/DEMO.md`](docs/DEMO.md).
+App conventions live in [`CONTRIBUTING.md`](CONTRIBUTING.md); the demo-day plan in [`docs/DEMO.md`](docs/DEMO.md); the work queue in [`TODO.md`](TODO.md).
 
 ## Repository layout
 
