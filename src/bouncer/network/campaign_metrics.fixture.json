@@ -1,0 +1,21 @@
+{
+  "stub": false,
+  "purity": 1.0,
+  "coverage": 1.0,
+  "n_predicted": 1,
+  "n_truth": 1,
+  "per_campaign": [
+    {
+      "id": "stuffing:admin",
+      "kind": "credential_stuffing",
+      "size": 4
+    }
+  ],
+  "known_weaknesses": [
+    "Shared NAT / venue Wi-Fi / mobile carrier NAT: many humans behind one IP can look like a single actor (C-9).",
+    "Behavior clustering suppressed when ≥70% sessions share one residential/mobile IP with diverse UAs."
+  ],
+  "synthetic": true,
+  "source": "C:/Users/etula/OneDrive/Työpöytä/Projektit/JunctionHackathon/tests/c/fixtures/stuffing_access.jsonl",
+  "note": "Synthetic C-4 fixture only — not production S9. Do not copy into dashboard as live campaign_metrics."
+}

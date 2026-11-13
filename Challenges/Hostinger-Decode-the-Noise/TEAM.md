@@ -26,7 +26,7 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 | `src/site/` | A | Demosivusto, kirjautumislomake, ansapolut, QR-sivu |
 | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, **pipeline-worker** |
 | `src/bouncer/db/` | A | Skeema, migraatiot, `load_sessions()` |
-| `src/bouncer/contracts.py` | A (muutokset 3 hengen sopimuksella) | Jaetut tyypit: `Request`, `Session`, `IpIntel`, `Campaign`, `Verdict`, `SessionLabel`; **S2 lukittu (032):** `Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` = `str` |
+| `src/bouncer/contracts.py` | A (muutokset 3 hengen sopimuksella) | Jaetut tyypit: `Request`, `Session`, `IpIntel`, `Campaign`, `Verdict`, `SessionLabel`; **S2 lukittu (039):** `Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` = `str` |
 | `samples/` | A | Lokinäytteet, joita vasten kaikki testaavat |
 | `tools/sim/` | A | Hyökkäys- ja ihmissimulaattorit |
 | `tools/sim/hidden/` | A (**ei B:lle eikä C:lle** ennen T+34) | Piilotettu hyökkäys — omassa yksityisessä haarassa/gistissä kunnes paljastetaan |

@@ -20,6 +20,18 @@
 | 3 | Result | | |
 | 4 | Wow | | |
 
+## Kaista C — swarm beat (Joonas, ~35 s)
+
+| Step | Click | Say |
+|---|---|---|
+| 1 | Open a session flagged as login abuse | "One IP is easy." |
+| 2 | Switch to campaign / graph view | "We stitch dozens of IPs into one actor — same username, same path order, same timing." |
+| 3 | Point at campaign node (IP → session → campaign) | "That is not one bot. That is a campaign." |
+| 4 | Mention known weakness | "Shared NAT looks the same — we suppress it and list it under known weaknesses." |
+| 5 | Open explanation | "The LLM never decides. Hostinger AI Router only narrates the reasons; if it is down, you still see them." |
+
+Offline failover: pre-render `campaign_graph` JSON + fallback `explain()` text (no Router key required).
+
 ## Failure plan
 
 | Failure | Do this |
