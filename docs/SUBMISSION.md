@@ -5,7 +5,11 @@
 - [ ] Public, `main` green, README updated with the real pitch and screenshots
 - [ ] `LICENSE` present (MIT by default)
 - [ ] No `.env`, no keys, no personal data in history (`git log -p -- .env` is empty)
-- [ ] Runs from a clean clone: `make setup && make up && make dev`
+- [ ] Tests pass from a clean clone: `uv run --no-project --python 3.12 --with pytest pytest tests -q`
+- [ ] Demo startup instructions match the implemented app; `make dev` is still a scaffold placeholder
+- [ ] Scan tracked files, untracked release files and all Git history for credentials
+- [ ] Publish only synthetic/sanitised traffic fixtures; exclude real logs and database exports
+- [ ] Read `SECURITY.md`; check PRs and compare the release commit with the remote branch
 - [ ] Seed data included so judges reproduce the demo
 - [ ] Tagged: `git tag -a demo -m "Junction submission" && git push --tags`
 

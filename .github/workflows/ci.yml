@@ -48,17 +48,15 @@ jobs:
       - name: Validate docker-compose.yml
         run: docker compose config --quiet
 
-  # Enable this once the stack is chosen and the Makefile commands are set.
-  # stack:
-  #   name: Stack checks
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: lts/*
-  #         cache: npm
-  #     - run: npm ci
-  #     - run: make lint
-  #     - run: make test
-  #     - run: make build
+  tests:
+    name: Python tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test runner
+        run: python -m pip install pytest
+      - name: Run all team tests
+        run: python -m pytest tests -q

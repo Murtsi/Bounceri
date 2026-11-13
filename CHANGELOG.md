@@ -5,6 +5,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
+- [A] Public-release preparation: English setup/status README and private vulnerability-reporting guidance; preserve synthetic ingestion fixtures and tests in Git.
+- [A] S2-datatyyppien alustava ehdotus, kuuden rivin Caddy JSONL -testifixture, fixture-parseri (sessiointi + `X-Sim-Run`) ja stub-ansalista; session/campaign ID-muodot vaativat B/C-hyväksynnän ja 50 rivin stub, Postgres-ingest, live-loki ja palvelu ovat vielä kesken (A-1, luonnos `a/person-a-integration`-haarassa)
+- [A] `deploy/traps.txt` lisätty B:n sääntöjen kehitystestejä varten; polut eivät ole vielä demosivustossa (A-1)
 - [C] Stubit S4/S5/S7/S9: `ip_intel` → `asn_type=unknown`, `find_campaigns` → `[]`, `explain` reasons-tekstinä, `campaign_metrics.json` stub (C-1).
 - [C] `ip_intel` C-2: Googlebot/Bingbot käänteinen+forward DNS -varmistus; offline CIDR→ASN-tyyppi (datacenter/residential/mobile).
 - [C] `find_campaigns` C-3: credential stuffing / distributed spray / low-and-slow sessioiden yli (C-3).
@@ -28,6 +32,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Arviointi (`bouncer.eval.evaluate.run_evaluation`): temporaalinen train/test-jako, kynnykset vain opetusjoukolla (ihmisten FPR ≤ 1 %), luvut testijoukolla S8-muodossa: ihmisten FPR + 95 %:n Wilson-yläraja, luokka- ja alaluokkakohtaiset luvut, sekaannusmatriisi, simuloitu/oikea/piilotettu hyökkäys erikseen ja ablaatio ilman C:n verkostosignaaleja. Ansat pois päältä arvioinnissa; synteettisen datan lukuja ei voi kirjoittaa `metrics.json`:iin. `metrics.json` on yhä stub, koska oikeaa dataa ei ole (B-7, B-8, päätökset 028–031)
 
 ### Changed
+- [A] Local PostgreSQL/Adminer ports bind to loopback; ignore private traffic, database exports and credential files in Git and Docker build contexts. Public example credentials are explicitly marked for local development.
+- [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi
 - [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon
 - [C] Origin → `Murtsi/Bounceri`; `c/stubs-c1` rebasoitu uuden mainin päälle; juuren README listaa C:n polut + `tests/c`
 - [C] C-9: shared NAT / venue-WiFi -suodatin behavior-kampanjoille; `known_weaknesses` päivitetty.
