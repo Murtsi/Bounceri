@@ -81,3 +81,13 @@ class Verdict:
     score: float  # 0 = varmasti ihminen, 1 = varmasti botti
     reasons: tuple[str, ...]  # enintään 3, tärkein ensin
     model_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class SessionLabel:
+    """A:n `load_labels()` (S3): `X-Sim-Run: <ajo-id>:<luokka>:<kampanja-id>` (S10)."""
+
+    session_id: str
+    run_id: str
+    sim_class: str  # A:n simulaattorin luokka, esim. "scraper", "human_playwright"
+    campaign_id: str | None = None
