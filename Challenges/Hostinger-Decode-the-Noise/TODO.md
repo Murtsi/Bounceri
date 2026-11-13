@@ -13,7 +13,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | PRE-1 | Hostinger-VPS, domain ja AI Router -avain käsiin | S | Murtsi | Kick-off / Hostingerin piste |
 | PRE-2 | Käydään `TEAM.md` läpi yhdessä | S | kaikki | 30 min — roolit päätetty (014) |
 | PRE-3 | Python 3.12 + Docker toimii jokaisella | S | kaikki | |
-| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | |
+| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | Kysymykset valmiina `MENTOR_QUESTIONS.md` — vastaukset kick-offissa |
 
 ---
 
@@ -53,8 +53,8 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | B-4 | T+8 → 12 | Varmat säännöt (ansat, C:n `verified_bot`, haavoittuvuuspolut) + `reasons` — **tehty** (`b/rules`, odottaa PR:ää; ansat aktivoituvat kun A:n `traps.txt` on olemassa) | P0 | M | **Integraatio T+12**: oikea `score()` |
 | B-5 | T+12 → 14 | Datasetti: `labels` + ansat + C:n varmistetut botit — **koodi valmis** (`b/dataset`); odottaa A:n `load_sessions()`/`load_labels()` (S3) ja simulaattoriluokkien nimiä | P0 | M | Labeloitu datasetti |
 | B-6 | T+14 → 18 | Malli; syötteinä myös C:n `IpIntel` ja kampanjajäsenyys; 3 syytä per päätös | P0 | L | |
-| B-7 | T+18 → 20 | Arviointi: temporaalinen jako, simuloitu vs. oikea erikseen, kynnykset (ihmisten FPR < 1 %) | P0 | M | **Integraatio T+20**: oikea `metrics.json` |
-| B-8 | T+20 → 24 | Ablaatio: tulos ilman C:n verkostosignaaleja | P1 | M | `ablation` `metrics.json`:issa |
+| B-7 | T+18 → 20 | Arviointi: temporaalinen jako, simuloitu vs. oikea erikseen, kynnykset (ihmisten FPR < 1 %) — **koodi valmis** (`main`); oikeat luvut odottavat A:n dataa (S1, S3) | P0 | M | **Integraatio T+20**: oikea `metrics.json` |
+| B-8 | T+20 → 24 | Ablaatio: tulos ilman C:n verkostosignaaleja — **koodi valmis** (`main`, osa arviointia) | P1 | M | `ablation` `metrics.json`:issa |
 | B-9 | T+24 → 30 | Virheanalyysi: väärät positiiviset käsin läpi → `known_weaknesses`, piirteiden korjaus | P1 | L | |
 | B-10 | T+30 → 34 | Uudelleenopetus kertyneellä datalla, kalibrointi | P1 | M | |
 | B-11 | T+34 → 36 | Piilotettu hyökkäys läpi **ilman uudelleenopetusta** → `split.hidden_attack` | P0 | M | **Integraatio T+34** — tulos raportoidaan sellaisenaan |
@@ -69,19 +69,21 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
 | ID | Aika | Card | Pri | Size | Valmis kun |
 |---|---|---|---|---|---|
-| C-1 | T+0 → 1 | `ip_intel()`-, `find_campaigns()`- ja `explain()`-stubit + `campaign_metrics.json`-stub | P0 | S | S4, S5, S7, S9 `main`-haarassa |
-| C-2 | T+1 → 5 | `ip_intel()`: hakukonebottien varmistus (käänteinen + eteenpäin DNS), offline-ASN-tietokanta, datakeskus / koti / mobiili | P0 | M | Googlebot-väärennös tunnistetaan |
-| C-3 | T+5 → 10 | Tunnusten kokeilu sessioiden yli: sama tunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti | P0 | L | Testit `tests/c` stub-dataa vasten |
-| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **Integraatio T+12** |
-| C-5 | T+12 → 20 | Kampanjat: otsakesormenjälki + polkujärjestys (MinHash) + ajoituksen synkronointi → klusterointi (union-find / DBSCAN) | P0 | L | **Integraatio T+20** |
-| C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | `campaign_metrics.json` |
-| C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | |
+| C-1 | T+0 → 1 | `ip_intel()`-, `find_campaigns()`- ja `explain()`-stubit + `campaign_metrics.json`-stub | P0 | S | **DONE** |
+| C-2 | T+1 → 5 | `ip_intel()`: hakukonebottien varmistus (käänteinen + eteenpäin DNS), offline-ASN-tietokanta, datakeskus / koti / mobiili | P0 | M | **DONE** |
+| C-3 | T+5 → 10 | Tunnusten kokeilu sessioiden yli: sama tunnus monesta IP:stä, hajautetut epäonnistuneet kirjautumiset, hidas tahti | P0 | L | **DONE** (syntettinen data; C-4 = oikea loki) |
+| C-4 | T+10 → 12 | Tunnusten kokeilu oikeaa dataa vasten | P0 | M | **BLOCKED** A:n samples/ingest (T+7/T+12) |
+| C-5 | T+12 → 20 | Kampanjat: otsakesormenjälki + polkujärjestys (MinHash) + ajoituksen synkronointi → klusterointi (union-find / DBSCAN) | P0 | L | **DONE** union-find+Jaccard/MinHash; DBSCAN skip |
+| C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | **DONE** evaluaattori; lukitus odottaa A:n labeleita |
+| C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | **DONE** koodi + fallback; live Router kun avain saadaan |
 | C-8 | T+28 → 30 | Integraatio dashboardiin (A) | P1 | S | **Integraatio T+30** |
-| C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | Kirjattu `known_weaknesses`:iin |
+| C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | **DONE** suodatin + `known_weaknesses` (oikea data myöhemmin) |
 | C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **Integraatio T+34** |
-| C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | |
+| C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | **DRAFT** `docs/PITCH.md` (C-osio) |
 
-**Jos aikaa jää (vain C):** kampanjagraafin visualisointidata (A piirtää) · threat-feed-lista (tunnetut haitalliset IP-alueet) piirteeksi.
+**Jos aikaa jää (vain C):**
+- [x] kampanjagraafin visualisointidata (`campaign_graph`) — A piirtää
+- [x] threat-feed-lista (`threat_prefixes.json` → `threat_label` IpIntelissä)
 
 ---
 
@@ -112,3 +114,7 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 |---|---|---|---|---|
 | PRE-1 | Hostinger-VPS, domain ja AI Router -avain | Tili-, domain- ja avaintilan vahvistus käyttäjältä | 2026-11-13 | Murtsi |
 | A-2 | Julkinen VPS-deploy (Docker/Caddy/TLS) | PRE-1:n valmistuminen ja julkisen endpointin saatavuus | 2026-11-13 | Murtsi |
+| C-4 | Stuffing oikeaa dataa vasten | A-4/A-5 samples + ingest + login fields | 2026-11-13 | Joonas |
+| C-8 | Integraatio dashboardiin | A-11/A-12 API + UI | — | Joonas |
+| C-10 | Piilotettu hyökkäys | A-15 paljastus T+34 | — | Joonas |
+| PRE-4 | Mentorivastaukset | Hostinger kick-off | — | Joonas |

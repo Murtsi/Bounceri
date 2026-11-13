@@ -67,7 +67,7 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 | S1 | `samples/access.sample.jsonl` — Caddyn JSON-lokin muoto | A → B, C | 50 riviä (nykyinen kuuden rivin JSONL on parserin fixture, ei korvaa sovittua stubia) | Oikea loki (T+7) |
 | S2 | `contracts.py` | A → B, C | Dataclassit | Muutokset vain sopimalla |
 | S3 | `load_sessions(since)` + `load_labels()` | A → B, C | JSONL-fixture ja `load_sample_data()` kehitykseen (ei vielä sopimuksen tuotantolataaja) | Postgres (T+12) |
-| S4 | `ip_intel(ip) -> IpIntel` (`verified_bot`, `asn`, `asn_type`, `country`) | C → B, A | `asn_type="unknown"` | T+5 |
+| S4 | `ip_intel(ip) -> IpIntel` (`verified_bot: bool \| None`, `asn`, `asn_type`, `country`) | C → B, A | `verified_bot=None`, `asn_type="unknown"` | T+5 — **sovittu 020+027:** DNS-virhe → `None`; lista = Googlebot+Bingbot (026) |
 | S5 | `find_campaigns(sessions) -> list[Campaign]` (`id`, `kind`, `session_ids`, `reasons`) | C → B, A | `[]` | Tunnusten kokeilu T+12, kampanjat T+20 |
 | S6 | `score(session, intel, campaign) -> Verdict` (`label`, `score`, `reasons[3]`, `model_version`) | B → A | Aina `uncertain` | Säännöt T+12, malli T+20 |
 | S7 | `explain(verdict, session, campaign) -> str` | C → A | B:n `reasons` tekstinä | LLM T+28 |

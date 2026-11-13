@@ -24,10 +24,10 @@ TRAPS_PATH = Path(__file__).resolve().parents[3] / "deploy" / "traps.txt"
 #: Montako *eri* haavoittuvuuspolkua tarvitaan varmaan päätökseen (päätös 019).
 VULN_PATHS_CERTAIN = 2
 
-#: Hakukonebotit, joiden aitous voidaan varmistaa käänteisellä DNS:llä (C:n S4).
-VERIFIABLE_CRAWLER_TOKENS = (
-    "googlebot", "bingbot", "applebot", "duckduckbot", "yandexbot", "baiduspider",
-)  # fmt: skip
+#: Hakukonebotit, jotka C:n `ip_intel()` (S4) oikeasti varmistaa DNS:llä. Lista
+#: PITÄÄ pitää samana kuin C:n `network/bots.py`: jos UA on crawler, jota C ei
+#: tarkista (esim. Applebot), `verified_bot=False` ei tarkoita väärennöstä.
+VERIFIABLE_CRAWLER_TOKENS = ("googlebot", "bingbot")
 
 
 @dataclass(frozen=True, slots=True)

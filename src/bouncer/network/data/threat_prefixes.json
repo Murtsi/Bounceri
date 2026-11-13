@@ -1,0 +1,11 @@
+{
+  "_comment": "Curated demo threat prefixes (not a live feed). asn_type forced to datacenter; reason shown in IpIntel via threat_hit.",
+  "prefixes": [
+    {"cidr": "185.220.100.0/22", "asn": 60729, "label": "tor_exit_ish", "org": "Known Tor-ish range (demo)"},
+    {"cidr": "45.227.254.0/24", "asn": 267784, "label": "scanner_hosting", "org": "Frequent scanner hosting (demo)"},
+    {"cidr": "194.26.29.0/24", "asn": 48666, "label": "bruteforce_hosting", "org": "Credential stuffing hosting (demo)"},
+    {"cidr": "91.240.118.0/24", "asn": 202425, "label": "scanner_hosting", "org": "Mass scanning range (demo)"},
+    {"cidr": "103.109.247.0/24", "asn": 137951, "label": "proxy_hosting", "org": "Open proxy / residential proxy (demo)"},
+    {"cidr": "5.188.86.0/23", "asn": 48666, "label": "bruteforce_hosting", "org": "Login attack source (demo)"}
+  ]
+}

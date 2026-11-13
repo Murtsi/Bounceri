@@ -27,8 +27,10 @@ src/bouncer/session/   B: session piirteet, säännöt, score()
 src/bouncer/eval/      B: datasetti, arviointi, metrics.json
 models/                B: metrics.json + mallit
 tests/b/               B: testit
+src/bouncer/network/   C: ip_intel, kampanjat (haara c/stubs-c1)
+src/bouncer/explain/   C: LLM-selitykset + fallback (haara c/stubs-c1)
+tests/c/               C: testit
 deploy/, src/site/, src/bouncer/{ingest,db,api}/, frontend/, tools/sim/   A (tulossa)
-src/bouncer/{network,explain}/                                            C (tulossa)
 scripts/               check.sh, check-changelog.sh, git-hook
 ```
 
@@ -37,6 +39,7 @@ scripts/               check.sh, check-changelog.sh, git-hook
 ```bash
 make check                                                       # repon tarkistukset + changelog (myös CI)
 uv run --no-project --python 3.12 --with pytest pytest tests/b   # kaistan B testit
+uv run --no-project --python 3.12 --with pytest pytest tests/c   # kaistan C testit
 make up                                                          # Postgres paikallisesti
 ```
 
