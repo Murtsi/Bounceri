@@ -129,14 +129,19 @@ def explanation_is_grounded(text: str, reasons: list[str], camp_reasons: list[st
 
 
 def _llm_explain(prompt: str) -> str | None:
-    api_key = os.getenv("HOSTINGER_AI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    api_key = (
+        os.getenv("HOSTINGER_AI_API_KEY")
+        or os.getenv("HOSTINGER_ROUTER_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+    )
     if not api_key:
         return None
+    # Docs: https://router.hostinger.com/v1 (OpenAI-compatible)
     base_url = os.getenv(
         "HOSTINGER_AI_BASE_URL",
-        os.getenv("OPENAI_BASE_URL", "https://api.hostinger.com/v1/ai/router"),
+        os.getenv("OPENAI_BASE_URL", "https://router.hostinger.com/v1"),
     )
-    model = os.getenv("LLM_MODEL", "gpt-4o-mini")
+    model = os.getenv("LLM_MODEL", "gemini-2.0-flash")
     try:
         from openai import OpenAI  # type: ignore
     except ImportError:

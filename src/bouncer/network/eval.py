@@ -23,7 +23,10 @@ STUB_METRICS: dict[str, Any] = {
     "n_predicted": 0,
     "n_truth": 0,
     "known_weaknesses": [
-        "Shared NAT / venue Wi-Fi: many humans look like one actor (C-9).",
+        "Shared NAT / venue Wi-Fi / mobile carrier NAT: many humans behind one IP "
+        "can look like a single actor (C-9).",
+        "Behavior clustering suppressed when ≥70% sessions share one residential/mobile "
+        "IP with diverse UAs.",
     ],
 }
 

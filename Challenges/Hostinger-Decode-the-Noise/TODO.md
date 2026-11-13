@@ -77,7 +77,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | C-6 | T+20 → 24 | Kampanjoiden arviointi A:n `kampanja-id`:tä vasten: puhtaus, kattavuus | P1 | M | **DONE** evaluaattori; lukitus odottaa A:n labeleita |
 | C-7 | T+24 → 28 | `explain()`: AI Router, vain B:n ja C:n syiden pohjalta; tarkistus ettei selitys väitä mitään syiden ulkopuolelta; varateksti | P1 | M | **DONE** koodi + fallback; live Router kun avain saadaan |
 | C-8 | T+28 → 30 | Integraatio dashboardiin (A) | P1 | S | **Integraatio T+30** |
-| C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | Kirjattu `known_weaknesses`:iin |
+| C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | **DONE** suodatin + `known_weaknesses` (oikea data myöhemmin) |
 | C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **Integraatio T+34** |
 | C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | |
 
