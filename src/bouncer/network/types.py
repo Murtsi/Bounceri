@@ -23,6 +23,8 @@ class IpIntel:
     asn: int | None = None
     asn_type: str = "unknown"  # unknown | datacenter | residential | mobile
     country: str | None = None
+    # Additive (ei BREAKING S4): offline threat-feed osuma, esim. "scanner_hosting"
+    threat_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

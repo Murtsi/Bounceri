@@ -79,9 +79,11 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | C-8 | T+28 → 30 | Integraatio dashboardiin (A) | P1 | S | **Integraatio T+30** |
 | C-9 | T+30 → 34 | Virheanalyysi: jaettu IP (toimisto, venue-WiFi, mobiili-NAT) → monta ihmistä näyttää yhdeltä toimijalta | P1 | M | **DONE** suodatin + `known_weaknesses` (oikea data myöhemmin) |
 | C-10 | T+34 → 36 | Piilotettu hyökkäys: löytyykö kampanjana? Tulos sellaisenaan | P0 | M | **Integraatio T+34** |
-| C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | |
+| C-11 | T+38 → 40 | Omat diat: kampanjat, selitykset | P0 | M | **DRAFT** `docs/PITCH.md` (C-osio) |
 
-**Jos aikaa jää (vain C):** kampanjagraafin visualisointidata (A piirtää) · threat-feed-lista (tunnetut haitalliset IP-alueet) piirteeksi.
+**Jos aikaa jää (vain C):**
+- [x] kampanjagraafin visualisointidata (`campaign_graph`) — A piirtää
+- [x] threat-feed-lista (`threat_prefixes.json` → `threat_label` IpIntelissä)
 
 ---
 
