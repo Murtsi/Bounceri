@@ -5,6 +5,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] S2-datatyyppien alustava ehdotus, kuuden rivin Caddy JSONL -testifixture, fixture-parseri (sessiointi + `X-Sim-Run`) ja stub-ansalista; session/campaign ID-muodot vaativat B/C-hyväksynnän ja 50 rivin stub, Postgres-ingest, live-loki ja palvelu ovat vielä kesken (A-1, luonnos `a/person-a-integration`-haarassa)
+- [A] `deploy/traps.txt` lisätty B:n sääntöjen kehitystestejä varten; polut eivät ole vielä demosivustossa (A-1)
 - Hackathon scaffold: docs, CI, docker-compose, pre-commit hook, devcontainer.
 - [X] `Challenges/`-kansio: idea-tason suunnitelmat Hostinger (Decode the Noise) ja Valio Aimo (Trusted Trade Agents) -haasteille.
 - [X] Hostinger-suunnitelma: kolme kaistaa ilman päällekkäisyyksiä — A alusta + hyökkääjä, B session tunnistus + arviointi, C verkosto- ja kampanjatunnistus + selitykset; sopimukset S1–S11.
@@ -20,6 +22,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Piirreraportti `bouncer.eval.feature_report`: piirteiden jakaumat (p10/mediaani/p90, True-osuus) erikseen simuloidulle ja oikealle liikenteelle luokittain, sekä lista ihmisiksi labeloiduista sessioista, joista löytyy bottihavaintoja (väärien positiivisten ehdokkaat). B-3:n työkalu; ajetaan oikeaa lokinäytettä vasten, kun se on olemassa (B-3)
 
 ### Changed
+- [A] Hostinger-haasteen tila ja A:n kortit dokumentoitu `main`-haaran/etähaarojen todisteiden mukaan; PRE-1/A-2 merkitty vahvistusta odottavaksi eikä synteettistä fixtureä väitetä oikeaksi liikenteeksi
 - [X] Repo siirretty: `Murtsi/JunctionHackathon` → `Murtsi/Bounceri`, koko historia mukana (yhdistetty uuden repon alkucommitin kanssa; `LICENSE` uuden repon versio). Vanhojen PR:ien #1–#6 linkit osoittavat yhä vanhaan repoon
 - [B] Ehdotus `IpIntel.verified_bot` → `bool | None` (`None` = ei tarkistettu), ettei C:n stub leimaa oikeita Googlebotteja väärennöksiksi; vaatii S4-sopimuksen hyväksynnän (B-4, päätös 020)
 - [B] `models/metrics.json` on edelleen stub, mutta `model_version` on nyt `rules-v1`; lukuja ei ole vielä mitattu (B-4)

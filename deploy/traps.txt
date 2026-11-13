@@ -1,0 +1,3 @@
+# Trap paths: one normalized path per line. Keep them absent from visible navigation.
+/.well-known/bouncer-canary
+/robots-probe/private
