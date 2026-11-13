@@ -23,12 +23,15 @@ flowchart LR
 
 | Component | Path | Owner | Responsibility |
 |---|---|---|---|
-| Proxy + demosivusto | `deploy/`, `src/site` | A | Caddy, TLS, JSON-loki, kirjautumislomake, ansapolut |
-| Ingest | `src/bouncer/ingest` | A | Lokin tail, parsinta, sessiointi (IP+UA, 5 min hiljaisuus katkaisee) |
-| Piirteet + pisteytys | `src/bouncer/detect` | B | Piirteet, säännöt, malli, kynnykset, kampanjat |
-| Arviointi | `src/bouncer/eval`, `tests/` | B | Labelit, train/test-jako, metriikat → `/metrics` |
-| Simulaattorit | `tools/sim` | C | Scraper, skanneri, tunnusten kokeilu, hidas skanneri, Playwright-"ihminen" |
-| API + dashboard | `src/bouncer/api`, `src/bouncer/web` | C | Endpointit, dashboard, LLM-selitykset |
+| Proxy + demosivusto | `deploy/`, `src/site/` | A | Caddy, TLS, JSON-loki, rate limit, kirjautumislomake, ansapolut |
+| Ingest + worker | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, `X-Sim-Run` → `labels`, kutsuu B:n `score()` ja `find_campaigns()` |
+| Tietokanta + sopimukset | `src/bouncer/db/`, `contracts.py`, `samples/` | A | Skeema, `load_sessions()`, jaetut tietotyypit |
+| Tunnistus | `src/bouncer/detect/`, `models/` | B | Piirteet, säännöt, malli, kynnykset, kampanjat — puhtaita funktioita ilman tietokantaa |
+| Arviointi | `src/bouncer/eval/`, `notebooks/` | B | Labelit, train/test-jako → `metrics.json` |
+| Simulaattorit | `tools/sim/` | C | Scraper, skanneri, tunnusten kokeilu, hidas skanneri, Playwright-"ihminen" |
+| API + dashboard + selitykset | `src/bouncer/api/`, `src/bouncer/web/`, `src/bouncer/explain/` | C | Endpointit, dashboard, `/metrics`-sivu, LLM-selitykset |
+
+Tarkka omistajuus, taulut ja sopimukset S1–S8: `TEAM.md`.
 
 Stack: Python 3.12, FastAPI, Postgres 16, scikit-learn / LightGBM, Jinja + HTMX (ei SPA:ta), Caddy, Docker Compose.
 
