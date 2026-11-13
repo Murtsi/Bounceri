@@ -1,8 +1,6 @@
 import json
 from dataclasses import dataclass
 
-import pytest
-
 from bouncer.contracts import IpIntel
 from bouncer.eval import run as runner
 from bouncer.session import model as mdl
@@ -31,9 +29,18 @@ def test_cli_sample_exit_codes(tmp_path, capsys):
     assert rep.read_text("utf-8").startswith("# Piirreraportti")
 
 
-def test_db_source_missing_is_clear():
-    with pytest.raises(SystemExit, match="bouncer.db"):
-        runner.load("db")
+def test_db_source_reads_a_store_and_its_synthetic_flag(tmp_path, monkeypatch):
+    from bouncer.db import seed_from_sample
+
+    store = tmp_path / "store.json"
+    monkeypatch.setenv("BOUNCER_STORE_PATH", str(store))
+    sessions, labels, synthetic = runner.load("db")
+    assert (sessions, labels, synthetic) == ([], [], False)  # tyhjä store
+    seed_from_sample(path=store)
+    sessions, labels, synthetic = runner.load("db")
+    assert len(sessions) == 3 and len(labels) == 1
+    assert synthetic is True  # näytteestä seedattu → ei saa kirjoittaa oikeiksi luvuiksi
+    assert all(isinstance(s.id, str) for s in sessions)
 
 
 # --- C:n signaalit ---------------------------------------------------------------

@@ -67,6 +67,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [B] `python -m bouncer.eval.run --source db` lukee A:n storesta tiedon, onko data synteettistä (`bouncer.db seed` näytteestä → synteettinen), joten `--write` ei tallenna näytteen lukuja oikeiksi
 - [B] Mallin syistä jätetään pois piirteet, joita sessiosta ei voi mitata (esim. tahti yhdestä pyynnöstä, otsakkeet työkalu-UA:lta) (päätös 043)
 - [X] `docs/DECISIONS.md`: kaistan C päätökset 032–034 numeroitu uudelleen 039–041:ksi, koska samat numerot olivat jo kaistan B käytössä; viittaukset korjattu (README, TEAM.md, C:n kommentit, CHANGELOG)
 - [B] Väärennetyn hakukonebotin sääntö tarkistaa vain Googlebotin ja Bingbotin, eli samat kuin C:n `ip_intel()` varmistaa; aiemmin oikea Applebot/DuckDuckBot/YandexBot/Baiduspider olisi leimautunut `bad_bot`iksi integraatiossa (B-4)
