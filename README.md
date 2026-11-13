@@ -2,7 +2,7 @@
 
 > Bouncer kertoo sivuston omistajalle, kuka sivulla oikeasti käy — ihminen, hyvä botti vai hyökkääjä — ja **miksi**, ja näyttää rehellisesti, kuinka usein se on väärässä.
 
-[![CI](https://github.com/Murtsi/JunctionHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/Murtsi/JunctionHackathon/actions/workflows/ci.yml)
+[![CI](https://github.com/Murtsi/Bounceri/actions/workflows/ci.yml/badge.svg)](https://github.com/Murtsi/Bounceri/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Haaste: **Hostinger — Decode the Noise**. Suunnitelma, kaistat ja tilanne: [`Challenges/Hostinger-Decode-the-Noise/`](Challenges/Hostinger-Decode-the-Noise/).
