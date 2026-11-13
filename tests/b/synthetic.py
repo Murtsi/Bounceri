@@ -7,9 +7,10 @@ lokinäytteillä ja `labels`-taululla (B-3, B-5).
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import UTC, datetime, timedelta
 
-from bouncer.contracts import Request, Session
+from bouncer.contracts import IpIntel, Request, Session, SessionLabel
 
 T0 = datetime(2026, 11, 14, 12, 0, 0, tzinfo=UTC)
 
@@ -108,3 +109,29 @@ def googlebot_session() -> Session:
     rs = [req(0.0, "/robots.txt", ua=GOOGLEBOT_UA, content_type="text/plain")]
     rs += [req(3.0 * i + 1, f"/p/{i}", ua=GOOGLEBOT_UA) for i in range(5)]
     return session(rs, ua=GOOGLEBOT_UA)
+
+
+def shift(s: Session, sid: str, minutes: float, ip: str | None = None) -> Session:
+    d = timedelta(minutes=minutes)
+    reqs = tuple(dataclasses.replace(r, ts=r.ts + d, ip=ip or r.ip) for r in s.requests)
+    return Session(sid, ip or s.ip, s.user_agent, s.started_at + d, s.ended_at + d, reqs)
+
+
+def corpus(n: int = 20):
+    """n kpl jokaista arkkityyppiä, tasaisesti 10 h:n ajalle, jokaisella oma IP."""
+    sessions, labels = {}, []
+    makers = [
+        ("human", human_session, "human_playwright"),
+        ("scan", curl_scanner_session, "scanner"),
+        ("scr", scraper_session, "scraper"),
+    ]
+    for i in range(n):
+        for prefix, make, cls in makers:
+            sid = f"{prefix}{i}"
+            ip = f"10.{len(prefix)}.0.{i}"
+            sessions[sid] = shift(make(), sid, minutes=30 * i, ip=ip)
+            labels.append(SessionLabel(sid, f"run-{prefix}-{i // 10}", cls))
+    gb = shift(googlebot_session(), "gb0", minutes=5, ip="66.249.66.1")
+    sessions["gb0"] = gb
+    intel = {"66.249.66.1": IpIntel(verified_bot=True)}
+    return sessions, labels, intel

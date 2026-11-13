@@ -10,9 +10,12 @@ from __future__ import annotations
 KNOWN_WEAKNESSES: tuple[str, ...] = (
     # Tunnistuksen kattavuus
     "Varmat säännöt (rules-v1) eivät tunnista scrapereita, jotka käyttävät selain-UA:ta "
-    "ilman haavoittuvuuspolkuja; ne jäävät 'uncertain'-luokkaan, kunnes malli (B-6) on käytössä.",
+    "ilman haavoittuvuuspolkuja; ne jäävät 'uncertain'-luokkaan, kunnes malli (B-6) on "
+    "opetettu oikealla datalla ja tallennettu (models/model.json).",
     "Säännöt eivät koskaan päätä 'human'; ihmiseksi luokittelu vaatii mallin ja kalibroidut "
     "kynnykset.",
+    "Malli (lr-v1) on lineaarinen: piirteiden yhteisvaikutukset (esim. nopea tahti vain "
+    "ilman CSS/JS-pyyntöjä) eivät näy, ellei niitä lisätä piirteiksi.",
     "Väärennetty Googlebot/Bingbot IP-osoitteesta, jolla ei ole PTR-tietuetta, saa "
     "verified_bot=None eikä jää kiinni väärennössäännöstä (päätös 027: turvallisempi "
     "ihmisille, mutta osa hyökkääjistä menee läpi).",

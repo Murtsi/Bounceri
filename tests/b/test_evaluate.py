@@ -1,10 +1,9 @@
-import dataclasses
 import json
 from datetime import timedelta
 
 import pytest
 
-from bouncer.contracts import IpIntel, Session, SessionLabel, Verdict
+from bouncer.contracts import IpIntel, SessionLabel, Verdict
 from bouncer.eval.dataset import build_dataset
 from bouncer.eval.evaluate import (
     Thresholds,
@@ -21,45 +20,19 @@ from bouncer.session import MODEL_VERSION, score
 
 from .synthetic import (
     T0,
+    corpus,
     curl_scanner_session,
     googlebot_session,
-    human_session,
     req,
-    scraper_session,
     session,
+    shift,
 )
 
 # --- synteettinen datasetti ----------------------------------------------------
 
 
-def _shift(s: Session, sid: str, minutes: float, ip: str | None = None) -> Session:
-    d = timedelta(minutes=minutes)
-    reqs = tuple(dataclasses.replace(r, ts=r.ts + d, ip=ip or r.ip) for r in s.requests)
-    return Session(sid, ip or s.ip, s.user_agent, s.started_at + d, s.ended_at + d, reqs)
-
-
-def _corpus(n: int = 20):
-    """n kpl jokaista arkkityyppiä, tasaisesti 10 h:n ajalle, jokaisella oma IP."""
-    sessions, labels = {}, []
-    makers = [
-        ("human", human_session, "human_playwright"),
-        ("scan", curl_scanner_session, "scanner"),
-        ("scr", scraper_session, "scraper"),
-    ]
-    for i in range(n):
-        for prefix, make, cls in makers:
-            sid = f"{prefix}{i}"
-            ip = f"10.{len(prefix)}.0.{i}"
-            sessions[sid] = _shift(make(), sid, minutes=30 * i, ip=ip)
-            labels.append(SessionLabel(sid, f"run-{prefix}-{i // 10}", cls))
-    gb = _shift(googlebot_session(), "gb0", minutes=5, ip="66.249.66.1")
-    sessions["gb0"] = gb
-    intel = {"66.249.66.1": IpIntel(verified_bot=True)}
-    return sessions, labels, intel
-
-
 def _dataset():
-    sessions, labels, intel = _corpus()
+    sessions, labels, intel = corpus()
     return sessions, build_dataset(sessions.values(), labels, intel_by_ip=intel), intel
 
 
@@ -175,7 +148,7 @@ def test_run_evaluation_with_rules_v1():
 def test_traps_are_disabled_during_evaluation():
     # Ansaan osunut, muuten tavallinen sessio: label "trap" → ei saa tunnistua ansasta.
     sessions, ds, intel = _dataset()
-    trap = _shift(
+    trap = shift(
         session([req(0, "/"), req(20, "/hidden-link")]), "trap0", 30 * 19 + 10, ip="10.9.9.9"
     )
     sessions["trap0"] = trap
@@ -192,7 +165,7 @@ def test_traps_are_disabled_during_evaluation():
 def test_ablation_without_network_signals():
     sessions, ds, _ = _dataset()
     # Väärennetty Googlebot testijaksolla: C:n verkostosignaali (verified_bot=False) tunnistaa sen.
-    fake = _shift(googlebot_session(), "fake0", 30 * 19, ip="10.7.7.7")
+    fake = shift(googlebot_session(), "fake0", 30 * 19, ip="10.7.7.7")
     sessions["fake0"] = fake
     ds.rows.extend(build_dataset([fake], [SessionLabel("fake0", "run-f", "scraper")]).rows)
     intel = {"10.7.7.7": IpIntel(verified_bot=False)}
@@ -204,7 +177,7 @@ def test_ablation_without_network_signals():
 
 def test_hidden_attack_is_reported_separately():
     sessions, ds, intel = _dataset()
-    hid = _shift(curl_scanner_session(), "hid0", 30 * 25, ip="10.8.8.8")
+    hid = shift(curl_scanner_session(), "hid0", 30 * 25, ip="10.8.8.8")
     sessions["hid0"] = hid
     hidden = build_dataset([hid], [SessionLabel("hid0", "hidden-run", "scanner")])
     res = run_evaluation(
