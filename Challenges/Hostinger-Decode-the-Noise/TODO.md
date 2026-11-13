@@ -32,7 +32,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | A-9 | T+18 → 20 | Playwright-"ihminen" + QR-sivu "selaa 30 s" | P0 | M | **Integraatio T+20**: ihmisdataa kertyy |
 | A-10 | T+20 → 21 | **Piilotettu hyökkäys** (eri tekniikka kuin muut), yksityisesti | P0 | M | Ajetaan T+21 → 34 taustalla |
 | A-11 | T+21 → 24 | Ohut API: sessiot, sessio, kampanjat, metrics, `/healthz`, `explain`-välimuisti | P0 | M | |
-| A-12 | T+24 → 30 | Dashboard: sessiolista, session näkymä, kampanjanäkymä, `/metrics`-sivu, livehyökkäys-nappi | P0 | L | **Integraatio T+30** |
+| A-12 | T+24 → 30 | Dashboard (React + shadcn/ui, tyypit OpenAPI:sta): sessiolista, session näkymä, kampanjanäkymä, `/metrics`-sivu, livehyökkäys-nappi | P0 | L | **Integraatio T+30** |
 | A-13 | T+30 → 32 | Etusivu Hostinger AI Builderilla + linkki dashboardiin | P1 | S | Sponsorin työkalu näkyvissä |
 | A-14 | T+32 → 34 | Lokin rotaatio, DB-varmuuskopio, rate limit, valvonta | P1 | M | |
 | A-15 | T+34 | Paljasta piilotettu hyökkäys B:lle ja C:lle | P0 | S | **Integraatio T+34** |

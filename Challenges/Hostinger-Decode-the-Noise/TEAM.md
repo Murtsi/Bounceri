@@ -28,7 +28,7 @@ Kolme henkilöä, kolme kaistaa, **ei päällekkäisyyksiä**. Kaksi kolmesta te
 | `samples/` | A | Lokinäytteet, joita vasten kaikki testaavat |
 | `tools/sim/` | A | Hyökkäys- ja ihmissimulaattorit |
 | `tools/sim/hidden/` | A (**ei B:lle eikä C:lle** ennen T+34) | Piilotettu hyökkäys — omassa yksityisessä haarassa/gistissä kunnes paljastetaan |
-| `src/bouncer/api/`, `src/bouncer/web/` | A | Ohut API ja dashboard |
+| `src/bouncer/api/`, `frontend/` | A | Ohut API ja dashboard |
 | `.github/workflows/` | A | CI |
 | `src/bouncer/session/` | B | Session piirteet, säännöt, malli, kynnykset, `score()` |
 | `src/bouncer/eval/` | B | Datasetin kokoaminen, train/test-jako, `metrics.json` |

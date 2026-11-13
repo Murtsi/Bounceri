@@ -25,6 +25,7 @@ hooks: ## Install the pre-commit hook
 
 check: ## Repo hygiene checks (also run by pre-commit and CI)
 	@bash scripts/check.sh
+	@bash scripts/check-changelog.sh
 
 dev: ## Start the dev server (edit DEV_CMD)
 	@$(DEV_CMD)

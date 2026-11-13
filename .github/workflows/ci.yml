@@ -22,6 +22,24 @@ jobs:
       - name: Run repository checks
         run: bash scripts/check.sh
 
+  changelog:
+    name: Changelog updated
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require a CHANGELOG.md entry (see AGENTS.md)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+          bash scripts/check-changelog.sh "$BASE" "$HEAD"
+
   compose:
     name: Compose config
     runs-on: ubuntu-24.04

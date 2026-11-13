@@ -31,7 +31,7 @@ A omistaa *missä ja milloin* koodi ajetaan, B ja C omistavat *mitä* lasketaan 
 | Ingest + worker | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, `X-Sim-Run` → `labels`, kutsuu C:n ja B:n funktioita |
 | Tietokanta + sopimukset | `src/bouncer/db/`, `contracts.py`, `samples/` | A | Skeema, `load_sessions()`, jaetut tietotyypit |
 | Simulaattorit (hyökkääjä) | `tools/sim/` | A | Scraper, skanneri, hidas skanneri, hajautettu tunnusten kokeilu, Playwright-"ihminen", piilotettu hyökkäys |
-| API + dashboard | `src/bouncer/api/`, `src/bouncer/web/` | A | Ohut API, dashboard, `/metrics`-sivu |
+| API + dashboard | `src/bouncer/api/`, `frontend/` | A | Ohut API, dashboard, `/metrics`-sivu |
 | Session tunnistus | `src/bouncer/session/`, `models/` | B | Piirteet, säännöt, malli, kynnykset, lopullinen `score()` |
 | Arviointi | `src/bouncer/eval/` | B | Datasetti, train/test-jako, ablaatio → `metrics.json` |
 | Verkostotunnistus | `src/bouncer/network/` | C | `ip_intel()`, tunnusten kokeilu sessioiden yli, `find_campaigns()`, `campaign_metrics.json` |
@@ -39,7 +39,7 @@ A omistaa *missä ja milloin* koodi ajetaan, B ja C omistavat *mitä* lasketaan 
 
 Tarkka omistajuus, taulut ja sopimukset S1–S11: `TEAM.md`.
 
-Stack: Python 3.12, FastAPI, Postgres 16, scikit-learn / LightGBM, Jinja + HTMX (ei SPA:ta), Caddy, Docker Compose.
+Stack (`docs/DECISIONS.md` 004–013): Python 3.12 + FastAPI, PostgreSQL 16 + TimescaleDB (`requests` hypertablena, dashboardin minuuttikäyrät continuous aggregateina), scikit-learn / LightGBM, frontend TypeScript + React + Vite + Tailwind + shadcn/ui (staattinen build, Caddy tarjoilee), Caddy, Docker Compose.
 
 ## Detection design
 
