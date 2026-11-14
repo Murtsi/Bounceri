@@ -198,3 +198,9 @@ Rejected: buffering arbitrary form bodies, treating lookup errors as spoofing, o
 Case history defaults to 100 rows with validated limit/offset and server-side origin filtering before pagination. A bounded three-query read loads page cases, relevant jobs and assessments. Existing public/private checks remain mandatory; UI origin/page keys are separate and changing origin resets pagination. Offset pages follow current history rather than an immutable historical cursor.
 
 Interrupted review recovery is an explicit operator action naming the running job and its expected worker, with confirmation that the worker has stopped. A transaction marks it unavailable/interrupted and releases only job.remaining. Dispatched pending/unknown reservations remain held, and no inference runner or retry is invoked. Automatic stale-job retry and automatic unknown-charge release were rejected.
+
+### 066 — Execute the existing browser suite in CI
+
+2026-11-14. Pin development-only Playwright 1.65.1 and run the existing browser checks through native Node tests and Vite's local server API. The runner starts on an ephemeral localhost port, creates isolated Chromium state, verifies nonempty checks, exits nonzero on failures, and closes browser/server even when startup or an assertion fails. CI uses Node 22.18.0 and installs Chromium system dependencies explicitly. No production bundle dependency or new UI test framework is introduced.
+
+Verified 7 unit tests, production build and 36 browser checks locally, including the exact CI Node version. Injected assertion/startup failures exited nonzero and cleaned up resources. GitHub's Ubuntu execution remains external verification; it is not claimed as locally run.

@@ -12,6 +12,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] Repeatable headless Chromium regression command runs the existing 36-check dashboard suite in CI, with browser/server cleanup on failure and a pinned development-only Playwright dependency.
 - [A] Checked, additive PostgreSQL migrations adopt existing investigation/review/enforcement data, serialize startup, reject schema/checksum drift, and ship in wheels and Hostinger capsules; CI exercises fresh databases, populated upgrades, rollback and concurrent writers.
 - [C] Explicit operator recovery closes a stopped worker's interrupted review without inference retry, releases only unused budget and retains dispatched charge reservations.
 - [X] Four-module evidence/capability matrix and a dependency-ordered implementation checklist; current documentation distinguishes implemented review/storage paths from pending durability and external real/hidden validation gates.
