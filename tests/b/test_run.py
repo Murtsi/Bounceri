@@ -1,6 +1,8 @@
 import json
 from dataclasses import dataclass
 
+import pytest
+
 from bouncer.contracts import IpIntel
 from bouncer.eval import run as runner
 from bouncer.session import model as mdl
@@ -101,3 +103,80 @@ def test_exclude_runs_drops_hidden_attack():
     sessions, labels, _ = corpus()
     r = runner.run(list(sessions.values()), labels, synthetic=True, exclude_runs=["run-scr-1"])
     assert r.dataset["excluded_runs"] == {"run-scr-1": 10}
+
+
+def test_import_context_never_invents_site_trap_or_current_dns_truth(monkeypatch):
+    from dataclasses import replace
+    sessions, _, _ = runner.load("sample")
+    session = sessions[0]
+    external = replace(session, requests=(replace(session.requests[0], path="/ordinary-page"),))
+    monkeypatch.setattr(runner.rules, "load_traps", lambda: frozenset({"/ordinary-page"}))
+    def forbidden_dns(ip):
+        raise AssertionError("historical import cannot get current DNS truth")
+    result = runner.run([external], [], synthetic=False, intel_fn=forbidden_dns,
+                        allow_site_labels=False)
+    assert result.dataset["labeled"] == 0
+    assert result.dataset["unlabeled"] == 1
+
+
+def test_synthetic_unlabeled_report_keeps_simulated_origin():
+    sessions, _, _ = runner.load("sample")
+    result = runner.run(sessions[:1], [], synthetic=True, allow_site_labels=False)
+    assert "## simulated/unlabeled" in result.report_md
+    assert "## real/unlabeled" not in result.report_md
+
+
+def test_incomplete_labeled_data_refuses_training_and_writes(tmp_path, monkeypatch):
+    sessions, labels, _ = corpus()
+    session_id = labels[0].session_id
+
+    def forbidden_training(*args, **kwargs):
+        raise AssertionError("incomplete feature contracts must not reach training")
+
+    monkeypatch.setattr(runner, "train_and_evaluate", forbidden_training)
+    result = runner.run(
+        list(sessions.values()), labels, synthetic=False, allow_site_labels=False,
+        unavailable_fields={session_id: ["bytes"]}, write=True,
+        metrics_path=tmp_path / "metrics.json", model_path=tmp_path / "model.json",
+    )
+    assert result.error == (
+        "opetus/arviointi estetty: labeloiduista sessioista puuttuu piirteiden lähdetietoja"
+    )
+    assert result.metrics is None and not result.saved and not result.written
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_import_masks_report_and_never_loads_site_traps_or_dns(tmp_path, monkeypatch):
+    from bouncer import network
+    from bouncer.db.store import _serialize_session, _write_raw
+
+    sessions, _, _ = runner.load("sample")
+    imported = sessions[0]
+    store = tmp_path / "import.json"
+    _write_raw({
+        "sessions": [_serialize_session(imported)], "labels": [], "synthetic": False,
+        "trap_policy": "unavailable_for_import",
+        "unavailable_fields": {imported.id: ["headers", "user_agent", "content_type"]},
+    }, store)
+    monkeypatch.setenv("BOUNCER_STORE_PATH", str(store))
+    monkeypatch.delenv("BOUNCER_TRAFFIC_DATABASE_URL", raising=False)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("historical import must not load current site or DNS truth")
+
+    monkeypatch.setattr(runner.rules, "load_traps", forbidden)
+    monkeypatch.setattr(network, "ip_intel_contract", forbidden)
+    report = tmp_path / "report.md"
+    assert runner.main(["--source", "db", "--report", str(report)]) == 0
+    text = report.read_text("utf-8")
+    assert "## real/unlabeled" in text
+    assert "| header_inconsistency_share | 1 | 1 |  |  |  |  |" in text
+    assert "| ua_is_tool | 1 | 1 |  |  |  |  |" in text
+
+
+def test_db_source_without_provenance_reader_fails_closed(monkeypatch):
+    from bouncer.db import store
+
+    monkeypatch.delattr(store, "is_synthetic")
+    with pytest.raises(SystemExit, match="provenance is unknown"):
+        runner.load("db")

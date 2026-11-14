@@ -15,6 +15,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] Authenticated private Caddy/normalized JSONL and standard nginx/Apache combined imports now return bounded per-line reports, redact credentials, pseudonymize targets, analyze offline, and atomically retain private native data with a redacted investigation; publication requires explicit synthetic permission and paid work is never queued automatically.
+- [X] Imported availability masks survive analysis, storage, case projection and evaluation: unknown values stay missing, incomplete labeled data cannot train/write models, and foreign logs never inherit current DNS/project trap truth or calibrated native models.
 - [C] Bounded live S4 network lookups retain checked times, resolver outcomes and curated/inferred ASN origins with expiring cache and cycle limits; timeout/failure stays unknown and hosted runtime selects the bounded path without paid inference.
 - [A] Traffic cases retain redacted resolver/rule/config/feature observations and complete scoped campaign relationships; gaps or missing members remain incomplete, and review consumes strict bounded candidate evidence without treating local predictions as original facts.
 - [A] Explicit SQL traffic selection for worker/API, bounded immutable JSON backfill and fresh rollback exports, private source resume state, and transactional 24-hour historical retention; Hostinger packaging enables the path only with an explicit cutover switch and keeps database credentials out of the simulator.
@@ -80,6 +82,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Dashboardin ammattitason UI: kaikki näkymät (yleiskuva, sessiot, kampanjat, mittarit) shadcn/ui-komponenteilla, dataviz-skillin validoima paletti (ihminen → hyvä botti → haitallinen → epävarma, CVD ΔE ≥ 9,2) vaaleaan ja tummaan tilaan, vaalea/tumma-kytkin (oletus käyttöjärjestelmän mukaan), liikennekaavio ja segmentoitu jakaumapalkki taulukkonäkymineen, toimenpidemerkit tilaväreillä + kuvakkeilla, sessiosuodatin määrineen, ja Bouncer-logoanimaatio ("ouncer" pomppaa B:stä) otsikkoon ja latausnäyttöön (pois päältä, jos käyttäjä on pyytänyt vähemmän liikettä) (päätös 057)
 
 ### Changed
+- [A] BREAKING: Migration 004 widens response-byte storage to BIGINT so valid public/native logs with response sizes above 2 GiB round-trip without loss.
+- [C] Review prompt v5 distinguishes generic imported URL patterns from known-site attack proof, and validates unknown account/shared-target counts without fabricating zero measurements.
 - [A] Native synthetic generator version 2 adds bounded-monitor and shared-NAT retry controls; existing frozen benchmark artifacts and unmeasured production metrics remain unchanged.
 - [C] Review prompt version 4 admits typed provenance/relationship evidence while preserving coordination abstention, deterministic attack prerequisites and advisory-only enforcement boundaries.
 - [C] Owner approved at most 20 additional synthetic-case review experiments after live validation; alternate local findings and controls, retain explicit experimental status, and preserve the $5 shared ledger and per-request ceilings.

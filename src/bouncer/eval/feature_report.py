@@ -15,10 +15,12 @@ havaintoja — eli mistä väärät positiiviset tulisivat.
 from __future__ import annotations
 
 import statistics
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import fields
 from typing import Any
 
-from bouncer.eval.dataset import Dataset
+from bouncer.contracts import TRAFFIC_UNAVAILABLE_FEATURES
+from bouncer.eval.dataset import Dataset, Origin
 from bouncer.session import rules
 from bouncer.session.features import SessionFeatures
 
@@ -33,11 +35,17 @@ def _quantiles(values: list[float]) -> dict[str, float]:
     return {"p10": q[0], "median": statistics.median(values), "p90": q[-1]}
 
 
-def summarise(feats: list[SessionFeatures]) -> dict[str, dict[str, Any]]:
+def summarise(
+    feats: list[SessionFeatures],
+    unavailable_features: Sequence[Collection[str]] | None = None,
+) -> dict[str, dict[str, Any]]:
     """Per piirre: lukumäärä, `None`-määrä ja p10/mediaani/p90 tai True-osuus."""
     out: dict[str, dict[str, Any]] = {}
     for name in FEATURE_NAMES:
-        vals = [getattr(x, name) for x in feats]
+        vals = [
+            None if unavailable_features and name in unavailable_features[i] else getattr(x, name)
+            for i, x in enumerate(feats)
+        ]
         present = [v for v in vals if v is not None]
         entry: dict[str, Any] = {"n": len(vals), "missing": len(vals) - len(present)}
         if present and all(isinstance(v, bool) for v in present):
@@ -48,16 +56,32 @@ def summarise(feats: list[SessionFeatures]) -> dict[str, dict[str, Any]]:
     return out
 
 
-def feature_report(ds: Dataset) -> dict[str, Any]:
+def feature_report(
+    ds: Dataset,
+    *,
+    unavailable_fields: Mapping[str, Collection[str]] | None = None,
+    unlabeled_origin: Origin = "real",
+) -> dict[str, Any]:
     """Jakaumat ryhmittäin `origin/truth` (simuloitu ja oikea erikseen) + labeloimattomat."""
-    groups: dict[str, list[SessionFeatures]] = {}
+    unavailable_fields = unavailable_fields or {}
+    groups: dict[str, list[tuple[str, SessionFeatures]]] = {}
     for r in ds.rows:
-        groups.setdefault(f"{r.origin}/{r.truth}", []).append(r.features)
+        groups.setdefault(f"{r.origin}/{r.truth}", []).append((r.session_id, r.features))
     if ds.unlabeled:
-        groups["real/unlabeled"] = [f for _, f in ds.unlabeled]
+        groups[f"{unlabeled_origin}/unlabeled"] = ds.unlabeled
     return {
         "summary": ds.summary(),
-        "groups": {k: summarise(v) for k, v in sorted(groups.items())},
+        "groups": {
+            group: summarise(
+                [features for _, features in rows],
+                [
+                    {name for field in unavailable_fields.get(sid, ())
+                     for name in TRAFFIC_UNAVAILABLE_FEATURES.get(field, ())}
+                    for sid, _ in rows
+                ],
+            )
+            for group, rows in sorted(groups.items())
+        },
     }
 
 

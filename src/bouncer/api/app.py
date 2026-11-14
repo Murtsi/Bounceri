@@ -20,6 +20,7 @@ from bouncer.api.enforcement import router as enforcement_router
 from bouncer.api.evaluation import router as evaluation_router
 from bouncer.api.investigations import admin_context, is_admin, public_legacy, router
 from bouncer.api.overview import enrich_campaigns, overview
+from bouncer.api.traffic_imports import router as traffic_import_router
 from bouncer.db.store import read_snapshot
 from bouncer.eval.metrics import METRICS_PATH
 from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
@@ -42,6 +43,7 @@ async def privacy_context(request: Request, call_next):
 app.include_router(router)
 app.include_router(enforcement_router)
 app.include_router(evaluation_router)
+app.include_router(traffic_import_router)
 
 
 def _store() -> dict[str, Any]:

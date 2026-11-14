@@ -166,3 +166,8 @@ Phase 1.2 is implemented and verified locally: normalized SQL history, atomic so
 ### Network/evidence checkpoint — 14 November 2026
 
 Phase 1.3–4 implementation is locally verified: bounded live S4 code, retained resolver/rule/config/feature observations, complete scoped campaign summaries, strict advisory review packets, and native v2 bounded/shared-NAT controls. Backend 739 tests/Ruff and packaged 21-session / 235-request SQL simulation pass, with no paid requests. Real resolver timeout remains unknown; no live deployment or real/hidden detector quality is claimed. Next: private log imports, remaining operations, consented/public evaluation data and the three new modules.
+
+
+### Private import checkpoint — 15 November 2026
+
+Phase 1.5 locally verified: bounded authenticated Caddy/normalized/combined uploads, per-line reports, credential removal/HMAC targets, availability-aware isolated local analysis, atomic private SQL/case persistence and explicit synthetic publication. Imported source context cannot create project trap/current DNS truth or unsupported training facts; paid calls/enforcement remain separately gated. Backend 888 tests with PostgreSQL, frontend 8 tests/build/36 browser checks and a private packaged HTTP import pass. Live rollout and real/hidden evaluation are not claimed. Next: health/backup/restore/resource/lifecycle operations, consent and evaluation, then new modules.

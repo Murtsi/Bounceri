@@ -16,7 +16,7 @@ A campaign_summary references complete scoped session evidence IDs, hashes its c
 
 The automatic case sampler includes complete connected campaign context when that scope has at most 32 sessions and every member exists. Otherwise it preserves the missing/oversized relationship as incomplete and review-ineligible. Neither storage nor review truncates a packet just to obtain eligibility. Existing byte/item gates remain; sufficiently large complete cases are stored with explicit review ineligibility.
 
-The Decision model sees original count/feature/provenance observations, with local labels, scores and rule IDs removed. Candidate relationships are not proof of a shared operator, maliciousness or social coordination. The bounded coordination answer remains unknown, and an observed coordination recommendation is rejected. Restrictive recommendations and maliciousness still require retained deterministic probe/trap observations. All review remains advisory; no model output activates enforcement. Prompt version traffic-review-v4 separates this context from earlier review cache keys.
+The Decision model sees original count/feature/provenance observations, with local labels, scores and rule IDs removed. Candidate relationships are not proof of a shared operator, maliciousness or social coordination. The bounded coordination answer remains unknown, and an observed coordination recommendation is rejected. Restrictive recommendations and maliciousness still require retained deterministic probe/trap observations. All review remains advisory; no model output activates enforcement. Prompt version traffic-review-v5 separates this context from earlier review cache keys.
 
 ## Evaluation limits
 

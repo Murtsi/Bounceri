@@ -99,3 +99,6 @@ For vulnerability reports, see [SECURITY.md](SECURITY.md). Bounceri is an adviso
 ## Durable traffic cutover
 
 The SQL traffic path now stores normalized events, sessions and labels with atomic source checkpoints. It is selected explicitly; the JSON compatibility path remains the default until its stopped writer is archived and verified. See [traffic storage, cutover, retention and fresh rollback](docs/TRAFFIC_STORAGE.md). Local PostgreSQL and packaged-runtime checks establish storage behavior, not real-world detector accuracy or live Hostinger deployment.
+
+
+Private native log uploads are now available through the authenticated [traffic import API](docs/TRAFFIC_IMPORTS.md). They preserve missing-data/source context, keep archives and cases private by default, and never create gold labels or queue paid reviews automatically.

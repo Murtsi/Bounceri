@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from bouncer.contracts import TRAFFIC_OPTIONAL_FIELDS, TRAFFIC_UNAVAILABLE_FEATURES
+
 from .config import MAX_REQUEST_BYTES
 
 LABELS = {"human", "good_bot", "bad_bot", "uncertain"}
@@ -39,7 +41,7 @@ DATA_FIELDS = (
     }
 )
 ATTACK_SIGNALS = {"probe", "trap", "vulnerability_probe", "trap_hit", "scan", "scanner"}
-SESSION_FIELDS = {"network_provenance", "rule_observations"}
+SESSION_FIELDS = {"network_provenance", "rule_observations", "unavailable_fields"}
 RULE_IDS = {"trap", "verified_crawler", "fake_crawler", "vuln_paths", "login_attack_campaign"}
 FEATURE_FIELDS = {
     "duration_s",
@@ -164,7 +166,10 @@ def _rules_valid(value, data) -> bool:
             valid = _finite_nonnegative(feature) and (not key.endswith("_share") or feature <= 1)
         if not valid:
             return False
-    return True
+    return not any(
+        TRAFFIC_UNAVAILABLE_FEATURES.get(field, frozenset()).intersection(features)
+        for field in data.get("unavailable_fields", [])
+    )
 
 
 def _validate_campaigns(evidence) -> None:
@@ -199,9 +204,9 @@ def _validate_campaigns(evidence) -> None:
                     "n_sessions",
                     "distinct_client_count",
                     "failed_logins",
-                    "shared_target_count",
                 }
             )
+            and (data["shared_target_count"] is None or _count(data["shared_target_count"]))
             and data["n_sessions"] == len(members)
             and 1 <= data["distinct_client_count"] <= len(members)
             and (data["window_seconds"] is None or _finite_nonnegative(data["window_seconds"]))
@@ -210,6 +215,9 @@ def _validate_campaigns(evidence) -> None:
             raise ValueError("invalid_evidence_packet")
         refs.add(data["campaign_ref"])
         facts = [sessions[ref] for ref in members]
+        targets_unknown = any("username" in fact.get("unavailable_fields", []) for fact in facts)
+        if targets_unknown != (data["shared_target_count"] is None):
+            raise ValueError("invalid_evidence_packet")
         session_refs = [fact.get("session_ref") for fact in facts]
         if (
             any(
@@ -225,7 +233,8 @@ def _validate_campaigns(evidence) -> None:
         ):
             raise ValueError("invalid_evidence_packet")
         if (
-            all("distinct_account_count" in fact for fact in facts)
+            data["shared_target_count"] is not None
+            and all("distinct_account_count" in fact for fact in facts)
             and data["shared_target_count"]
             > sum(fact["distinct_account_count"] for fact in facts) // 2
         ):
@@ -322,7 +331,13 @@ def validate_packet(packet: dict) -> dict:
             continue
         for key, value in data.items():
             valid = True
-            if key in COUNT_FIELDS:
+            if key == "unavailable_fields":
+                valid = (isinstance(value, list) and len(value) <= len(TRAFFIC_OPTIONAL_FIELDS)
+                         and all(isinstance(v, str) and v in TRAFFIC_OPTIONAL_FIELDS for v in value)
+                         and len(value) == len(set(value)))
+                if valid and "username" in value and "distinct_account_count" in data:
+                    valid = False
+            elif key in COUNT_FIELDS:
                 valid = _count(value)
             elif key in MAP_FIELDS:
                 valid = (
@@ -359,7 +374,7 @@ def validate_packet(packet: dict) -> dict:
             elif key == "path_category_version":
                 valid = value == "categories-v1"
             elif key == "category_provenance":
-                valid = value == "bouncer-path-categories-v1"
+                valid = value in {"bouncer-path-categories-v1", "generic-path-patterns-v1"}
             elif key == "session_ref":
                 valid = isinstance(value, str) and bool(
                     re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value)

@@ -588,3 +588,17 @@ def test_populated_001_upgrade_preserves_traffic_and_old_external_id_mapping(eng
     assert repo.load_sessions(source_key="legacy")[0].id == "1"
     assert repo.load_labels(source_key="legacy") == [SessionLabel("1", "legacy-run", "human")]
     assert len(repo.load_sessions(source_key="legacy")[0].requests) == 1
+
+
+def test_valid_large_response_size_round_trips(repository):
+    module = api()
+    request, session, _, payload = fixture_payload(count=1)
+    request = replace(request, bytes=3_000_000_000)
+    session = replace(session, requests=(request,))
+    payload["sessions"] = [_serialize_session(session)]
+    repository.apply_batch("large-response",
+                           events=[module.SourceEvent("one", 0, request, session.id)],
+                           snapshot=payload, checkpoint=module.Checkpoint("one", 100),
+                           expected_checkpoint=None)
+    stored = repository.load_sessions(source_key="large-response")[0].requests[0]
+    assert stored.bytes == 3_000_000_000

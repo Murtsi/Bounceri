@@ -201,6 +201,36 @@ class InvestigationStore:
         packet = traffic_packet(snapshot)
         if public_demo and not packet["synthetic"]:
             raise ValueError("only synthetic snapshots can be public demos")
+        with self.transaction() as conn:
+            case_id = self._create_case(conn, packet, source_key, public_demo)
+        return self.get_case(case_id, False)
+
+    def create_traffic_import(
+        self, snapshot: dict, *, source_key: str, report: dict, provenance: dict,
+        public_demo: bool = False,
+    ) -> dict:
+        """Atomically retain a private uploaded source and its redacted local case."""
+        from bouncer.db.traffic import TrafficRepository
+
+        if snapshot.get("labels"):
+            raise ValueError("uploaded traffic cannot supply trusted labels")
+        if type(snapshot.get("synthetic")) is not bool:
+            raise ValueError("traffic source synthetic provenance must be a boolean")
+        private_snapshot = snapshot | {
+            "import_report": report, "source_provenance": provenance,
+            "trap_policy": "unavailable_for_import",
+        }
+        packet = traffic_packet(private_snapshot)
+        if public_demo and not packet["synthetic"]:
+            raise ValueError("only synthetic snapshots can be public demos")
+        # Schema initialization/migrations must finish before acquiring the shared budget lock.
+        repository = TrafficRepository(self.engine)
+        with self.transaction() as conn:
+            repository._freeze_snapshot(conn, private_snapshot, source_key=source_key)
+            case_id = self._create_case(conn, packet, source_key, public_demo, "uploaded_log")
+        return self.get_case(case_id, False)
+
+    def _create_case(self, conn, packet, source_key, public_demo, source_kind=None):
         digest = hashlib.sha256(
             json.dumps(
                 {"source_scope": source_key, "packet": packet},
@@ -208,40 +238,40 @@ class InvestigationStore:
                 separators=(",", ":"),
             ).encode()
         ).hexdigest()
-        with self.transaction() as conn:
-            existing = conn.execute(
-                select(cases.c.id).where(
-                    cases.c.source_key == source_key, cases.c.evidence_hash == digest
-                )
-            ).scalar()
-            if existing:
-                case_id = existing
-            else:
-                case_id = identifier()
-                payload = {
-                    "id": case_id,
-                    "module": "clean_the_traffic",
-                    "source": {
-                        "kind": "fixture" if source_key == "fixture" else "monitored_traffic",
-                        "synthetic": packet["synthetic"],
-                    },
-                    "created_at": now(),
-                    "evidence_version": 1,
-                    "evidence_hash": digest,
-                    **packet,
-                }
-                conn.execute(
-                    insert(cases).values(
-                        id=case_id,
-                        source_key=source_key,
-                        evidence_hash=digest,
-                        public=public_demo,
-                        payload=payload,
-                        created_at=payload["created_at"],
-                    )
-                )
-                self._append(conn, case_id, None, "local", packet["local_assessment"], {})
-        return self.get_case(case_id, False)
+        existing = conn.execute(
+            select(cases.c.id).where(
+                cases.c.source_key == source_key, cases.c.evidence_hash == digest
+            )
+        ).scalar()
+        if existing:
+            return existing
+        case_id = identifier()
+        payload = {
+            "id": case_id,
+            "module": "clean_the_traffic",
+            "source": {
+                "kind": source_kind or (
+                    "fixture" if source_key == "fixture" else "monitored_traffic"
+                ),
+                "synthetic": packet["synthetic"],
+            },
+            "created_at": now(),
+            "evidence_version": 1,
+            "evidence_hash": digest,
+            **packet,
+        }
+        conn.execute(
+            insert(cases).values(
+                id=case_id,
+                source_key=source_key,
+                evidence_hash=digest,
+                public=public_demo,
+                payload=payload,
+                created_at=payload["created_at"],
+            )
+        )
+        self._append(conn, case_id, None, "local", packet["local_assessment"], {})
+        return case_id
 
     def list_cases(
         self, public_only: bool = True, *, limit=100, offset=0, origin="all"
@@ -260,7 +290,9 @@ class InvestigationStore:
                 )
             if origin == "real":
                 statement = statement.where(
-                    cases.c.payload["source"]["kind"].as_string() == "monitored_traffic"
+                    cases.c.payload["source"]["kind"].as_string().in_(
+                        ("monitored_traffic", "uploaded_log")
+                    )
                 )
             page = list(conn.execute(statement.limit(limit).offset(offset)).mappings())
             if not page:

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -72,11 +72,13 @@ def load(
                 "bouncer.db.load_sessions/load_labels (A, S3) puuttuu vielä — käytä --source sample"
             ) from e
         # A:n store kertoo, onko sisältö synteettistä (esim. `bouncer.db seed` näytteestä).
-        # Jos backend ei osaa kertoa, oletetaan oikea data (Postgres + oikea liikenne).
+        # Tuntematon alkuperä ei saa päätyä oikeiksi arviointiluvuiksi.
         try:
             from bouncer.db.store import is_synthetic
-        except ImportError:
-            synthetic = False
+        except ImportError as e:
+            raise SystemExit(
+                "traffic source provenance is unknown; is_synthetic is unavailable"
+            ) from e
         else:
             synthetic = is_synthetic()
         return list(load_sessions(since)), list(load_labels()), synthetic
@@ -114,11 +116,27 @@ def run(
     write: bool = False,
     metrics_path: Path | None = None,
     model_path: Path | None = None,
+    allow_site_labels: bool = True,
+    unavailable_fields: Mapping[str, Collection[str]] | None = None,
 ) -> RunResult:
-    intel_by_ip, campaign_by_session = network_signals(sessions, intel_fn, campaigns_fn)
-    ds = build_dataset(sessions, labels, intel_by_ip, rules.load_traps(), exclude_runs)
+    intel_by_ip, campaign_by_session = network_signals(
+        sessions, intel_fn if allow_site_labels else None, campaigns_fn
+    )
+    ds = build_dataset(
+        sessions, labels, intel_by_ip, rules.load_traps() if allow_site_labels else frozenset(),
+        exclude_runs,
+    )
     out = RunResult(synthetic, ds.summary(), len(human_alarms(ds)))
-    out.report_md = to_markdown(feature_report(ds))
+    out.report_md = to_markdown(feature_report(
+        ds, unavailable_fields=unavailable_fields,
+        unlabeled_origin="simulated" if synthetic else "real",
+    ))
+
+    if unavailable_fields and any(unavailable_fields.get(r.session_id) for r in ds.rows):
+        out.error = (
+            "opetus/arviointi estetty: labeloiduista sessioista puuttuu piirteiden lähdetietoja"
+        )
+        return out
 
     n_h = sum(r.truth == "human" for r in ds.rows if r.source != "dns")
     n_b = sum(r.truth != "human" for r in ds.rows if r.source != "dns")
@@ -202,9 +220,18 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         # C:n virallinen B-polku: S4-muoto ilman C:n sisäistä threat_labelia (päätös 040)
         intel_fn, campaigns_fn = ip_intel_contract, find_campaigns
+    allow_site_labels = True
+    unavailable_fields = None
+    if a.source == "db":
+        from bouncer.db.store import read_snapshot
+
+        snapshot = read_snapshot()
+        allow_site_labels = snapshot.get("trap_policy") != "unavailable_for_import"
+        unavailable_fields = snapshot.get("unavailable_fields")
     r = run(
         sessions, labels, synthetic=synthetic, intel_fn=intel_fn, campaigns_fn=campaigns_fn,
-        exclude_runs=a.exclude_run, write=a.write,
+        exclude_runs=a.exclude_run, write=a.write, allow_site_labels=allow_site_labels,
+        unavailable_fields=unavailable_fields,
     )  # fmt: skip
     if a.report:
         a.report.write_text(r.report_md + "\n", "utf-8")

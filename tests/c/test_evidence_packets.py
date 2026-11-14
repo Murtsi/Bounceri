@@ -271,3 +271,25 @@ def test_retained_adapter_packet_survives_investigation_store_and_model_validati
     assert value["evidence"] == case["evidence"]
     assert value["evidence"][-1]["data"]["member_refs"] == ["e1", "e2", "e3"]
     assert value["evidence"][0]["data"]["network_provenance"]["verified_bot"] is True
+
+
+def test_unavailable_header_measurements_cannot_be_reported_as_observed():
+    value = retained_packet()
+    data = value["evidence"][0]["data"]
+    data["unavailable_fields"] = ["headers"]
+    data["rule_observations"]["features"]["header_inconsistency_share"] = 1.0
+    with pytest.raises(ValueError):
+        validate_packet(value)
+
+
+def test_missing_target_logging_requires_unknown_campaign_count():
+    value = retained_packet()
+    member = next(e["data"] for e in value["evidence"] if e["kind"] == "session_summary")
+    member["unavailable_fields"] = ["username"]
+    member.pop("distinct_account_count", None)
+    relation = next(e["data"] for e in value["evidence"] if e["kind"] == "campaign_summary")
+    relation["shared_target_count"] = None
+    validate_packet(value)
+    relation["shared_target_count"] = 0
+    with pytest.raises(ValueError):
+        validate_packet(value)

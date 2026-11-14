@@ -12,7 +12,7 @@ The owner approved execution of modules plan.md and the audit fixes. Work is on 
 - [x] Phase 1.1: additive migrations for existing/new tables, populated upgrade and fresh/restart/concurrent tests.
 - [x] Phase 1.2: SQL request/session/label repository, atomic source checkpoints/event identity, readers/cutover/backfill/rollback and retention.
 - [x] Phase 1.3–4: bounded cached live network evidence and complete scoped campaign/rule provenance.
-- [ ] Phase 1.5: authenticated private log import with redaction/limits/reports.
+- [x] Phase 1.5: authenticated private log import with redaction/limits/reports.
 - [ ] Phase 1.6: detailed health, pagination, backup/restore, measured resources, deployment smoke.
 - [ ] Phase 1.7–8: consent records, real data collection, whole-actor/run/time holdouts, independent hidden attack and separate evaluation artifacts. External participants/independent author remain required; never fabricate their evidence.
 - [ ] Phase 2: private bounded media import/storage, locked offline/network-restricted C2PA verification and reproducible trust context, licensed fixtures/evaluator, authenticated case creation and result UI.
@@ -55,3 +55,13 @@ Bounded child-process S4 lookups, TTL/LRU and cycle budgets, private retained re
 Verification: 739 Python tests passed with disposable PostgreSQL, Ruff passed. Real lookup of 3.5.140.2 completed in 0.907 seconds as timeout/unknown while retaining curated ASN 16509; this is not live DNS verification. Packaged isolated SQL runtime with the bounded path ingested 21 sessions / 235 synthetic requests, checkpoint revision 7, no JSON primary and no paid calls; all owned resources removed. An additional inspection attempted during teardown was unavailable; do not claim that inspection passed. Independent review approved after the complete bounded sampler regression passed. Raw consent/public-data acquisition and independent withheld attack inputs remain unavailable; user intends public data mixed with real human activity.
 
 Next is Phase 1.5 private native log import, followed by operations, consent/enrollment and leakage-safe evaluation. Live Hostinger deployment/verified DNS/real-human and genuinely hidden quality gates remain separate; the overall goal is not complete.
+
+## Evidence: Phase 1.5 private import
+
+Implemented authenticated bounded traffic uploads for Caddy/normalized JSONL and standard nginx/Apache combined adapters; per-line numeric reports preserve later valid rows. Credential/query removal, per-import HMAC targets and declared field availability precede isolated offline deterministic analysis. Unknown headers cannot create learned-model/header-fingerprint claims; foreign site trap/current DNS labels are unavailable. Private SQL source/report/provenance and sanitized case/local assessment commit atomically. Default private visibility, explicit synthetic publication, no automatic paid/training/enforcement, and one actual job per API process hold even after cancellation.
+
+Availability/count types survive every boundary: unavailable account counts are omitted/shared-target counts stay null, reports mask unknown features, synthetic unlabeled origin remains simulated, and incomplete labeled inputs cannot write a model/metrics. Review v5 rejects generic imported path matches as attack proof. Migration004 preserves int64 response bytes. Malformed Unicode authorization/simulator markers fail closed without dropping valid traffic.
+
+Final checks: 888 Python tests passed with PostgreSQL enabled; Ruff, 8 frontend tests/build and 36 Chromium checks passed. Packaged isolated HTTP import returned 201 / accepted 1, private/non-synthetic case absent from public history, credential/target canaries absent, no paid requests/executions. All owned test containers/network/volumes were removed. Independent final review approved after fixes. Original uploads are not retained; only sanitized archives persist under the documented lifecycle boundary. Live Hostinger rollout and real/hidden evaluation remain unverified.
+
+Next: Phase 1.6 operations/health/backup/restore/resource and lifecycle work, then consent/collection/evaluation and the three independent modules. Overall objective remains active.

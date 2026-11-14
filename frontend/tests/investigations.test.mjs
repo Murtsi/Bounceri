@@ -64,3 +64,8 @@ test("review absence, outage, budget deferral, failure and unknown state stay di
   assert.equal(reviewState("deferred_budget").label, "Deferred · budget");
   assert.equal(reviewState("new_server_state").label, "Unknown review status");
 });
+
+
+test("uploaded traffic has an explicit origin without claiming verified human identity", () => {
+  assert.equal(sourceState({ kind: "uploaded_log", synthetic: false }).label, "Imported traffic");
+});

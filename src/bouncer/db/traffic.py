@@ -89,7 +89,7 @@ requests = Table(
     Column("status", Integer, nullable=False),
     Column("user_agent", Text, nullable=False, server_default=""),
     Column("query", Text, nullable=False, server_default=""),
-    Column("bytes", Integer, nullable=False, server_default=text("0")),
+    Column("bytes", BIGINT, nullable=False, server_default=text("0")),
     Column("headers", DOCUMENT, nullable=False, server_default=text("'{}'")),
     Column("content_type", Text),
     Column("username", Text),
@@ -276,6 +276,11 @@ class TrafficRepository:
 
     def save_snapshot(self, snapshot: dict[str, Any], *, source_key: str) -> None:
         """Freeze an immutable compatibility archive while preserving external session IDs."""
+        with self.engine.begin() as conn:
+            self._freeze_snapshot(conn, snapshot, source_key=source_key)
+
+    def _freeze_snapshot(self, conn, snapshot: dict[str, Any], *, source_key: str) -> None:
+        """Freeze within the caller's transaction so related case writes stay atomic."""
         digest = hashlib.sha256(
             json.dumps(snapshot, sort_keys=True, default=str).encode()
         ).hexdigest()
@@ -290,22 +295,21 @@ class TrafficRepository:
                         str(session["id"]),
                     )
                 )
-        with self.engine.begin() as conn:
-            current = self._lock_source(conn, source_key)
-            if current["generation"] is not None:
-                raise ValueError(
-                    "cannot backfill a source with a live checkpoint; use a new source key"
-                )
-            if current["read_only"]:
-                if current["resume_state"].get("archive_digest") != digest:
-                    raise ValueError("cannot replace an immutable archive; use a new source key")
-                return
-            self._save(conn, source_key, events, snapshot)
-            conn.execute(
-                update(sources)
-                .where(sources.c.source_key == source_key)
-                .values(read_only=True, resume_state={"archive_digest": digest})
+        current = self._lock_source(conn, source_key)
+        if current["generation"] is not None:
+            raise ValueError(
+                "cannot backfill a source with a live checkpoint; use a new source key"
             )
+        if current["read_only"]:
+            if current["resume_state"].get("archive_digest") != digest:
+                raise ValueError("cannot replace an immutable archive; use a new source key")
+            return
+        self._save(conn, source_key, events, snapshot)
+        conn.execute(
+            update(sources)
+            .where(sources.c.source_key == source_key)
+            .values(read_only=True, resume_state={"archive_digest": digest})
+        )
 
     def _save(
         self,

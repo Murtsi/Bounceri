@@ -50,6 +50,9 @@ export function sourceState(source?: { kind?: string; synthetic?: boolean } | nu
       tone: "warning" as Tone,
     };
   }
+  if (source?.kind === "uploaded_log" && source.synthetic === false) {
+    return { label: "Imported traffic", synthetic: false, tone: "info" as Tone };
+  }
   if (source?.kind === "monitored_traffic" && source.synthetic === false) {
     return { label: "Real traffic", synthetic: false, tone: "info" as Tone };
   }

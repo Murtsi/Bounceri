@@ -12,6 +12,14 @@ from typing import Literal
 
 Label = Literal["human", "good_bot", "bad_bot", "uncertain"]
 AsnType = Literal["datacenter", "residential", "mobile", "unknown"]
+TRAFFIC_OPTIONAL_FIELDS = ("user_agent", "headers", "bytes", "content_type", "username")
+TRAFFIC_UNAVAILABLE_FEATURES = {
+    "headers": frozenset({"header_inconsistency_share", "missing_referer_share"}),
+    "user_agent": frozenset({"ua_is_tool", "ua_claims_bot", "header_inconsistency_share"}),
+    "content_type": frozenset({
+        "static_share", "html_share", "header_inconsistency_share", "missing_referer_share"
+    }),
+}
 
 
 @dataclass(frozen=True, slots=True)

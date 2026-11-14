@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from typing import Any
 
+from bouncer.contracts import TRAFFIC_OPTIONAL_FIELDS, TRAFFIC_UNAVAILABLE_FEATURES
 from bouncer.session.features import STATIC_EXTENSIONS, is_vuln_path
 
 RULE_IDS = {"verified_crawler", "trap", "fake_crawler", "vuln_paths", "login_attack_campaign"}
@@ -146,6 +147,12 @@ def _rules(raw: Any, n_requests: int) -> dict[str, Any] | None:
     }
 
 
+
+def _unavailable(snapshot: dict, session_id: str) -> list[str]:
+    values = snapshot.get("unavailable_fields", {}).get(session_id, [])
+    return sorted({v for v in values if isinstance(v, str) and v in TRAFFIC_OPTIONAL_FIELDS})
+
+
 def _campaigns(snapshot: dict[str, Any], sessions: list[dict], evidence: list[dict]) -> bool:
     index = {
         str(session.get("id")): (session, item["id"])
@@ -211,7 +218,9 @@ def _campaigns(snapshot: dict[str, Any], sessions: list[dict], evidence: list[di
                     "n_sessions": len(ids),
                     "distinct_client_count": len({str(s.get("ip")) for s in members}),
                     "failed_logins": failures,
-                    "shared_target_count": sum(count >= 2 for count in targets.values()),
+                    "shared_target_count": None
+                    if any("username" in _unavailable(snapshot, sid) for sid in ids)
+                    else sum(count >= 2 for count in targets.values()),
                     "window_seconds": (max(timestamps) - min(timestamps)).total_seconds()
                     if timed and timestamps
                     else None,
@@ -230,6 +239,8 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
     sessions = snapshot.get("sessions", [])
     if not isinstance(sessions, list):
         raise ValueError("sessions must be a list")
+    imported = (snapshot.get("trap_policy") == "unavailable_for_import"
+                or snapshot.get("source") == "import:caddy")
     verdicts = snapshot.get("verdicts", {})
     evidence = []
     missing = []
@@ -286,13 +297,22 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
             "status_counts": dict(statuses),
             "method_counts": dict(methods),
             "path_category_counts": dict(categories),
-            "category_provenance": "bouncer-path-categories-v1",
+            "category_provenance": ("generic-path-patterns-v1" if imported
+                                    else "bouncer-path-categories-v1"),
             "failed_logins": failures,
             "distinct_account_count": len(accounts),
             "local_label": label,
             "local_score": score if isinstance(score, (int, float)) and 0 <= score <= 1 else None,
             "verified_bot": None,
         }
+        unavailable = _unavailable(snapshot, str(session.get("id")))
+        if unavailable:
+            data["unavailable_fields"] = unavailable
+            if "username" in unavailable:
+                data.pop("distinct_account_count")
+            message = "Some optional logging fields are unavailable; their absence is not measured."
+            if message not in missing:
+                missing.append(message)
         provenance = _network(network.get(session.get("ip"))) if isinstance(network, dict) else None
         if provenance is not None:
             data["network_provenance"] = provenance
@@ -310,6 +330,9 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
             else None
         )
         if retained is not None:
+            for field in unavailable:
+                for feature in TRAFFIC_UNAVAILABLE_FEATURES.get(field, ()):
+                    retained["features"].pop(feature, None)
             data["rule_observations"] = retained
         evidence.append(
             {
@@ -330,12 +353,25 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
     if isinstance(ingest, dict) and ingest.get("rotation_gaps", 0) > 0:
         complete = False
         missing.append("Source rotation gaps were observed; traffic evidence is incomplete.")
+    report = snapshot.get("import_report", {})
+    if isinstance(report, dict) and report.get("rejected", 0) > 0:
+        complete = False
+        missing.append("Some imported lines were rejected; only accepted records are retained.")
+    if isinstance(ingest, dict) and (
+        ingest.get("bad_lines", 0) or ingest.get("invalid_records", 0)
+    ):
+        complete = False
+        missing.append("Some source records could not be parsed; source coverage is incomplete.")
     limitations = [
         "Local findings describe individual sessions, not every actor.",
         "Detector scores are estimates, not established truth probabilities.",
     ]
     if isinstance(ingest, dict) and ingest.get("discarded_by_retention", 0) > 0:
         limitations.append("Counts describe the retained window, which excludes older traffic.")
+    if imported:
+        limitations.append(
+            "Imported site context is unknown; site trap and current DNS truth are unavailable."
+        )
     return {
         "synthetic": snapshot.get("synthetic") is True,
         "complete": complete,

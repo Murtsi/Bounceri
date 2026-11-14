@@ -93,11 +93,15 @@ class Worker:
         repository=None,
         source_key: str = "monitored",
         history_retention_seconds: float | None = None,
+        traps: frozenset[str] | None = None,
+        rules_only: bool = False,
     ) -> None:
         if max_records is not None and (type(max_records) is not int or max_records < 1):
             raise ValueError("max_records must be a positive integer")
         if window_seconds is not None and window_seconds <= 0:
             raise ValueError("window_seconds must be positive")
+        self.rules_only = rules_only
+        self.trap_paths = traps
         self.history_retention_seconds = history_retention_seconds
         self.max_records = max_records
         self.window_seconds = window_seconds
@@ -220,7 +224,7 @@ class Worker:
 
         verdicts = {}
         rule_observations = {}
-        traps = rules.load_traps()
+        traps = self.trap_paths if self.trap_paths is not None else rules.load_traps()
         trap_version = hashlib.sha256("\n".join(sorted(traps)).encode()).hexdigest()
         feature_fields = {
             "duration_s", "requests_per_min", "peak_requests_per_min", "static_share",
@@ -229,7 +233,8 @@ class Worker:
         }
         for s in sessions:
             camp: Campaign | None = camp_by_session.get(s.id)
-            v = score(s, intel[s.ip], camp, traps=traps)
+            v = score(s, intel[s.ip], camp, traps=traps,
+                      **({"model": None} if self.rules_only else {}))
             hits = rules.evaluate(s, intel[s.ip], traps, camp)
             rule_id = hits[0].rule_id if hits else None
             rule_observations[s.id] = {
