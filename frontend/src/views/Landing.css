@@ -227,7 +227,10 @@
   .lp-cta-sm { margin-left: auto; }
   .lp-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-top: 28px; }
   .lp-hero-scene { order: -1; height: 340px; margin: 0 -12px; }
-  .lp-key { left: 4%; bottom: 2%; }
+  /* Selite kuvan alle omalle rivilleen: ei päällekkäin tauko-painikkeen kanssa. */
+  .lp-hero-scene { height: auto; }
+  .lp-hero-scene .gh { position: relative; height: 320px; }
+  .lp-key { position: static; padding: 4px 16px 0; gap: 6px 14px; }
   .lp-section { grid-template-columns: minmax(0, 1fr); padding-top: 64px; padding-bottom: 64px; }
   .lp-steps { grid-template-columns: minmax(0, 1fr); }
   .lp-diff li { grid-template-columns: minmax(0, 1fr); }

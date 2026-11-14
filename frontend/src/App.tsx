@@ -228,9 +228,9 @@ export default function App() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{TITLE[tab]}</h1>
               {s?.synthetic && tab !== "investigations" && (
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground lg:hidden">
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground lg:hidden" title={SYNTHETIC_DATA_NOTICE}>
                   <FlaskConical className="size-3.5" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
-                  {SYNTHETIC_DATA_NOTICE}
+                  Synthetic traffic
                 </p>
               )}
             </div>

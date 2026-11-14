@@ -51,6 +51,7 @@ export function DepthFloor() {
   return (
     <div ref={ref} className="depth-floor" aria-hidden="true">
       <div className="depth-floor-plane" />
+      <div className="depth-horizon" />
     </div>
   );
 }
