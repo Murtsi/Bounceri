@@ -11,8 +11,8 @@ function clock(iso: string) {
 }
 
 /**
- * Uusimmat sessiot reaaliajassa (päivittyy 2 s välein). Uusi rivi nousee esiin
- * omalla animaatiollaan, koska rivin avain on session ID.
+ * Uusimmat havaitut sessiot. Uusi rivi nousee esiin omalla animaatiollaan,
+ * koska rivin avain on session ID.
  */
 export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; limit?: number }) {
   const { data } = useQuery({ queryKey: ["sessions"], queryFn: api.sessions });
@@ -23,7 +23,7 @@ export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; 
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardHeading Icon={Radio} title="Live activity" description="Newest sessions as Bouncer decides them" />
+        <CardHeading Icon={Radio} title="Latest activity" description="Most recently observed sessions" />
       </CardHeader>
       <CardContent>
         {!data ? (

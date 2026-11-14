@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { CircleHelp, Cpu, EyeOff, type LucideIcon, TriangleAlert, UserX } from "lucide-react";
 import { api } from "@/api";
+import { SYNTHETIC_DATA_NOTICE } from "@/content";
 import { ListSkeleton } from "@/components/Skeletons";
 import { CardHeading, CardIcon } from "@/components/CardIcon";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -41,7 +42,7 @@ export default function Metrics() {
           <p>
             {m.stub
               ? "models/metrics.json is a stub: there is no real labelled traffic yet. No numbers are shown or invented."
-              : "These numbers come from synthetic data: they prove nothing."}
+              : SYNTHETIC_DATA_NOTICE}
           </p>
         </div>
       )}

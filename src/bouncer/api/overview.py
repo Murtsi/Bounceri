@@ -164,14 +164,22 @@ def honesty(st: dict[str, Any]) -> dict[str, Any]:
     verdicts = st.get("verdicts", {})
     humans = [lab["session_id"] for lab in st.get("labels", [])
               if re.match(r"human", lab.get("sim_class", ""))]  # fmt: skip
+    scored = [sid for sid in humans if sid in verdicts]
+    by_verdict = Counter(verdicts[sid].get("label", "uncertain") for sid in scored)
     false_alarms = sum(
-        verdicts.get(sid, {}).get("label") in ("bad_bot", "good_bot") for sid in humans
+        verdicts[sid].get("label") in ("bad_bot", "good_bot") for sid in scored
     )
-    n = len(humans)
+    n = len(scored)
     return {
         "synthetic": bool(st.get("synthetic")),
-        "n_humans": n,
+        "n_humans": len(humans),
+        "n_scored": n,
         "false_alarms": false_alarms,
+        "verdicts": {lab: by_verdict.get(lab, 0) for lab in LABELS},
+        "model_versions": sorted({
+            str(verdicts[sid].get("model_version"))
+            for sid in scored if verdicts[sid].get("model_version")
+        }),
         "fpr": false_alarms / n if n else None,
         "fpr_ci95_upper": wilson_upper(false_alarms, n),
     }

@@ -33,6 +33,7 @@ export interface Campaign {
   session_ids: string[];
   reasons: string[];
   size: number;
+  title?: string;
   labels?: Partial<Record<Label, number>>;
 }
 
@@ -96,7 +97,10 @@ export interface Overview {
   honesty: {
     synthetic: boolean;
     n_humans: number;
+    n_scored: number;
     false_alarms: number;
+    verdicts: Record<Label, number>;
+    model_versions: string[];
     fpr: number | null;
     fpr_ci95_upper: number | null;
   };

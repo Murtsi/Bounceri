@@ -87,7 +87,15 @@ const GAP = "gap-[3px]";
  * (widget-tyyli, ei y-akselia). Kokonaismäärä ja huippu luetaan otsikosta,
  * tarkat luvut vihjeestä tai taulukkonäkymästä.
  */
-export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number }) {
+export function TrafficChart({
+  points,
+  stepS,
+  emptyIntervalsHidden = false,
+}: {
+  points: Point[];
+  stepS: number;
+  emptyIntervalsHidden?: boolean;
+}) {
   const [table, setTable] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const secs = stepS < 60;
@@ -108,6 +116,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
           <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("en-GB")}</p>
           <figcaption className="text-xs text-muted-foreground">
             requests · per {unit}{peak && peak.n > 0 ? ` · peak ${peak.n} at ${peak.label}` : ""}
+            {emptyIntervalsHidden ? " · empty intervals hidden" : ""}
           </figcaption>
         </div>
         <Button
