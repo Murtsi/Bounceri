@@ -78,6 +78,19 @@ def test_sample_loader_does_not_treat_header_as_forwarded_client_ip() -> None:
     assert request.ip == "198.51.100.10"
 
 
+def test_caddy_client_ip_is_used_when_caddy_resolved_it() -> None:
+    """Paikallinen demo (päätös 050): Caddy laskee client_ip:n luotetulta proxyltä.
+    Ilman luotettua proxyä client_ip == remote_ip; XFF-otsakkeeseen ei luoteta."""
+    records = _records()
+    records[0]["request"]["remote_ip"] = "172.18.0.1"  # type: ignore[index]
+    records[0]["request"]["client_ip"] = "203.0.113.50"  # type: ignore[index]
+    records[0]["request"]["headers"]["X-Forwarded-For"] = ["198.51.100.99"]  # type: ignore[index]
+
+    request, _ = parse_access_record(records[0])
+
+    assert request.ip == "203.0.113.50"
+
+
 def test_sim_run_parser_handles_missing_campaign_and_rejects_malformed_marker() -> None:
     assert parse_sim_run("run-1:human_playwright", 7) == SessionLabel(
         "7", "run-1", "human_playwright", None

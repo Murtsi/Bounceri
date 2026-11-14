@@ -40,6 +40,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
 - [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 048–051)
 - [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 048)
+- [A] MVP vaihe 1: demosivu `bouncer.site` (FastAPI; sivut, CSS/JS/kuva, `POST /login` → 401 + `X-Login-User`, piilotettu ansalinkki, `robots.txt` kieltää ansat) ja Caddy Docker Composella (`deploy/`: tuotanto- ja paikallinen Caddyfile). Parseri käyttää Caddyn laskemaa `client_ip`:tä (A-3, päätökset 049–050, 052)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)

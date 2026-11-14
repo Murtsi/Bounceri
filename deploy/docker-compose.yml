@@ -1,0 +1,29 @@
+# MVP (docs/MVP.md). Paikallisesti: CADDYFILE=Caddyfile.local (oletus).
+# VPS:llä: CADDYFILE=Caddyfile ja SITE_ADDRESS=<domain>.
+name: bouncer
+
+services:
+  site:
+    build:
+      context: ..
+      dockerfile: deploy/site.Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  caddy:
+    image: caddy:2.8.4
+    restart: unless-stopped
+    depends_on:
+      site:
+        condition: service_healthy
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:8080}
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-8080}:8080"
+    volumes:
+      - ./${CADDYFILE:-Caddyfile.local}:/etc/caddy/Caddyfile:ro
+      - ../logs/caddy:/var/log/caddy

@@ -148,6 +148,7 @@ Revisit if: tunnukset halutaan pseudonymisoida (HMAC) ennen lokitusta.
 | 049 | 2026-11-14 | **MVP ajetaan Docker Composella oikean Caddyn kanssa myös paikallisesti** (`deploy/`) | Sama kokoonpano siirtyy VPS:lle; todistaa oikean Caddy-lokimuodon | Demosivu kirjoittaa itse Caddy-muotoisen lokin (ei todista muotoa) |
 | 050 | 2026-11-14 | **Paikallinen XFF-tila:** vain paikallisessa demossa Caddy luottaa `X-Forwarded-For`-otsakkeeseen (`trusted_proxies`), jotta monen IP:n hyökkäys syntyy yhdeltä koneelta; parseri käyttää Caddyn laskemaa `client_ip`:tä (sama kuin `remote_ip` ilman luotettua proxyä). Tuotannossa pois päältä | Tunnusten kokeilu monesta IP:stä on demon kohokohta; ilman tätä kaikki paikallinen liikenne näyttää yhdeltä IP:ltä | Kampanja vain VPS:llä (MVP ei näyttäisi kohokohtaa) |
 | 051 | 2026-11-14 | **MVP:n dashboard Reactilla heti** (päätös 005) API:n yli | Tiimin valinta; sama käyttöliittymä jatkuu MVP:n jälkeen | Yksinkertainen HTML ensin |
+| 052 | 2026-11-14 | **Demosivu polussa `src/bouncer/site/`** (TEAM.md: `src/site/`), projekti asennetaan pakettina (hatchling, src-rakenne) | Paketti nimeltä `site` törmäisi Pythonin vakiomoduuliin `site`; pakettina asennettuna `bouncer.*` toimii kaikkialla (uvicorn, Docker, skriptit) ilman `PYTHONPATH`-kikkoja | `src/site/` + `PYTHONPATH=src` jokaiseen komentoon |
 
 `make lint` löytää 23 vanhaa huomautusta A:n ja C:n koodista (mm. `timezone.utc` → `UTC`); ei korjattu tässä, jotta muiden kesken olevaan työhön ei tule konflikteja.
 
