@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from bouncer.contracts import IpIntel
@@ -236,10 +236,16 @@ async def create_case(request: Request):
 
 
 @router.get("/api/investigations")
-def list_cases(request: Request):
+def list_cases(
+    request: Request, limit: int = Query(default=100, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    origin: Literal["all", "real", "synthetic"] = "all",
+):
     return [
         {k: v for k, v in case.items() if k != "evidence"}
-        for case in get_store().list_cases(public_only=not is_admin(request))
+        for case in get_store().list_cases(
+            public_only=not is_admin(request), limit=limit, offset=offset, origin=origin
+        )
     ]
 
 

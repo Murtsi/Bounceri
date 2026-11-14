@@ -67,3 +67,18 @@ def test_required_gateway_config_and_release_restart_marker(tmp_path):
     assert rule == "Host(`test.example`) || Host(`bounceri.tech`) || Host(`www.bounceri.tech`)"
     with pytest.raises(ValueError):
         compose(tmp_path, "test.example", env, aliases=("unsafe`)",))
+
+
+def test_capsule_includes_versioned_sql_but_not_arbitrary_sql(tmp_path):
+    for name in ("frontend/dist/index.html", "src/bouncer/db/migrations/001_init.sql",
+                 "src/bouncer/db/migrations/002_investigations_enforcement.sql",
+                 "src/bouncer/private.sql"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fixture", encoding="utf-8")
+    encoded, _ = capsule(tmp_path)
+    with tarfile.open(fileobj=io.BytesIO(base64.b64decode(encoded)), mode="r:gz") as archive:
+        names = archive.getnames()
+    assert "src/bouncer/db/migrations/001_init.sql" in names
+    assert "src/bouncer/db/migrations/002_investigations_enforcement.sql" in names
+    assert "src/bouncer/private.sql" not in names

@@ -177,3 +177,20 @@ The check makes no paid model calls and revokes its own test policies at the end
 This is a functional actor-scoped demonstration, not proof of evasion-resistant
 anonymous Internet blocking. A database lookup failure makes this dedicated route
 unavailable while leaving normal pages and admin recovery accessible.
+
+
+## Checked schema upgrades and interrupted reviews (14 November 2026)
+
+PostgreSQL store initialization now runs checked additive SQL from `src/bouncer/db/migrations/` under a transaction advisory lock. The ledger records ordered names and normalized UTF-8 SHA256 checksums. Keep applied files immutable; add the next numbered SQL file for upgrades. Incompatible schema/history fails startup without committing the attempted DDL. SQLite remains a local/test adapter. The main traffic JSON path is still the live compatibility path until the repository/checkpoint/cutover work is verified; installing these migrations alone does not enable that writer.
+
+Before an upgrade, take and verify a database backup. Migration, fresh-database and populated-upgrade tests run with `BOUNCER_TEST_POSTGRES=1 uv run --no-sync pytest tests/a/test_migrations.py -q`; this creates and removes a disposable PostgreSQL container on a random localhost port, never using the deployment database.
+
+If a review worker stops with a job still running, first stop/verify the actual owning worker. With the intended private database environment, run:
+
+```sh
+uv run --no-sync python -m bouncer.review.worker --close-interrupted JOB_ID --worker-id EXPECTED_OWNER --confirm-worker-stopped
+```
+
+The command requires the stored owner and running state. It marks the job unavailable/interrupted, releases unused job reservation amounts, and preserves all dispatched pending/unknown charge holds. It never sends a model request or retries inference. Unknown charges still require authoritative billing reconciliation.
+
+The isolated local Docker/Caddy acceptance run passed five of six gates after core hardening. Fake-crawler verification remained unknown when DNS was unavailable. This does not establish a passing live-DNS or Hostinger deployment gate.

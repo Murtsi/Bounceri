@@ -190,3 +190,11 @@ Revisit if: evidence linkage and held-out measurements justify a different revie
 Session continuity metadata is private and persisted separately from retained requests. Keep each identity while its session is visible or until five idle event minutes elapse. This fixes reproduced retention/restart failures without storing duplicate requests or exposing continuity metadata in public projections. SQL persistence and atomic checkpoints remain separate required plan work.
 
 Rejected: buffering arbitrary form bodies, treating lookup errors as spoofing, or deriving continuity only from an evictable request slice. These changes implement the owner-approved audit fixes and module plan.
+
+### 065 — Checked PostgreSQL upgrades and bounded case history
+
+2026-11-14. Run numbered SQL files in a single PostgreSQL transaction under an advisory lock. Record ordered file names and SHA256 checksums over UTF-8 SQL with normalized newlines/BOM; reject changed history and unsupported future versions. Validate the resulting types, keys and required defaults after pending upgrades, so a valid additive migration can introduce the columns current metadata expects. Preserve create_all only for SQLite local/tests. Existing 001 is immutable; 002 adopts the existing investigation/review/budget/enforcement schemas without replacing rows. SQL is part of the runtime wheel and deployment capsule. The natural request uniqueness constraint in 001 still requires the event-identity migration before enabling the durable traffic writer.
+
+Case history defaults to 100 rows with validated limit/offset and server-side origin filtering before pagination. A bounded three-query read loads page cases, relevant jobs and assessments. Existing public/private checks remain mandatory; UI origin/page keys are separate and changing origin resets pagination. Offset pages follow current history rather than an immutable historical cursor.
+
+Interrupted review recovery is an explicit operator action naming the running job and its expected worker, with confirmation that the worker has stopped. A transaction marks it unavailable/interrupted and releases only job.remaining. Dispatched pending/unknown reservations remain held, and no inference runner or retry is invoked. Automatic stale-job retry and automatic unknown-charge release were rejected.

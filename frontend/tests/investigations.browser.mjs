@@ -53,6 +53,9 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     review: { status: "not_requested" },
   };
   let mode = "empty";
+  let releasePage;
+  let holdNextPage = false;
+  const caseRequests = [];
   let evaluationMode = "published";
   const publishedEvaluation = {
     available: true,
@@ -270,9 +273,23 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       ingest: {},
     },
   });
-  await page.route("**/api/**", (route) => {
-    const path = new URL(route.request().url()).pathname;
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname;
     const data = records();
+    if (path === "/api/investigations") {
+      const origin = url.searchParams.get("origin") ?? "all";
+      const offset = Number(url.searchParams.get("offset") ?? 0);
+      const limit = Number(url.searchParams.get("limit") ?? 100);
+      caseRequests.push({ origin, offset, limit });
+      const cases = mode === "paginated"
+        ? [synthetic, ...Array.from({ length: 99 }, (_, index) => ({ ...synthetic, id: `fixture-${index}` })), real]
+        : data[path];
+      data[path] = cases.filter((item) => origin === "all" || (origin === "synthetic"
+        ? item.source?.synthetic === true
+        : item.source?.synthetic === false && item.source.kind === "monitored_traffic")).slice(offset, offset + limit);
+      if (holdNextPage && offset === 100) await new Promise((resolve) => { releasePage = resolve; });
+    }
     if (path === "/api/evaluation" && evaluationMode === "404")
       return route.fulfill({ status: 404, contentType: "application/json", body: "{}" });
     const unavailable =
@@ -431,6 +448,40 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     "Capabilities, usage, evaluation and list errors must stay visible",
   );
 
+  mode = "paginated";
+  await reload();
+  const pagination = page.getByRole("navigation", { name: "Investigation pages", exact: true });
+  const previous = pagination.getByRole("button", { name: "Previous", exact: true });
+  const next = pagination.getByRole("button", { name: "Next", exact: true });
+  check(await previous.isDisabled(), "First page allows a previous page");
+  check(await next.isEnabled(), "Older cases are inaccessible after the first 100");
+  holdNextPage = true;
+  await next.click();
+  await page.getByText("Loading investigations…", { exact: true }).waitFor();
+  check(await previous.isDisabled() && await next.isDisabled(), "Page controls allow overlapping fetches");
+  holdNextPage = false;
+  releasePage();
+  await page.getByRole("button", { name: /real-case/ }).waitFor();
+  check(await next.isDisabled(), "Short final page allows another page");
+  check(await previous.isEnabled(), "Older page cannot return to newer cases");
+  await previous.click();
+  await page.getByRole("button", { name: /fixture-case/ }).waitFor();
+  await next.click();
+  await page.getByRole("button", { name: /real-case/ }).waitFor();
+  await page.getByRole("combobox", { name: "Source" }).selectOption("real");
+  await page.getByText("Page 1", { exact: true }).waitFor();
+  await page.getByRole("button", { name: /real-case/ }).waitFor();
+  check(await previous.isDisabled() && await next.isDisabled(), "Source change did not reset pagination");
+  check(caseRequests.some(({ origin, offset, limit }) => origin === "real" && offset === 0 && limit === 100),
+    "Source filter did not query older real cases independently of the current page");
+  await page.getByRole("combobox", { name: "Source" }).selectOption("synthetic");
+  await page.getByRole("button", { name: /fixture-case/ }).waitFor();
+  await next.click();
+  await page.getByText("No more investigations", { exact: true }).waitFor();
+  check(await previous.isEnabled() && await next.isDisabled(), "Empty final page traps navigation");
+  check((await page.getByText("No investigations published yet", { exact: true }).count()) === 0,
+    "Empty final page was confused with an unpublished workspace");
+
   mode = "populated";
   await reload();
   await page.getByRole("button", { name: /fixture-case/ }).waitFor();
@@ -443,6 +494,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   );
   check(await page.getByText("Origin unavailable", { exact: true }).isVisible(), "Unknown origin was concealed");
   await page.getByRole("combobox", { name: "Source" }).selectOption("real");
+  await page.getByRole("button", { name: /real-case/ }).waitFor();
   check((await page.getByRole("button", { name: /real-case/ }).count()) === 1, "Real source filter missing real case");
   check(
     (await page.getByRole("button", { name: /fixture-case|unknown-origin/ }).count()) === 0,
@@ -618,6 +670,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "outage distinction",
       "future modules disabled",
       "source filter",
+      "100-case pagination and final page",
+      "pagination disabled during fetch",
+      "server origin filter resets pagination",
+      "empty final page preserves previous navigation",
       "API-backed synthetic benchmark support counts",
       "evaluation confidence intervals and provenance",
       "unpublished evaluation distinct from service error",

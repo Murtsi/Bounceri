@@ -7,9 +7,9 @@ oletusvastuita, eivät muokkauskieltoja (AGENTS.md, päätös 044).
 
 | Työ | Tila | Näyttö / seuraava portti |
 |---|---|---|
-| Kriittiset korjaukset ennen ydintyötä | **Ready for review** | Virheellisten batch-rivien ohitus/laskenta ja origin-path `//`-käsittely; fixture-importin 201/list-serialisointi; DNS unknown/dual-stack; yksityisen sessioidentiteetin säilyminen retentionin, tyhjän ikkunan ja restartin yli idle-vanhenemisella; loginin 8 KiB/ASCII-rajat. Riippumaton koodikatselmointi hyväksyi korjaukset. |
-| Phase 0 — dokumentit ja lähtötason tarkistus | **In progress** | Nykytila ja moduulimatriisi sovitetaan koodiin. Python-testit/Ruff, frontend-testit/build ja Docker-image build tarkistettu. Eristetyn Docker/Caddy-demon hyväksymisajo on vielä kesken; uutta live-deployn tarkistusta ei väitetä. |
-| Phase 1 — ydin ennen moduuleja | **Pending** | Versioidut migraatiot ja liikenteen SQL repository/checkpointit; rajattu live-IP-näyttö ja case-näytön täydellisyys; yksityinen loki-import; health/backup/retention; suostumuksellinen oikea ihmisdata ja vuotovapaa arviointi. |
+| Kriittiset korjaukset ennen ydintyötä | **Verified / committed** | Virheellisten batch-rivien ohitus/laskenta ja origin-path `//`-käsittely; fixture-importin 201/list-serialisointi; DNS unknown/dual-stack; yksityisen sessioidentiteetin säilyminen retentionin, tyhjän ikkunan ja restartin yli idle-vanhenemisella; loginin 8 KiB/ASCII-rajat. Riippumaton koodikatselmointi hyväksyi korjaukset. |
+| Phase 0 — dokumentit ja lähtötason tarkistus | **In progress** | Nykytila ja moduulimatriisi sovitetaan koodiin. Python-testit/Ruff, frontend-testit/build ja Docker-image build tarkistettu. Eristetty Docker/Caddy-demo läpäisi 5/6 ehtoa; crawler-varmistus jäi tuntemattomaksi, koska DNS-varmistus ei ollut saatavilla. Tätä ehtoa eikä uutta live-deployta väitetä varmennetuksi. |
+| Phase 1 — ydin ennen moduuleja | **In progress** | Versioidut migraatiot ja liikenteen SQL repository/checkpointit; rajattu live-IP-näyttö ja case-näytön täydellisyys; yksityinen loki-import; health/backup/retention; suostumuksellinen oikea ihmisdata ja vuotovapaa arviointi. |
 | Phase 2 — Trust the Source | **Pending / unavailable** | Erillinen media-import, C2PA-validointi, näyttö, conformance-arviointi ja UI. |
 | Phase 3 — Spot the Swarm | **Pending / unavailable** | Erillinen sosiaalisten tapahtumien putki, koordinaatiosignaalit ja ryhmä-/aikaholdout; nykyiset HTTP-kampanjat eivät toteuta tätä. |
 | Phase 4 — Name the Technique | **Pending / unavailable** | Rajattu tekstisyöte, tuettu taksonomia/kieli, tarkat spanit ja riippumaton korpusarviointi lisenssirajoineen. |
@@ -151,3 +151,8 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 | C-8 | Integraatio dashboardiin | A-11/A-12 API + UI | — | Joonas |
 | C-10 | Piilotettu hyökkäys | A-15 paljastus T+34 | — | Joonas |
 | PRE-4 | Mentorivastaukset | Hostinger kick-off | — | Joonas |
+
+
+### Core/module implementation checkpoint — 14 November 2026
+
+Committed core fixes are independently reviewed. Versioned PostgreSQL schema upgrades, bounded three-query case pages with origin filtering/UI controls, and explicit stopped-worker review recovery are verified locally. Integrated checks: 492 Python tests including 20 disposable-PostgreSQL acceptance tests, Ruff, 7 frontend tests/build, repository/Compose checks; browser suite reports 36 passing checks. Browser CI runner remains pending. Main traffic still uses the JSON compatibility path: SQL repository, atomic event checkpoints, backfill/read cutover and retention are the next Phase 1 task. New modules remain unavailable. External DNS, real-human/independent-hidden evidence and Hostinger release smoke gates remain open.

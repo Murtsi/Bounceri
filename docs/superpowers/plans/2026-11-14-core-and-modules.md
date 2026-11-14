@@ -9,7 +9,7 @@ The owner approved execution of modules plan.md and the audit fixes. Work is on 
 - [x] Critical fixes: tolerant parsing, JSON-compatible serialization, DNS unknown/IPv6, stable session identity through retention/restart, bounded and Unicode-safe login.
 - [ ] Remaining reliability: bounded case list, interrupted review reconciliation without inference retry, browser suite in CI.
 - [ ] Phase 0: baseline verification, reconcile runtime/challenge docs, docs/MODULES.md.
-- [ ] Phase 1.1: additive migrations for existing/new tables, populated upgrade and fresh/restart/concurrent tests.
+- [x] Phase 1.1: additive migrations for existing/new tables, populated upgrade and fresh/restart/concurrent tests.
 - [ ] Phase 1.2: SQL request/session/label repository, atomic source checkpoints/event identity, readers/cutover/backfill/rollback and retention.
 - [ ] Phase 1.3–4: bounded cached live network evidence and complete scoped campaign/rule provenance.
 - [ ] Phase 1.5: authenticated private log import with redaction/limits/reports.
@@ -29,3 +29,9 @@ All new regression tests were observed failing before the corresponding implemen
 Isolated Docker/Caddy smoke: production image builds; 139 signed synthetic requests; scanner, stuffing campaign, human false-alarm, evidence and dashboard/metrics gates passed. Fake-crawler gate remained uncertain because DNS verification was unavailable. This is an outstanding live DNS acceptance gate, not a passing six-gate demo. Containers/network used isolated scratch data and were removed. Repository hygiene passed; shellcheck unavailable.
 
 Case-list pagination is in progress (test first, bounded limit/offset and 3 SQL queries). UI navigation and API pagination regressions remain to finish before marking that task done. Versioned schema runner is in progress independently. Phase 0 docs are reconciled but the full demo/DNS gate is still open.
+
+## Evidence: Phase 1.1 and reliability increment
+
+Twenty isolated real PostgreSQL migration tests pass: fresh/adopted populated stores, concurrent startup/writers, transactional rollback, version/checksum/schema drift, line-ending portability, future additive-column upgrade, production create_all exclusion and PostgreSQL origin-query privacy. SQL002 is included in wheels and Hostinger capsules; existing001 is unchanged. Independent read-only review found no further defect. SQLite remains explicitly local/test only.
+
+Case paging and interrupted-review recovery are implemented with test-first evidence. Integrated verification: 492 Python tests passed with PostgreSQL enabled; Ruff, 7 frontend tests, TypeScript/Vite build, repository hygiene, root/demo Compose configuration passed. Independent final review approved recovery ownership/accounting and pagination privacy. Browser agent verified36 checks including desktop/mobile paging, held fetches, source reset, empty final page, no writes/page errors. Main traffic SQL writer/checkpoints/cutover, core import/operations/evaluation and all3 new modules remain incomplete. Browser suite still needs a repeatable CI runner; migration tests are wired into CI.

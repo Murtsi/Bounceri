@@ -162,3 +162,16 @@ def test_repository_fixture_creates_case(client):
                            json={"source": "fixture", "public_demo": True})
     assert response.status_code == 201, response.text
     assert response.json()["source"] == {"kind": "fixture", "synthetic": True}
+
+
+def test_case_list_pagination_validates_and_preserves_visibility(client):
+    case = client.post("/api/investigations", headers=ADMIN,
+                       json={"source": "monitored_traffic"}).json()
+    assert client.get("/api/investigations?limit=1&offset=0").json() == []
+    page = client.get("/api/investigations?limit=1&offset=0&origin=synthetic", headers=ADMIN)
+    assert page.status_code == 200
+    assert page.json()[0]["id"] == case["id"]
+    assert "evidence" not in page.json()[0]
+    assert client.get("/api/investigations?offset=1", headers=ADMIN).json() == []
+    for query in ("limit=0", "limit=101", "offset=-1", "origin=unknown"):
+        assert client.get("/api/investigations?" + query).status_code == 422

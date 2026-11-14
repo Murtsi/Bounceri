@@ -79,7 +79,12 @@ class EnforcementRuntime:
     def __init__(self, store: InvestigationStore, clock: Callable[[], float] = time.time):
         self.store = store
         self.clock = clock
-        metadata.create_all(store.engine)
+        if store.engine.dialect.name == "sqlite":
+            metadata.create_all(store.engine)
+        else:
+            from bouncer.db.migrate import run_migrations
+
+            run_migrations(store.engine)
 
     def _event(self, conn, policy_id, event, at, details=None):
         conn.execute(

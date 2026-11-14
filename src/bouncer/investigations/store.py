@@ -162,7 +162,12 @@ class InvestigationStore:
             if ":memory:" in database_url:
                 options["poolclass"] = StaticPool
         self.engine = create_engine(database_url, **options)
-        metadata.create_all(self.engine)
+        if self.engine.dialect.name == "sqlite":
+            metadata.create_all(self.engine)
+        else:
+            from bouncer.db.migrate import run_migrations
+
+            run_migrations(self.engine)
         # PostgreSQL/SQLite conflict-safe singleton initialization across processes.
         from sqlalchemy.dialects.postgresql import insert as pg_insert
         from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -238,13 +243,57 @@ class InvestigationStore:
                 self._append(conn, case_id, None, "local", packet["local_assessment"], {})
         return self.get_case(case_id, False)
 
-    def list_cases(self, public_only: bool = True) -> list[dict]:
+    def list_cases(
+        self, public_only: bool = True, *, limit=100, offset=0, origin="all"
+    ) -> list[dict]:
+        if type(limit) is not int or not 1 <= limit <= 100 or type(offset) is not int or offset < 0:
+            raise ValueError("invalid pagination")
+        if origin not in {"all", "real", "synthetic"}:
+            raise ValueError("invalid origin")
         with self.engine.connect() as conn:
-            statement = select(cases.c.id).order_by(cases.c.created_at.desc())
+            statement = select(cases).order_by(cases.c.created_at.desc(), cases.c.id.desc())
             if public_only:
                 statement = statement.where(cases.c.public.is_(True))
-            ids = list(conn.execute(statement).scalars())
-        return [self.get_case(case_id, public_only) for case_id in ids]
+            if origin != "all":
+                statement = statement.where(
+                    cases.c.payload["synthetic"].as_boolean() == (origin == "synthetic")
+                )
+            if origin == "real":
+                statement = statement.where(
+                    cases.c.payload["source"]["kind"].as_string() == "monitored_traffic"
+                )
+            page = list(conn.execute(statement.limit(limit).offset(offset)).mappings())
+            if not page:
+                return []
+            latest_jobs = {}
+            for job in conn.execute(
+                select(jobs).where(jobs.c.evidence_hash.in_([c["evidence_hash"] for c in page]))
+                .order_by(jobs.c.created_at.desc(), jobs.c.id.desc())
+            ).mappings():
+                latest_jobs.setdefault(job["evidence_hash"], job)
+            results = {
+                (a["case_id"], a["job_id"]): a["payload"]
+                for a in conn.execute(
+                    select(assessments).where(
+                        assessments.c.case_id.in_([c["id"] for c in page]),
+                        assessments.c.stage == "reviewer",
+                    ).order_by(assessments.c.created_at, assessments.c.id)
+                ).mappings()
+            }
+            return [self._case_view(c["payload"], latest_jobs.get(c["evidence_hash"]), results)
+                    for c in page]
+
+    @staticmethod
+    def _case_view(source, job, results):
+        payload = dict(source)
+        payload["review_eligibility"] = review_eligibility(payload)
+        payload["review"] = {
+            "status": job["status"] if job else "not_requested",
+            "job_id": job["id"] if job else None,
+            "result": results.get((payload["id"], job["id"] if job else None)),
+            "reason": job["reason"] if job else "",
+        }
+        return payload
 
     def get_case(self, case_id, public_only=True):
         with self.engine.connect() as conn:
@@ -259,7 +308,7 @@ class InvestigationStore:
                 conn.execute(
                     select(jobs)
                     .where(jobs.c.evidence_hash == case["evidence_hash"])
-                    .order_by(jobs.c.created_at.desc())
+                    .order_by(jobs.c.created_at.desc(), jobs.c.id.desc())
                 )
                 .mappings()
                 .first()
@@ -271,16 +320,11 @@ class InvestigationStore:
                     assessments.c.stage == "reviewer",
                     assessments.c.job_id == (job["id"] if job else None),
                 )
-                .order_by(assessments.c.created_at.desc())
+                .order_by(assessments.c.created_at.desc(), assessments.c.id.desc())
             ).scalar()
-            payload["review_eligibility"] = review_eligibility(payload)
-            payload["review"] = {
-                "status": job["status"] if job else "not_requested",
-                "job_id": job["id"] if job else None,
-                "result": result,
-                "reason": job["reason"] if job else "",
-            }
-            return payload
+            return self._case_view(
+                payload, job, {(case_id, job["id"] if job else None): result}
+            )
 
     def list_assessments(self, case_id):
         with self.engine.connect() as conn:
@@ -516,6 +560,28 @@ class InvestigationStore:
                 update(jobs)
                 .where(jobs.c.id == job_id)
                 .values(status=status, reason=reason, remaining=0)
+            )
+
+    def close_interrupted_job(self, job_id, worker_id):
+        """Close one job after its operator has confirmed the owning worker stopped."""
+        if not isinstance(worker_id, str) or not worker_id.strip():
+            raise ValueError("expected worker owner is required")
+        with self.transaction() as conn:
+            job, b = row(conn, jobs, job_id), row(conn, budget, 1)
+            if job["status"] != "running":
+                raise ValueError("job is not running")
+            if job["worker_id"] != worker_id:
+                raise ValueError("job worker owner does not match")
+            # Dispatched pending/unknown charges have already left job.remaining.
+            conn.execute(
+                update(budget)
+                .where(budget.c.id == 1)
+                .values(reserved=b["reserved"] - job["remaining"])
+            )
+            conn.execute(
+                update(jobs)
+                .where(jobs.c.id == job_id)
+                .values(status="unavailable", reason="interrupted", remaining=0)
             )
 
     def usage(self):

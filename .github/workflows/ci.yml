@@ -62,6 +62,10 @@ jobs:
           uv sync --frozen
       - name: Run all team tests
         run: uv run --no-sync pytest tests -q
+      - name: PostgreSQL migration and upgrade acceptance
+        env:
+          BOUNCER_TEST_POSTGRES: '1'
+        run: uv run --no-sync pytest tests/a/test_migrations.py -q
       - name: Python lint
         run: uv run --no-sync ruff check src tests notebooks tools/hostinger
 

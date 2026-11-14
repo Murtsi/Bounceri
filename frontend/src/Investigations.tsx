@@ -5,6 +5,7 @@ import {
   type Assessment,
   type Capabilities,
   type Investigation,
+  type InvestigationOrigin,
   type LocalAssessment,
 } from "./investigationsApi";
 import {
@@ -885,20 +886,15 @@ function CaseRow({ investigation, onPick }: { investigation: Investigation; onPi
 
 export default function Investigations({ goTraffic }: { goTraffic: () => void }) {
   const [picked, setPicked] = useState<string | null>(null);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<InvestigationOrigin>("all");
+  const [offset, setOffset] = useState(0);
   const query = useQuery({
-    queryKey: ["investigations"],
-    queryFn: investigationApi.investigations,
+    queryKey: ["investigations", filter, offset],
+    queryFn: () => investigationApi.investigations(filter, offset),
     retry: false,
     refetchInterval: 5_000,
   });
-  const cases = (query.data ?? []).filter(
-    (item) =>
-      filter === "all" ||
-      (filter === "synthetic"
-        ? item.source?.synthetic === true
-        : item.source?.synthetic === false && item.source.kind === "monitored_traffic"),
-  );
+  const cases = query.data ?? [];
   return (
     <div className="space-y-6">
       <div>
@@ -934,7 +930,10 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
               Source
               <select
                 value={filter}
-                onChange={(event) => setFilter(event.target.value)}
+                onChange={(event) => {
+                  setFilter(event.target.value as InvestigationOrigin);
+                  setOffset(0);
+                }}
                 className="rounded-md border border-input bg-card px-2 py-1.5 text-foreground"
               >
                 <option value="all">All origins</option>
@@ -960,12 +959,16 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
           {query.data && cases.length === 0 && (
             <div className="border-t border-border px-5 py-8">
               <h3 className="text-sm font-semibold">
-                {query.data.length === 0 ? "No investigations published yet" : "No investigations match this source"}
+                {offset > 0
+                  ? "No more investigations"
+                  : filter === "all" ? "No investigations published yet" : "No investigations match this source"}
               </h3>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
-                {query.data.length === 0
-                  ? "An operator can publish a sanitised traffic snapshot. An empty case list does not mean the monitored traffic is safe."
-                  : "Choose another source to inspect the available cases."}
+                {offset > 0
+                  ? "Return to the previous page to inspect newer cases."
+                  : filter === "all"
+                    ? "An operator can publish a sanitised traffic snapshot. An empty case list does not mean the monitored traffic is safe."
+                    : "Choose another source to inspect the available cases."}
               </p>
               <button
                 onClick={goTraffic}
@@ -982,6 +985,26 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
               ))}
             </ul>
           )}
+          <nav
+            aria-label="Investigation pages"
+            className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3"
+          >
+            <button
+              onClick={() => setOffset((current) => Math.max(0, current - 100))}
+              disabled={query.isFetching || offset === 0}
+              className="min-h-10 rounded-md border border-input px-3 py-2 text-sm font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <p aria-live="polite" className="text-sm tabular-nums text-muted-foreground">Page {offset / 100 + 1}</p>
+            <button
+              onClick={() => setOffset((current) => current + 100)}
+              disabled={query.isFetching || !!query.error || cases.length < 100}
+              className="min-h-10 rounded-md border border-input px-3 py-2 text-sm font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </nav>
         </section>
       )}
     </div>

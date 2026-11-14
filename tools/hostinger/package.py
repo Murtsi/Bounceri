@@ -27,6 +27,7 @@ def capsule(root: Path) -> tuple[str, str]:
     for folder in ("src/bouncer", "tools/sim", "tools/hostinger", "tools/datasets"):
         paths.extend((root / folder).rglob("*.py"))
     paths.extend((root / "frontend/dist").rglob("*"))
+    paths.extend((root / "src/bouncer/db/migrations").glob("*.sql"))
     paths.extend(
         root / name
         for name in (
@@ -67,6 +68,7 @@ def capsule(root: Path) -> tuple[str, str]:
                     and path.suffix
                     not in {
                         ".py",
+                        ".sql",
                         ".json",
                         ".jsonl",
                         ".html",

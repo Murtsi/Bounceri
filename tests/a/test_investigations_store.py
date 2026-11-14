@@ -267,3 +267,38 @@ def test_complete_small_model_packet_is_eligible_and_incomplete_packet_is_not(st
     with pytest.raises(ValueError, match="review_ineligible"):
         store.enqueue_review(empty["id"], "config", 100)
     assert store.usage()["reserved_usd"] == 0
+
+
+def test_case_list_is_bounded_paged_and_constant_queries(store):
+    from sqlalchemy import event
+    for i in range(7):
+        store.create_from_legacy(snapshot(), source_key=f"public-{i}", public_demo=True)
+    private = store.create_from_legacy(snapshot(), source_key="private")
+    statements = []
+    def capture(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+    event.listen(store.engine, "before_cursor_execute", capture)
+    try:
+        page = store.list_cases(limit=3)
+    finally:
+        event.remove(store.engine, "before_cursor_execute", capture)
+    assert len(page) == 3
+    assert len(statements) <= 3
+    second = store.list_cases(limit=3, offset=3)
+    assert not {c["id"] for c in page} & {c["id"] for c in second}
+    assert private["id"] not in {c["id"] for c in store.list_cases()}
+    assert len(store.list_cases(public_only=False)) == 8
+    assert all(c["review"]["status"] == "not_requested" for c in page)
+
+
+def test_case_origin_filter_precedes_pagination(store):
+    for i in range(4):
+        store.create_from_legacy(snapshot(), source_key=f"synth-{i}", public_demo=True)
+    real = store.create_from_legacy(snapshot(False), source_key="real")
+    store.create_from_legacy(snapshot(False), source_key="fixture")
+    assert len(store.list_cases(False, origin="real")) == 1
+    assert store.list_cases(origin="real") == []
+    assert store.list_cases(False, origin="real", limit=1)[0]["id"] == real["id"]
+    assert len(store.list_cases(False, origin="synthetic", limit=2)) == 2
+    with pytest.raises(ValueError, match="origin"):
+        store.list_cases(origin="invalid")

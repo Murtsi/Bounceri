@@ -152,9 +152,12 @@ async function list<T>(path: string): Promise<T[]> {
 
 // Public inspection is GET-only. Case creation, paid review and enforcement require
 // an authenticated operator; no credentials or write actions belong in this bundle.
+export type InvestigationOrigin = "all" | "real" | "synthetic";
+
 export const investigationApi = {
   capabilities: async () => record<Capabilities>(await get("/api/capabilities")),
-  investigations: () => list<Investigation>("/api/investigations"),
+  investigations: (origin: InvestigationOrigin = "all", offset = 0) =>
+    list<Investigation>(`/api/investigations?limit=100&offset=${offset}&origin=${origin}`),
   investigation: async (id: string) =>
     record<Investigation>(await get(`/api/investigations/${encodeURIComponent(id)}`)),
   assessments: (id: string) => list<Assessment>(`/api/investigations/${encodeURIComponent(id)}/assessments`),
