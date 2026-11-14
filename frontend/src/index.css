@@ -1,74 +1,50 @@
 @import "tailwindcss";
 
-/* shadcn/ui (new-york, neutral) + Bouncerin datavärit.
-   Kaaviovärit: dataviz-skillin validoitu paletti, järjestys ihminen → hyvä botti →
-   haitallinen → epävarma (CVD ΔE ≥ 9,2, normaali ≥ 17,6 molemmissa tiloissa; harmaa
-   on de-emphasis-rooli). Tumma tila on valittu erikseen, ei automaattinen käännös. */
+/* Bouncer: vain tumma "lasi"-teema syvänvihreällä taustalla, limenvihreä korostus.
+   Kaaviovärit: dataviz-skillin validoima paletti lasikortin efektiivistä pintaa
+   (#1b2620) vasten, järjestys ihminen → hyvä botti → haitallinen (CVD ΔE ≥ 9,7,
+   normaali ≥ 19,3). "Epävarma" on de-emphasis: harmaa + vinoviivoitus (tekstuuri),
+   ei neljäs sävy. Limeä ei käytetä datasarjana, vain käyttöliittymän korostuksena. */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --radius: 0.75rem;
-  --background: #f9f9f7;
-  --foreground: #0b0b0b;
-  --card: #fcfcfb;
-  --card-foreground: #0b0b0b;
-  --popover: #fcfcfb;
-  --popover-foreground: #0b0b0b;
-  --primary: #0b0b0b;
-  --primary-foreground: #fcfcfb;
-  --secondary: #f0efec;
-  --secondary-foreground: #0b0b0b;
-  --muted: #f0efec;
-  --muted-foreground: #52514e;
-  --accent: #f0efec;
-  --accent-foreground: #0b0b0b;
-  --destructive: #d03b3b;
-  --border: rgba(11, 11, 11, 0.1);
-  --input: rgba(11, 11, 11, 0.15);
-  --ring: #2a78d6;
+  color-scheme: dark;
+  --radius: 1rem;
+  --background: #08110c;
+  --foreground: #eef3ea;
+  --card: rgba(255, 255, 255, 0.055);
+  --card-solid: #1b2620;
+  --card-foreground: #eef3ea;
+  --popover: rgba(22, 32, 26, 0.92);
+  --popover-foreground: #eef3ea;
+  --primary: #c5ef5d;
+  --primary-foreground: #0f1a0c;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #eef3ea;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(226, 236, 220, 0.68);
+  --accent: rgba(255, 255, 255, 0.1);
+  --accent-foreground: #eef3ea;
+  --destructive: #e5534b;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #c5ef5d;
 
   /* data (dataviz) */
-  --series-human: #2a78d6;
-  --series-good: #1baf7a;
-  --series-bad: #eb6834;
-  --series-uncertain: #898781;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --ink-muted: #898781;
+  --series-human: #4a93e6;
+  --series-good: #1d9e72;
+  --series-bad: #df5f33;
+  --series-uncertain: #8a958c;
+  --hatch: rgba(255, 255, 255, 0.22);
+  --grid: rgba(255, 255, 255, 0.07);
+  --axis: rgba(255, 255, 255, 0.14);
+  --ink-muted: rgba(226, 236, 220, 0.55);
   /* status (vain tila-merkitys, aina kuvake + teksti) */
-  --status-good: #0ca30c;
+  --status-good: #4cc764;
   --status-warning: #fab219;
   --status-serious: #ec835a;
-  --status-critical: #d03b3b;
-}
-
-.dark {
-  --background: #0d0d0d;
-  --foreground: #f0efec;
-  --card: #1a1a19;
-  --card-foreground: #f0efec;
-  --popover: #1a1a19;
-  --popover-foreground: #f0efec;
-  --primary: #f0efec;
-  --primary-foreground: #1a1a19;
-  --secondary: #2c2c2a;
-  --secondary-foreground: #f0efec;
-  --muted: #2c2c2a;
-  --muted-foreground: #c3c2b7;
-  --accent: #2c2c2a;
-  --accent-foreground: #f0efec;
-  --destructive: #d03b3b;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #3987e5;
-
-  --series-human: #3987e5;
-  --series-good: #199e70;
-  --series-bad: #d95926;
-  --series-uncertain: #898781;
-  --grid: #2c2c2a;
-  --axis: #383835;
+  --status-critical: #e5534b;
 }
 
 @theme inline {
@@ -80,6 +56,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-solid: var(--card-solid);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
@@ -110,7 +87,15 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply min-h-screen bg-background text-foreground antialiased;
+    /* Sumea syvänvihreä tausta (kuin epätarkka valokuva), pysyy paikallaan. */
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgba(126, 168, 112, 0.42), transparent 60%),
+      radial-gradient(50rem 36rem at 95% 10%, rgba(60, 120, 84, 0.38), transparent 60%),
+      radial-gradient(70rem 50rem at 60% 110%, rgba(150, 140, 96, 0.22), transparent 60%),
+      radial-gradient(40rem 30rem at 30% 60%, rgba(28, 74, 48, 0.5), transparent 70%),
+      linear-gradient(160deg, #10241a 0%, #08110c 55%, #0b1710 100%);
+    background-attachment: fixed;
   }
 }
 
@@ -145,4 +130,17 @@
 .bouncer-static .bouncer-letter { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .bouncer-b, .bouncer-letter { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* --- Lasi ja tekstuuri ---------------------------------------------------------- */
+.glass {
+  background: var(--card);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+/* "Epävarma": harmaa pohja + 45° vinoviivoitus (dataviz: tekstuuri toissijaisena koodauksena). */
+.hatch {
+  background-color: var(--series-uncertain);
+  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 5px);
 }

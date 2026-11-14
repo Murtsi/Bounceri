@@ -19,8 +19,8 @@ export function Swatch({ label, className }: { label: Label; className?: string 
   return (
     <span
       aria-hidden="true"
-      className={cn("inline-block size-2.5 shrink-0 rounded-[3px]", className)}
-      style={{ background: SERIES_VAR[label] }}
+      className={cn("inline-block size-2.5 shrink-0 rounded-[3px]", label === "uncertain" && "hatch", className)}
+      style={label === "uncertain" ? undefined : { background: SERIES_VAR[label] }}
     />
   );
 }
@@ -53,7 +53,7 @@ function ChartTooltip({ active, payload, label }: TooltipContentProps<number, st
   if (!active || !payload?.length) return null;
   const total = payload.reduce((s, p) => s + (Number(p.value) || 0), 0);
   return (
-    <div className="min-w-40 rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+    <div className="min-w-40 rounded-2xl border bg-popover px-3 py-2 backdrop-blur-xl text-xs text-popover-foreground shadow-md">
       <p className="mb-1.5 font-medium">{label}</p>
       <ul className="flex flex-col gap-1">
         {[...payload].reverse().map((p) => (
@@ -117,6 +117,12 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
         <div className="h-60" role="img" aria-label={`Pinottu pylväskaavio: pyynnöt ${unit} väleissä luokittain`}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={rows} margin={{ top: 8, right: 4, bottom: 0, left: -20 }} barCategoryGap="20%">
+              <defs>
+                <pattern id="hatch-uncertain" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <rect width="6" height="6" fill="var(--series-uncertain)" />
+                  <line x1="0" y1="0" x2="0" y2="6" stroke="var(--hatch)" strokeWidth="2" />
+                </pattern>
+              </defs>
               <CartesianGrid vertical={false} stroke="var(--grid)" strokeWidth={1} />
               <XAxis
                 dataKey="label"
@@ -132,18 +138,18 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
                 axisLine={false}
                 tick={{ fontSize: 11, fill: "var(--ink-muted)" }}
               />
-              <Tooltip content={ChartTooltip} cursor={{ fill: "var(--muted)", opacity: 0.6 }} />
+              <Tooltip content={ChartTooltip} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
               {SERIES.map((l, i) => (
                 <Bar
                   key={l}
                   dataKey={l}
                   stackId="s"
-                  fill={SERIES_VAR[l]}
+                  fill={l === "uncertain" ? "url(#hatch-uncertain)" : SERIES_VAR[l]}
                   maxBarSize={24}
                   // 2 px rako segmenttien välissä pinnan värillä (dataviz: surface gap).
-                  stroke="var(--card)"
+                  stroke="var(--card-solid)"
                   strokeWidth={2}
-                  radius={i === SERIES.length - 1 ? [4, 4, 0, 0] : 0}
+                  radius={i === SERIES.length - 1 ? [6, 6, 0, 0] : 0}
                   isAnimationActive={false}
                 />
               ))}
@@ -168,8 +174,14 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
           return (
             <div
               key={l}
-              className="flex items-center overflow-visible rounded-[4px] px-2 text-xs font-semibold text-white"
-              style={{ width: `${(counts[l] / total) * 100}%`, background: SERIES_VAR[l] }}
+              className={cn(
+                "flex items-center overflow-visible rounded-md px-2 text-xs font-semibold text-white",
+                l === "uncertain" && "hatch",
+              )}
+              style={{
+                width: `${(counts[l] / total) * 100}%`,
+                ...(l === "uncertain" ? {} : { background: SERIES_VAR[l] }),
+              }}
               title={`${LABEL_TEXT[l]}: ${counts[l]} (${p} %)`}
             >
               {p >= 12 ? `${p} %` : ""}
