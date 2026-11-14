@@ -1,0 +1,26 @@
+{
+  "schema_version": "bounceri-source-registry-v1",
+  "datasets": [{
+    "id": "zenodo-3477932-simple",
+    "version": "2019-10-09-record-3477932",
+    "source_url": "https://doi.org/10.5281/zenodo.3477932",
+    "source_unit": "published_anonymized_session",
+    "sha256": "72977977ba3bda0ad35f7443aac0e5e374eded523eecf95384921d8d63fb8394",
+    "artifact_name": "simple_features.csv",
+    "bytes": 15913454,
+    "synthetic": false,
+    "task": "historical_robot_label",
+    "label_source": "Published ROBOT column; source-specific annotation, not verified human identity or maliciousness",
+    "maliciousness_labels": false,
+    "native_feature_mapping": "not_available",
+    "license": {
+      "id": "CC-BY-4.0",
+      "use": "Archived local metadata reports CC-BY-4.0; verify upstream terms before new use",
+      "redistribution": "Attribute Lagopoulos and Tsoumakas, dataset title, DOI and license; describe modifications. No raw corpus is redistributed here."
+    },
+    "terms_evidence": "Archived Zenodo record 3477932 in prior local learning pack; not refreshed over the network",
+    "annotation_limitations": "ROBOT does not establish good_bot/bad_bot; unobserved native HTTP features remain missing",
+    "status": "registered_only_not_loaded_not_trained"
+  }],
+  "unavailable_evidence": ["independently annotated real humans", "genuinely independently withheld attack"]
+}

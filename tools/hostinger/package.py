@@ -24,7 +24,7 @@ def capsule(root: Path) -> tuple[str, str]:
     if not (root / "frontend/dist/index.html").is_file():
         raise ValueError("Build the dashboard with pnpm run build before packaging")
     paths = []
-    for folder in ("src/bouncer", "tools/sim", "tools/hostinger"):
+    for folder in ("src/bouncer", "tools/sim", "tools/hostinger", "tools/datasets"):
         paths.extend((root / folder).rglob("*.py"))
     paths.extend((root / "frontend/dist").rglob("*"))
     paths.extend(
@@ -44,6 +44,7 @@ def capsule(root: Path) -> tuple[str, str]:
             "src/bouncer/network/campaign_metrics.json",
             "models/metrics.json",
             "models/model.json",
+            "tools/datasets/registry.example.json",
         )
     )
     stream = io.BytesIO()

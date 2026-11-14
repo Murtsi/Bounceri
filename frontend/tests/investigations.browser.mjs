@@ -171,7 +171,14 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       n_campaigns: 0,
       ingest: {},
     },
-    "/api/overview": { n_sessions: 0 },
+    "/api/overview": {
+      n_sessions: 0,
+      alerts: [],
+      actors: [],
+      distribution: { human: 0, good_bot: 0, bad_bot: 0, uncertain: 0 },
+      timeline: { step_s: 60, points: [] },
+      honesty: { synthetic: true, n_humans: 0, false_alarms: 0, fpr: null, fpr_ci95_upper: null },
+    },
     "/api/sessions": populatedSessions ? [publicSession] : [],
     "/api/sessions/public-session": {
       ...publicSession,
@@ -213,25 +220,27 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       body: JSON.stringify(unavailable ? { detail: "Mock unavailable" } : (data[path] ?? {})),
     });
   });
+  const nav = (label) =>
+    page
+      .locator('nav[aria-label="Views"]:visible')
+      .getByRole("button", { name: new RegExp(`^${label}(?:\\s*\\d+)?$`) });
   const reload = async () => {
     await page.goto(baseURL);
     await page.waitForLoadState("networkidle");
+    await page.getByText("Analysing traffic\u2026", { exact: true }).waitFor({ state: "hidden" });
+    check(await page.getByRole("img", { name: "Bouncer", exact: true }).first().isVisible(), "Existing header changed");
     check(
-      await page.locator("header").getByRole("img", { name: "Bouncer", exact: true }).isVisible(),
-      "Existing header changed",
-    );
-    check(
-      (await page.getByRole("tab", { name: "Yleiskuva", exact: true }).getAttribute("aria-selected")) === "true",
+      (await nav("Overview").getAttribute("aria-current")) === "page",
       "Existing overview is no longer the default",
     );
-    for (const name of ["Sessiot", "Kampanjat", "Mittarit"]) {
-      check(await page.getByRole("tab", { name, exact: true }).isVisible(), "Existing navigation changed");
+    for (const name of ["Sessions", "Campaigns", "Metrics"]) {
+      check(await nav(name).isVisible(), "Existing navigation changed");
     }
     check(
       (await page.getByRole("button", { name: /Vaihda .* teemaan/ }).count()) === 0,
-      "PR24 removed theme toggle was restored",
+      "PR25 removed theme toggle was restored",
     );
-    await page.getByRole("tab", { name: "Investigations", exact: true }).click();
+    await nav("Investigations").click();
     if (mode === "empty") await page.getByText("No investigations published yet", { exact: true }).waitFor();
     else if (mode === "error") await page.getByText("Investigations could not be loaded", { exact: true }).waitFor();
     else await page.getByRole("button", { name: /fixture-case/ }).waitFor();
@@ -247,7 +256,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   );
   check(
     await page.evaluate(() => document.documentElement.classList.contains("dark")),
-    "PR24 dark-only default changed",
+    "PR25 dark-only default changed",
   );
   check(
     await page
@@ -257,25 +266,25 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
         (node) =>
           node.classList.contains("glass") && getComputedStyle(node).backgroundColor === "rgba(255, 255, 255, 0.055)",
       ),
-    "Investigation panels do not follow PR24 dark glass theme",
+    "Investigation panels do not follow PR25 dark glass theme",
   );
-  await page.getByRole("tab", { name: "Sessiot", exact: true }).click();
-  await page.getByText("Ei sessioita tällä suodattimella.", { exact: true }).waitFor();
-  await page.getByRole("tab", { name: "Kampanjat", exact: true }).click();
-  await page.getByText("Ei kampanjoita:", { exact: false }).waitFor();
-  await page.getByRole("tab", { name: "Mittarit", exact: true }).click();
-  await page.getByText("models/metrics.json on stub:", { exact: false }).waitFor();
-  await page.getByRole("tab", { name: "Yleiskuva", exact: true }).click();
-  await page.getByText("Odotetaan liikennettä…", { exact: false }).waitFor();
+  await nav("Sessions").click();
+  await page.getByText("No sessions match this filter.", { exact: true }).waitFor();
+  await nav("Campaigns").click();
+  await page.getByText("No campaigns:", { exact: false }).waitFor();
+  await nav("Metrics").click();
+  await page.getByText("models/metrics.json is a stub:", { exact: false }).waitFor();
+  await nav("Overview").click();
+  await page.getByText("Waiting for traffic…", { exact: false }).waitFor();
   populatedSessions = true;
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.getByRole("tab", { name: "Sessiot", exact: true }).click();
-  await page.getByRole("button", { name: "Avaa sessio public-session", exact: true }).click();
-  await page.getByRole("complementary", { name: "Sessio public-session", exact: true }).waitFor();
+  await nav("Sessions").click();
+  await page.getByRole("button", { name: "Open session public-session", exact: true }).click();
+  await page.getByRole("complementary", { name: "Session public-session", exact: true }).waitFor();
   await page.waitForTimeout(650);
   check(
     await page
-      .getByRole("complementary", { name: "Sessio public-session", exact: true })
+      .getByRole("complementary", { name: "Session public-session", exact: true })
       .getByText(publicReason, { exact: true })
       .isVisible(),
     "Actual public campaign reason missing",
@@ -288,7 +297,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   check(favicon === "/favicon.svg", "Bouncer favicon link missing");
   const icon = await page.request.get(new URL(favicon, baseURL).href);
   check(icon.status() === 200 && (await icon.text()).includes("<svg"), "Bouncer favicon unavailable");
-  await page.getByRole("tab", { name: "Investigations", exact: true }).click();
+  await nav("Investigations").click();
   await page.getByText("No investigations published yet", { exact: true }).waitFor();
 
   mode = "error";
@@ -467,15 +476,15 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.getByText("History could not be loaded", { exact: true }).waitFor();
   check(await page.getByRole("heading", { name: "Evidence snapshot" }).isVisible(), "History failure hid evidence");
   await page.getByRole("button", { name: "Open current traffic overview →" }).click();
-  await page.getByText("Odotetaan liikennettä…", { exact: false }).waitFor();
+  await page.getByText("Waiting for traffic…", { exact: false }).waitFor();
   check(writes.length === 0, `Public UI issued write requests: ${writes.join(", ")}`);
   check(errors.length === 0, `Browser errors: ${errors.join(", ")}`);
   return {
     passed: [
       "existing overview remains default",
       "existing header and navigation preserved",
-      "PR24 sessions campaigns metrics and overview preserved",
-      "PR24 dark-only glass theme preserved",
+      "PR25 sessions campaigns metrics and overview preserved",
+      "PR25 dark-only glass theme preserved",
       "empty state",
       "outage distinction",
       "future modules disabled",

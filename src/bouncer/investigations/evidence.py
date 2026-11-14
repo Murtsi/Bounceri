@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from collections import Counter
 from datetime import UTC, datetime
 from typing import Any
@@ -21,11 +22,15 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
     verdicts = snapshot.get("verdicts", {})
     evidence = []
     labels: Counter[str] = Counter()
+    versions: set[str] = set()
     for i, session in enumerate(sessions[:500]):
         requests = session.get("requests", [])
         if not isinstance(requests, list):
             raise ValueError("requests must be a list")
         verdict = verdicts.get(str(session.get("id")), {})
+        version = verdict.get("model_version")
+        if isinstance(version, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", version):
+            versions.add(version)
         label = verdict.get("label", "uncertain")
         if label not in {"human", "good_bot", "bad_bot", "uncertain"}:
             label = "uncertain"
@@ -99,7 +104,11 @@ def traffic_packet(snapshot: dict[str, Any]) -> dict[str, Any]:
             "stage": "local",
             "label": next(iter(labels)) if len(labels) == 1 else "uncertain",
             "score": None,
-            "model_version": "legacy-traffic-snapshot-v1",
+            "model_version": next(iter(versions))
+            if len(versions) == 1
+            else "mixed-local-detectors"
+            if versions
+            else "legacy-traffic-snapshot-v1",
             "label_counts": dict(labels),
             "reasons": [
                 f"{n} session(s) received local label {label}."

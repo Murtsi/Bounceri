@@ -26,7 +26,9 @@ VULN_PATHS_CERTAIN = 2
 
 #: C:n kampanjatyypit, jotka ovat kirjautumishyökkäyksiä → varma `bad_bot` (päätös 053).
 #: `behavior_cluster` EI kuulu tänne: MVP:ssä se niputti simuloidut ihmiset kampanjaksi.
-LOGIN_ATTACK_CAMPAIGNS = frozenset({"credential_stuffing", "distributed_login_spray"})
+# Generic distributed_login_spray is advisory: temporal overlap can include ordinary retries.
+# Only the stronger same-target relationship is eligible for this session-level rule.
+LOGIN_ATTACK_CAMPAIGNS = frozenset({"credential_stuffing"})
 #: Vähintään näin monta sessiota kampanjassa, ennen kuin B luottaa siihen.
 CAMPAIGN_MIN_SESSIONS = 3
 

@@ -6,6 +6,14 @@ import pytest
 from bouncer.investigations import InvestigationStore
 
 
+def test_case_retains_actual_worker_detector_version(tmp_path):
+    source = snapshot()
+    for verdict in source["verdicts"].values():
+        verdict["model_version"] = "rules-v2"
+    case = InvestigationStore(f"sqlite:///{tmp_path / 'versions.db'}").create_from_legacy(source)
+    assert case["local_assessment"]["model_version"] == "rules-v2"
+
+
 def snapshot(synthetic=True):
     return {
         "synthetic": synthetic,

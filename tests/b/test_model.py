@@ -151,4 +151,4 @@ def test_saved_model_is_loaded_by_score(trained, tmp_path):
 
 def test_no_model_file_in_repo_means_rules_only():
     assert mdl.load_model() is None  # models/model.json ei ole commitoitu
-    assert score(scraper_session(), None, None).model_version == "rules-v1"
+    assert score(scraper_session(), None, None).model_version == "rules-v2"

@@ -124,7 +124,7 @@ def test_verdict_shape(make):
     assert 0.0 <= v.score <= 1.0
     assert 1 <= len(v.reasons) <= 3
     assert len(set(v.reasons)) == len(v.reasons)
-    assert v.model_version == "rules-v1"
+    assert v.model_version == "rules-v2"
 
 
 def test_score_default_traps_file_missing_is_safe():
@@ -141,8 +141,8 @@ def _login_session():
     return session([req(0, "/login", method="POST", ua=CURL_UA, status=401)], ua=CURL_UA)
 
 
-@pytest.mark.parametrize("kind", ["credential_stuffing", "distributed_login_spray"])
-def test_login_attack_campaign_is_bad_bot(kind):
+def test_login_attack_campaign_is_bad_bot():
+    kind = "credential_stuffing"
     camp = Campaign(
         "stuffing:admin", kind, ("1", "2", "3", "4"), ("username 'admin' failed from 4 IPs",)
     )
