@@ -231,6 +231,30 @@ class Recommendation(BaseModel):
     observations: list[Observation] = Field(max_length=40)
 
 
+def _trusted_attack_observed(facts) -> bool:
+    return any(
+        (
+            data.get("category_provenance") == "bouncer-path-categories-v1"
+            or data.get("attack_signals")
+            and data.get("path_category_version") == "categories-v1"
+        )
+        and any(data.get("path_category_counts", {}).get(key, 0) > 0 for key in ("probe", "trap"))
+        for data in facts
+    )
+
+
+def validate_decision_result(result: dict, packet: dict) -> dict:
+    """Typed model opinions cannot bypass phase-one observation prerequisites."""
+    answers = result["answers"]
+    if answers["coordination"]["choice"] != "unknown":
+        raise ValueError("invalid_decision_output")
+    if answers["explicit_attack"]["choice"] == "yes" and not _trusted_attack_observed(
+        item["data"] for item in packet["evidence"]
+    ):
+        raise ValueError("invalid_decision_output")
+    return result
+
+
 def validate_recommendation(value: dict, packet: dict) -> dict:
     result = Recommendation.model_validate(value)
     evidence = {item["id"]: item["data"] for item in packet["evidence"]}
@@ -282,15 +306,7 @@ def validate_recommendation(value: dict, packet: dict) -> dict:
     )
     if (result.label == "good_bot" or result.crawler_verification == "verified") and not verified:
         raise ValueError("invalid_reviewer_output")
-    attack = any(
-        (
-            data.get("category_provenance") == "bouncer-path-categories-v1"
-            or data.get("attack_signals")
-            and data.get("path_category_version") == "categories-v1"
-        )
-        and any(data.get("path_category_counts", {}).get(key, 0) > 0 for key in ("probe", "trap"))
-        for data in facts
-    )
+    attack = _trusted_attack_observed(facts)
     if (result.label == "bad_bot" or result.maliciousness == "supported") and not attack:
         raise ValueError("invalid_reviewer_output")
     if result.label == "bad_bot" and result.maliciousness != "supported":

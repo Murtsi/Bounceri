@@ -29,6 +29,13 @@ and validated decision assessment; its agreement is not independent corroboratio
 metadata records the actual provider and exact configured/returned model for each stage. A
 Featherless model is never represented as Microsoft-Decision-1.
 
+Before recording either native or chat decision assessments, backend policy requires coordination
+to remain unknown because this phase has no relationship evidence. An affirmative explicit-attack
+answer requires trusted probe/trap observations; automation remains an advisory interpretation.
+Malformed or unrepresentable reported costs leave reservations held and finish the job unavailable.
+Decimal exponents/precision and conversions are bounded to the PostgreSQL ledger representation;
+provider billing strings cannot crash a worker through unbounded arithmetic.
+
 Native Hostinger remains an optional separately configured adapter, not a fallback. Hostinger
 OpenAI-compatible chat support does **not** establish native Microsoft Decision support.
 No native Hostinger route is supplied by default. Public Hostinger documentation advertises model

@@ -102,6 +102,54 @@ def row(conn, table, record_id):
     return dict(result)
 
 
+class ReviewIneligible(ValueError):
+    """The immutable source snapshot cannot form an accepted bounded model packet."""
+
+    def __init__(self, reason: str):
+        self.reason = reason
+        super().__init__("review_ineligible: " + reason)
+
+
+def model_packet(payload: dict) -> dict:
+    return {
+        key: payload[key]
+        for key in (
+            "evidence_hash",
+            "evidence_version",
+            "synthetic",
+            "complete",
+            "evidence",
+            "local_assessment",
+            "missing_information",
+            "distinct_client_count",
+        )
+    } | {"case_id": payload["id"]}
+
+
+def review_eligibility(payload: dict) -> dict:
+    # Source completeness and model eligibility are separate. Preserve the source and
+    # validate the exact model view, rather than truncating evidence to buy a review.
+    if payload.get("complete") is not True:
+        return {"eligible": False, "reason": "Evidence snapshot is incomplete."}
+    try:
+        from bouncer.review.validation import validate_packet
+    except ModuleNotFoundError as exc:
+        if exc.name not in {"bouncer.review", "bouncer.review.validation"}:
+            raise
+        return {"eligible": False, "reason": "The bounded review validator is unavailable."}
+    try:
+        validate_packet(model_packet(payload))
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return {
+            "eligible": False,
+            "reason": (
+                "Model packet exceeds size/item limits or fails evidence validation. "
+                "Create a smaller scoped case; the source snapshot has been preserved."
+            ),
+        }
+    return {"eligible": True, "reason": None}
+
+
 class InvestigationStore:
     LIMIT = 5_000_000
 
@@ -225,6 +273,7 @@ class InvestigationStore:
                 )
                 .order_by(assessments.c.created_at.desc())
             ).scalar()
+            payload["review_eligibility"] = review_eligibility(payload)
             payload["review"] = {
                 "status": job["status"] if job else "not_requested",
                 "job_id": job["id"] if job else None,
@@ -269,6 +318,9 @@ class InvestigationStore:
             raise ValueError("invalid review limits or configuration")
         with self.transaction() as conn:
             case = row(conn, cases, case_id)
+            eligibility = review_eligibility(case["payload"])
+            if not eligibility["eligible"]:
+                raise ReviewIneligible(eligibility["reason"])
             existing = (
                 conn.execute(
                     select(jobs).where(
@@ -337,19 +389,7 @@ class InvestigationStore:
         with self.engine.connect() as conn:
             job = row(conn, jobs, job_id)
             payload = row(conn, cases, job["case_id"])["payload"]
-            return {
-                key: payload[key]
-                for key in (
-                    "evidence_hash",
-                    "evidence_version",
-                    "synthetic",
-                    "complete",
-                    "evidence",
-                    "local_assessment",
-                    "missing_information",
-                    "distinct_client_count",
-                )
-            } | {"case_id": job["case_id"]}
+            return model_packet(payload)
 
     def start_request(self, job_id, stage, provider, model, maximum_cost_microusd, pricing_version):
         if (

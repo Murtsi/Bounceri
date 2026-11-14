@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from decimal import ROUND_CEILING, Decimal, InvalidOperation
+from decimal import ROUND_CEILING, Decimal, DecimalException
 
 import httpx
 
@@ -11,6 +11,9 @@ from .config import MAX_OUTPUT_TOKENS, MAX_REQUEST_BYTES
 from .validation import Recommendation, strict_json, validate_recommendation
 
 MAX_RESPONSE_BYTES = 65_536
+# PostgreSQL Integer ledger columns store signed 32-bit microdollars. Avoid giant
+# Decimal multiplication/int conversion and unrepresentable SQL charge values.
+MAX_SETTLED_MICROUSD = 2_147_483_647
 QUESTIONS = {
     "automation": "Does the original traffic evidence support automated activity?",
     "explicit_attack": "Does trusted original evidence establish probes or trap access?",
@@ -283,13 +286,26 @@ def usage_summary(response: dict, provider: str) -> tuple[int | None, dict, str 
         and value >= 0
     }
     cost = None
-    if provider == "featherless" and "cost" in usage and type(usage["cost"]) in (int, float, str):
+    if provider == "featherless" and "cost" in usage:
+        clean["cost_status"] = "invalid"
         try:
+            if type(usage["cost"]) not in (int, float, str):
+                raise ValueError("invalid_cost_type")
             usd = Decimal(str(usage["cost"]))
-            if usd.is_finite() and usd >= 0:
-                cost = int((usd * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
-        except (InvalidOperation, ValueError, OverflowError):
-            pass
+            if (
+                not usd.is_finite()
+                or usd < 0
+                or not -18 <= usd.as_tuple().exponent <= 6
+                or len(usd.as_tuple().digits) > 32
+                or usd > Decimal("2147.483647")
+            ):
+                raise ValueError("unrepresentable_provider_cost")
+            cost = int((usd * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
+            if not 0 <= cost <= MAX_SETTLED_MICROUSD:
+                raise ValueError("unrepresentable_provider_cost")
+            clean["cost_status"] = "reported"
+        except (DecimalException, ValueError, OverflowError):
+            cost = None
     request_id = response.get("id")
     if not isinstance(request_id, str) or not 1 <= len(request_id) <= 200:
         request_id = None

@@ -19,6 +19,7 @@ from bouncer.contracts import IpIntel
 from bouncer.db.store import _read_raw, _serialize_session, store_path
 from bouncer.ingest.sample import load_sample_data
 from bouncer.investigations import InvestigationStore
+from bouncer.investigations.store import ReviewIneligible
 from bouncer.session import score
 from bouncer.session.features import is_vuln_path
 
@@ -263,7 +264,10 @@ def list_assessments(case_id: str, request: Request):
 @router.post("/api/investigations/{case_id}/reviews", status_code=202)
 def request_review(case_id: str, request: Request):
     require_admin(request)
-    visible_case(case_id, request)
+    case = visible_case(case_id, request)
+    eligibility = case["review_eligibility"]
+    if not eligibility["eligible"]:
+        raise HTTPException(422, {"status": "review_ineligible", "reason": eligibility["reason"]})
     settings, capability = review_configuration()
     if not capability["enabled"] or settings is None:
         raise HTTPException(503, {"status": "unavailable", "reason": "Paid review is disabled"})
@@ -274,6 +278,8 @@ def request_review(case_id: str, request: Request):
             settings.maximum_cost_microusd,
             max_requests=capability.get("max_requests", 2),
         )
+    except ReviewIneligible as exc:
+        raise HTTPException(422, {"status": "review_ineligible", "reason": exc.reason}) from exc
     except ValueError as exc:
         raise HTTPException(409, {"status": "deferred_budget", "reason": str(exc)}) from exc
     return {"job_id": job["id"], "status": job["status"], "cached": job["status"] == "completed"}

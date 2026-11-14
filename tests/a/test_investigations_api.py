@@ -116,3 +116,42 @@ def test_live_private_legacy_data_is_hidden_and_admin_token_never_defaults(clien
         client.post("/api/investigations", headers=ADMIN, json={"source": "fixture"}).status_code
         == 401
     )
+
+
+@pytest.mark.parametrize("session_count", [48, 72])
+def test_review_endpoint_rejects_model_ineligible_packet_before_reserving(
+    client, monkeypatch, session_count
+):
+    from types import SimpleNamespace
+
+    from bouncer.api import investigations
+
+    raw = {
+        "synthetic": True,
+        "sessions": [
+            {
+                "id": f"session-{i}",
+                "ip": "192.0.2.1",
+                "requests": [{"method": "GET", "path": "/", "status": 200}],
+            }
+            for i in range(session_count)
+        ],
+    }
+    case = investigations.get_store().create_from_legacy(raw, source_key="large", public_demo=True)
+    settings = SimpleNamespace(config_key="verified-fixture-v1", maximum_cost_microusd=100)
+    monkeypatch.setattr(
+        investigations,
+        "review_configuration",
+        lambda: (settings, {"enabled": True, "max_requests": 2}),
+    )
+    response = client.post(f"/api/investigations/{case['id']}/reviews", headers=ADMIN)
+    assert response.status_code == 422
+    assert response.json()["detail"]["status"] == "review_ineligible"
+    assert response.json()["detail"]["reason"]
+    assert (
+        client.get(f"/api/investigations/{case['id']}").json()["review_eligibility"]["eligible"]
+        is False
+    )
+    usage = client.get("/api/usage").json()
+    assert usage["executions"] == usage["requests"] == 0
+    assert usage["reserved_usd"] == 0

@@ -218,3 +218,44 @@ def test_provider_overcharge_halts_existing_jobs_and_new_reservations_durably(st
     assert reopened.usage()["requests"] == 1
     assert reopened.usage()["execution_halted"] is True
     assert reopened.usage()["halt_reason"] == "provider_charge_exceeded_reservation"
+
+
+@pytest.mark.parametrize("session_count", [48, 72])
+def test_large_source_snapshots_are_preserved_but_ineligible_before_any_budget_reservation(
+    store, session_count
+):
+    raw = {
+        "synthetic": True,
+        "sessions": [
+            {
+                "id": f"session-{i}",
+                "ip": "192.0.2.1",
+                "requests": [{"method": "GET", "path": "/", "status": 200}],
+            }
+            for i in range(session_count)
+        ],
+    }
+    case = store.create_from_legacy(raw, source_key=f"large-{session_count}", public_demo=True)
+    assert case["complete"] is True
+    assert len(case["evidence"]) == session_count
+    eligibility = case["review_eligibility"]
+    assert eligibility["eligible"] is False
+    assert eligibility["reason"]
+    assert store.list_cases()[0]["review_eligibility"] == eligibility
+    with pytest.raises(ValueError, match="review_ineligible"):
+        store.enqueue_review(case["id"], "config", 100)
+    usage = store.usage()
+    assert usage["reserved_usd"] == 0
+    assert usage["executions"] == usage["requests"] == 0
+    assert store.get_case(case["id"])["evidence_hash"] == case["evidence_hash"]
+
+
+def test_complete_small_model_packet_is_eligible_and_incomplete_packet_is_not(store):
+    case = store.create_from_legacy(snapshot())
+    assert case["review_eligibility"] == {"eligible": True, "reason": None}
+    empty = store.create_from_legacy({"synthetic": True, "sessions": []}, "empty")
+    assert empty["review_eligibility"]["eligible"] is False
+    assert "incomplete" in empty["review_eligibility"]["reason"].lower()
+    with pytest.raises(ValueError, match="review_ineligible"):
+        store.enqueue_review(empty["id"], "config", 100)
+    assert store.usage()["reserved_usd"] == 0

@@ -24,7 +24,7 @@ from .providers import (
     reviewer_request,
     usage_summary,
 )
-from .validation import validate_packet
+from .validation import validate_decision_result, validate_packet
 
 
 class ReviewStore(Protocol):
@@ -141,6 +141,9 @@ class ReviewRunner:
             return None
         actual, usage, request_id = usage_summary(response, cfg.provider)
         self.store.settle_request(reservation_id, actual, usage, request_id)
+        if usage.get("cost_status") == "invalid":
+            self.store.finish_job(job_id, "unavailable", "invalid_provider_usage_unknown_charge")
+            return None
         if cfg.provider == "featherless" and usage.get("completion_tokens", 0) > MAX_OUTPUT_TOKENS:
             self.store.finish_job(job_id, "unavailable", "provider_output_limit_exceeded")
             return None
@@ -159,6 +162,8 @@ class ReviewRunner:
                 if stage == "decision_model"
                 else parse_reviewer_response(response, packet, cfg.expected_model)
             )
+            if stage == "decision_model":
+                result = validate_decision_result(result, packet)
         except (ValueError, KeyError, TypeError):
             reason = (
                 "model_identity_mismatch"

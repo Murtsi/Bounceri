@@ -793,3 +793,91 @@ def test_worker_prefers_shared_database_namespace_with_legacy_compatibility(monk
     monkeypatch.delenv("BOUNCER_DATABASE_URL")
     assert main(["--once"], store_factory=factory) == 0
     assert seen[-1] == "sqlite:///wrong.db"
+
+
+@pytest.mark.parametrize("provider", ["hostinger", "featherless"])
+@pytest.mark.parametrize(
+    "question,choice",
+    [
+        ("coordination", "yes"),
+        ("coordination", "no"),
+        ("explicit_attack", "yes"),
+    ],
+)
+def test_decision_claims_require_original_observation_prerequisites(provider, question, choice):
+    from bouncer.review import ReviewRunner
+
+    cfg = settings() if provider == "hostinger" else dual_settings()
+    data = packet()
+    data["evidence"][0]["data"]["path_category_counts"] = {"other": 12}
+    store = MemoryStore(cfg.config_key, data)
+    source = Responses(store) if provider == "hostinger" else DualResponses(store)
+
+    def unsupported_claim(*args):
+        response = source(*args)
+        if len(source.requests) > 1:
+            return response
+        if provider == "hostinger":
+            response["answers"][question]["choice"] = choice
+        else:
+            result = json.loads(response["choices"][0]["message"]["content"])
+            result["answers"][question]["choice"] = choice
+            response["choices"][0]["message"]["content"] = json.dumps(result)
+        return response
+
+    ReviewRunner(store, cfg, transport=unsupported_claim).run_once()
+    assert store.finished == ("unavailable", "invalid_decision_output")
+    assert len(source.requests) == 1
+    assert not store.assessments
+
+
+@pytest.mark.parametrize("cost", ["1e1000000", "1e-1000000", "NaN", "not-a-cost", "999999999999"])
+def test_unrepresentable_provider_cost_remains_reserved_and_finishes_visibly(cost):
+    from bouncer.review import ReviewRunner
+
+    cfg = dual_settings()
+    store = MemoryStore(cfg.config_key)
+    source = DualResponses(store)
+
+    def invalid_cost(*args):
+        response = source(*args)
+        response["usage"]["cost"] = cost
+        return response
+
+    ReviewRunner(store, cfg, transport=invalid_cost).run_once()
+    assert store.finished == ("unavailable", "invalid_provider_usage_unknown_charge")
+    assert len(source.requests) == 1
+    assert store.settlements[0][1] is None
+    assert store.settlements[0][2]["cost_status"] == "invalid"
+    assert not store.assessments
+
+
+@pytest.mark.parametrize("provider", ["hostinger", "featherless"])
+@pytest.mark.parametrize("automation", ["yes", "no", "unknown"])
+def test_supported_attack_observation_and_ambiguous_automation_remain_assessments(
+    provider, automation
+):
+    from bouncer.review import ReviewRunner
+
+    cfg = settings() if provider == "hostinger" else dual_settings()
+    store = MemoryStore(cfg.config_key)
+    source = Responses(store) if provider == "hostinger" else DualResponses(store)
+
+    def bounded_assessment(*args):
+        response = source(*args)
+        if len(source.requests) > 1:
+            return response
+        if provider == "hostinger":
+            response["answers"]["explicit_attack"]["choice"] = "yes"
+            response["answers"]["automation"]["choice"] = automation
+        else:
+            result = json.loads(response["choices"][0]["message"]["content"])
+            result["answers"]["explicit_attack"]["choice"] = "yes"
+            result["answers"]["automation"]["choice"] = automation
+            response["choices"][0]["message"]["content"] = json.dumps(result)
+        return response
+
+    ReviewRunner(store, cfg, transport=bounded_assessment).run_once()
+    assert store.finished == ("completed", "")
+    assert len(source.requests) == 2
+    assert store.assessments[0]["payload"]["answers"]["automation"]["choice"] == automation
