@@ -9,15 +9,20 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
 from bouncer.contracts import Request, Session, SessionLabel
+from bouncer.ingest import simrun
+from bouncer.ingest.simrun import IngestStats
 
 SAMPLE_PATH = Path(__file__).resolve().parents[3] / "samples" / "access.sample.jsonl"
 SESSION_IDLE = timedelta(minutes=5)
+#: Demosivu kertoo kirjautumisyrityksen tunnuksen tässä vastausotsakkeessa (päätös 047).
+LOGIN_USER_HEADER = "x-login-user"
+_FROM_ENV = object()
 
 
 def _header_value(headers: Mapping[str, Any], name: str) -> str:
@@ -33,7 +38,7 @@ def _header_value(headers: Mapping[str, Any], name: str) -> str:
 def _normalised_headers(headers: Mapping[str, Any]) -> dict[str, str]:
     result: dict[str, str] = {}
     for key, value in headers.items():
-        if key.lower() == "x-sim-run":
+        if key.lower() in (simrun.MARKER_HEADER, simrun.SIG_HEADER):
             continue
         if isinstance(value, list):
             value = value[0] if value else ""
@@ -50,8 +55,8 @@ def _timestamp(value: Any) -> datetime:
     except ValueError as exc:
         raise ValueError(f"Invalid Caddy timestamp: {value!r}") from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _content_type(response_headers: Mapping[str, Any]) -> str | None:
@@ -59,8 +64,23 @@ def _content_type(response_headers: Mapping[str, Any]) -> str | None:
     return value.split(";", 1)[0].strip().lower() or None
 
 
-def parse_access_record(record: Mapping[str, Any]) -> tuple[Request, str | None]:
-    """Convert one Caddy JSON record to a Request and optional S10 marker."""
+def _is_login(method: str, path: str) -> bool:
+    return method == "POST" and "/login" in path.lower()
+
+
+def parse_access_record(
+    record: Mapping[str, Any],
+    *,
+    secret: str | None | object = _FROM_ENV,
+    stats: IngestStats | None = None,
+) -> tuple[Request, str | None]:
+    """Convert one Caddy JSON record to a Request and optional S10 marker.
+
+    `secret` (oletus `SIM_RUN_SECRET`): kun asetettu, merkintä hyväksytään vain
+    oikealla `X-Sim-Sig`-allekirjoituksella (päätös 046); muuten se ohitetaan.
+    """
+    if secret is _FROM_ENV:
+        secret = simrun.secret_from_env()
     raw_request = record.get("request")
     if not isinstance(raw_request, Mapping):
         raise ValueError("Caddy record must contain a request object")
@@ -73,10 +93,14 @@ def parse_access_record(record: Mapping[str, Any]) -> tuple[Request, str | None]
     parsed_uri = urlsplit(uri)
     path = parsed_uri.path or "/"
     request_headers = _normalised_headers(raw_headers)
+    method = str(raw_request.get("method") or "GET").upper()
+    username = None
+    if _is_login(method, path):
+        username = _header_value(response_headers, LOGIN_USER_HEADER).strip() or None
     request = Request(
         ts=_timestamp(record.get("ts")),
         ip=str(raw_request.get("remote_ip") or ""),
-        method=str(raw_request.get("method") or "GET").upper(),
+        method=method,
         path=path,
         status=int(record.get("status", 0)),
         user_agent=_header_value(raw_headers, "user-agent"),
@@ -84,9 +108,19 @@ def parse_access_record(record: Mapping[str, Any]) -> tuple[Request, str | None]
         bytes=int(record.get("size", 0)),
         headers=request_headers,
         content_type=_content_type(response_headers),
+        username=username,
     )
-    marker = _header_value(raw_headers, "x-sim-run") or request_headers.get("x-sim-run", "")
-    return request, marker or None
+    if stats is not None:
+        stats.records += 1
+        stats.login_events += username is not None
+    marker = _header_value(raw_headers, simrun.MARKER_HEADER).strip()
+    if not marker:
+        return request, None
+    if secret and not simrun.verify(marker, _header_value(raw_headers, simrun.SIG_HEADER), secret):
+        if stats is not None:
+            stats.unsigned_markers += 1
+        return request, None
+    return request, marker
 
 
 def parse_sim_run(value: str, session_id: str | int) -> SessionLabel:
@@ -102,15 +136,18 @@ def parse_access_records(
     records: Iterable[Mapping[str, Any]],
     *,
     idle_timeout: timedelta = SESSION_IDLE,
+    secret: str | None | object = _FROM_ENV,
+    stats: IngestStats | None = None,
 ) -> tuple[list[Session], list[SessionLabel]]:
     """Group fixture records by IP/UA and five-minute idle window.
 
-    If multiple simulation markers occur in one session, the first is retained;
-    conflicting markers raise instead of silently manufacturing ground truth.
+    Labels are never guessed: a session with conflicting markers, or a marker in
+    the wrong format, gets no label and is counted in `stats` instead of stopping
+    the whole ingest (one hostile request must not halt the pipeline).
     """
     grouped: dict[tuple[str, str], list[tuple[Request, str | None]]] = defaultdict(list)
     for record in records:
-        request, marker = parse_access_record(record)
+        request, marker = parse_access_record(record, secret=secret, stats=stats)
         grouped[(request.ip, request.user_agent)].append((request, marker))
 
     sessions: list[Session] = []
@@ -124,7 +161,7 @@ def parse_access_records(
             else:
                 batches[-1].append(entry)
 
-        for index, batch in enumerate(batches, start=1):
+        for batch in batches:
             # S2: stable string IDs at the Python boundary (DB ints → str later).
             session_id = str(len(sessions) + 1)
             requests = tuple(item[0] for item in batch)
@@ -140,19 +177,30 @@ def parse_access_records(
             )
             markers = {marker for _, marker in batch if marker}
             if len(markers) > 1:
-                raise ValueError(f"Conflicting X-Sim-Run markers in session {session_id}")
+                if stats is not None:
+                    stats.conflicting_sessions.append(session_id)
+                continue
             if markers:
-                labels.append(parse_sim_run(next(iter(markers)), session_id))
+                try:
+                    labels.append(parse_sim_run(next(iter(markers)), session_id))
+                except ValueError:
+                    if stats is not None:
+                        stats.invalid_markers += 1
     return sessions, labels
 
 
 def load_sample_data(
     path: Path = SAMPLE_PATH,
+    *,
+    secret: str | None = None,
+    stats: IngestStats | None = None,
 ) -> tuple[list[Session], list[SessionLabel]]:
     """Load sessions and labels together to preserve their shared IDs.
 
     This fixture-only helper has no ``since`` filter and performs no database I/O;
     it is not the production ``load_sessions(since)`` / ``load_labels()`` contract.
+    Committed fixtures are trusted and unsigned, so no signature is required
+    unless `secret` is given (live ingest reads `SIM_RUN_SECRET` instead).
     """
     records = []
     with path.open(encoding="utf-8") as source:
@@ -166,7 +214,7 @@ def load_sample_data(
             if not isinstance(row, Mapping):
                 raise ValueError(f"Expected an object in {path}:{line_number}")
             records.append(row)
-    return parse_access_records(records)
+    return parse_access_records(records, secret=secret, stats=stats)
 
 
 def load_sample_sessions(path: Path = SAMPLE_PATH) -> list[Session]:

@@ -48,6 +48,7 @@ def _request_from_dict(row: dict[str, Any]) -> Request:
         bytes=int(row.get("bytes") or 0),
         headers=dict(row.get("headers") or {}),
         content_type=row.get("content_type"),
+        username=row.get("username"),
     )
 
 

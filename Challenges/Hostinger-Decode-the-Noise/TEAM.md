@@ -73,7 +73,7 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 | S7 | `explain(verdict, session, campaign) -> str` | C → A | B:n `reasons` tekstinä | LLM T+28 |
 | S8 | `metrics.json` (koko järjestelmä) | B → A | `"stub": true` | T+20, lukittu T+42 |
 | S9 | `campaign_metrics.json` (kampanjoiden puhtaus/kattavuus) | C → A | `"stub": true` | T+24 |
-| S10 | `X-Sim-Run: <ajo-id>:<luokka>:<kampanja-id>` | A (sisäinen) → `labels` | `X-Sim-Run` HTTP-pyyntöotsakkeessa; kampanja-id voi olla `-` tai puuttua. Asetetaan vain simulaattoripyynnöissä, poistetaan julkisista lokeista | Luokat ja lopullinen parseri vahvistetaan B:n/C:n kanssa ennen ajoa |
+| S10 | `X-Sim-Run: <ajo-id>:<luokka>:<kampanja-id>` | A (sisäinen) → `labels` | `X-Sim-Run` HTTP-pyyntöotsakkeessa; kampanja-id voi olla `-` tai puuttua. Asetetaan vain simulaattoripyynnöissä, poistetaan julkisista lokeista | Luokat ja lopullinen parseri vahvistetaan B:n/C:n kanssa ennen ajoa; **allekirjoitus `X-Sim-Sig` = HMAC-SHA256(`SIM_RUN_SECRET`, merkintä)** (046) |
 | S11 | `deploy/traps.txt` | A → B | Lista | — |
 
 `metrics.json` (B):

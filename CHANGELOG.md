@@ -36,8 +36,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Ajoskripti `python -m bouncer.eval.run`: yksi komento lataa sessiot ja labelit (A:n näyte nyt, A:n tietokanta myöhemmin), hakee C:n IP-tiedot ja kampanjat, kokoaa datasetin, kirjoittaa piirreraportin ja opettaa ja arvioi mallin; `--write` tallentaa `metrics.json`:n ja mallin vain oikealla datalla. A:n näytteellä se kertoo, että labeloitua dataa on liian vähän (B-7, päätös 037)
 - [B] Piilotettu hyökkäys (`python -m bouncer.eval.hidden --run <ajo-id>`): jäädytetty malli ja kynnykset, ei uudelleenopetusta; tunnistusosuus ansat päällä ja ilman ansoja; `--write` lisää tuloksen `metrics.json`:n `split.hidden_attack`-kenttään muuttamatta muita lukuja eikä ylikirjoita aiempaa tulosta. Valmis T+34:ää varten (B-11, päätös 038)
 - [B] Proof of concept `notebooks/b/poc.py`: A:n parseri → C:n IP-tiedot ja kampanjat → B:n säännöt ja malli → C:n selitys ilman LLM:ää, A:n näytteellä ja C:n tunnusten kokeilun fixturella (synteettinen data, ei tietokantaa). B:n ja C:n integraatiotesti `tests/b/test_integration_c.py` (DNS mockattuna) (päätökset 042–043)
+- [A] Kirjautumistunnus lokista: demosivun `X-Login-User`-vastausotsake `POST /login` -pyynnöstä tallentuu kenttään `Request.username`, jolloin C:n tunnusten kokeilun tunnistus toimii oikeasta Caddy-lokista (A-3/A-5, päätös 047)
+- [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
 
 ### Changed
+- [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
+- [A] BREAKING: S2 — `Request`-sopimukseen uusi valinnainen kenttä `username` (oletus `None`); vanha koodi toimii ennallaan (päätös 047, needs-ack)
 - [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)
 - [X] `AGENTS.md`: kaistarajat eivät enää estä toisen polun muokkausta; CODEOWNERS on review-apuri (päätös 044).
 - [A] BREAKING S2: sample-ingest/`SessionLabel` käyttävät `str`-session-id:itä; B:n strict-xfail poistettu (A-1/S2).
@@ -67,6 +71,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Virheellinen tai ristiriitainen `X-Sim-Run`-merkintä ei enää kaada lukemista: sessio jää ilman labelia ja ohitus lasketaan (päätös 046)
 - [B] `python -m bouncer.eval.run --source db` lukee A:n storesta tiedon, onko data synteettistä (`bouncer.db seed` näytteestä → synteettinen), joten `--write` ei tallenna näytteen lukuja oikeiksi
 - [B] Mallin syistä jätetään pois piirteet, joita sessiosta ei voi mitata (esim. tahti yhdestä pyynnöstä, otsakkeet työkalu-UA:lta) (päätös 043)
 - [X] `docs/DECISIONS.md`: kaistan C päätökset 032–034 numeroitu uudelleen 039–041:ksi, koska samat numerot olivat jo kaistan B käytössä; viittaukset korjattu (README, TEAM.md, C:n kommentit, CHANGELOG)
