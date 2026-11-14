@@ -8,10 +8,11 @@ Joka kierroksella:
 3. hakee C:n IP-tiedot (kerran per IP, välimuistissa) ja kampanjat,
 4. pisteyttää jokaisen session B:n `score()`:lla ja selittää C:n `explain()`:lla
    ilman LLM:ää (AI Router -saldoa ei kuluteta silmukassa),
-5. kirjoittaa kaiken atomisesti JSON-storeen, josta API lukee.
+5. commits source events, read models and byte checkpoints together when SQL is selected;
+   JSON remains an explicit private compatibility adapter.
 
-Session ID on vakaa (`ip|ua|alkuaika` → hash), joten sama sessio pitää ID:nsä,
-vaikka uusia sessioita tulee ja parserin juokseva numerointi muuttuu.
+Committed event ownership and private continuity state preserve session IDs through
+late timestamps, retention, rotation and restart.
 """
 
 from __future__ import annotations
@@ -19,12 +20,10 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import hashlib
-import json
 import os
 import signal
 import sys
 import threading
-from collections import defaultdict
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -39,12 +38,16 @@ from bouncer.db.store import (
     _session_from_dict,
     _write_raw,
     store_path,
+    traffic_repository,
+    traffic_retention,
+    traffic_source,
 )
 from bouncer.eval.run import network_signals
 from bouncer.explain import explain
 from bouncer.ingest import simrun
-from bouncer.ingest.sample import _timestamp, parse_access_records
-from bouncer.ingest.simrun import IngestStats
+from bouncer.ingest.continuity import sessionize
+from bouncer.ingest.sample import _timestamp, parse_access_record
+from bouncer.ingest.tail import LogTail
 from bouncer.session import rules, score
 from bouncer.session.actions import recommend
 
@@ -52,46 +55,6 @@ IntelFn = Callable[[str], IpIntel]
 CampaignsFn = Callable[[Sequence[Session]], list[Any]]
 
 
-class LogTail:
-    """Lukee JSONL-lokia lisäyksinä. Kesken jäänyt viimeinen rivi odottaa seuraavaan kertaan."""
-
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        self.offset = 0
-        self.inode: int | None = None
-        self.partial = b""
-        self.bad_lines = 0
-
-    def read_new(self) -> list[dict[str, Any]]:
-        try:
-            st = self.path.stat()
-        except FileNotFoundError:
-            return []
-        if self.inode is not None and (st.st_ino != self.inode or st.st_size < self.offset):
-            self.offset, self.partial = 0, b""  # rotaatio tai katkaisu
-        self.inode = st.st_ino
-        with self.path.open("rb") as f:
-            f.seek(self.offset)
-            chunk = f.read()
-            self.offset = f.tell()
-        data = self.partial + chunk
-        lines = data.split(b"\n")
-        self.partial = lines.pop()  # tyhjä, jos data päättyi rivinvaihtoon
-        out = []
-        for raw in lines:
-            raw = raw.replace(b"\x00", b"").strip()
-            if not raw:
-                continue
-            try:
-                row = json.loads(raw)
-            except ValueError:
-                self.bad_lines += 1
-                continue
-            if isinstance(row, dict) and isinstance(row.get("request"), dict):
-                out.append(row)
-            else:
-                self.bad_lines += 1
-        return out
 
 
 def stable_id(s: Session) -> str:
@@ -126,11 +89,15 @@ class Worker:
         synthetic: bool,
         max_records: int | None = None,
         window_seconds: float | None = None,
+        repository=None,
+        source_key: str = "monitored",
+        history_retention_seconds: float | None = None,
     ) -> None:
         if max_records is not None and (type(max_records) is not int or max_records < 1):
             raise ValueError("max_records must be a positive integer")
         if window_seconds is not None and window_seconds <= 0:
             raise ValueError("window_seconds must be positive")
+        self.history_retention_seconds = history_retention_seconds
         self.max_records = max_records
         self.window_seconds = window_seconds
         self.discarded_by_retention = 0
@@ -142,7 +109,40 @@ class Worker:
         self.synthetic = synthetic
         self.records: list[dict[str, Any]] = []
         self.intel_cache: dict[str, IpIntel] = {}
-        saved = _read_raw(store)
+        self.repository = repository
+        self.source_key = source_key
+        self.committed_checkpoint = None
+        self.label_state = {}
+        if repository is None:
+            saved = _read_raw(store)
+            resumed = saved.get("worker_resume_state", {})
+        else:
+            saved = repository.load_snapshot(source_key)
+            self.committed_checkpoint = repository.load_checkpoint(source_key)
+            resumed = repository.load_resume_state(source_key) or {}
+            if "archive_digest" in resumed:
+                raise ValueError("read-only archive cannot be used by a live worker")
+            if self.committed_checkpoint is None and store.exists():
+                legacy = _read_raw(store)
+                if legacy.get("sessions") or legacy.get("worker_resume_state"):
+                    with store.open("rb") as original:
+                        digest = hashlib.file_digest(original, "sha256").hexdigest()
+                    archive = repository.load_resume_state("archive/" + digest)
+                    if not archive.get("archive_digest"):
+                        raise ValueError("archive the existing JSON snapshot before SQL cutover")
+                    if legacy.get("synthetic") is not self.synthetic:
+                        raise ValueError("JSON provenance differs from the configured live source")
+                    saved = legacy
+                    resumed = legacy.get("worker_resume_state", {})
+        self.label_state = saved.get("session_label_state", {})
+        if resumed:
+            self.tail.restore(resumed["tail"])
+            self.records = resumed["records"]
+            self.discarded_by_retention = resumed.get("discarded_by_retention", 0)
+            saved["session_identity_state"] = resumed.get("session_identity_state", [])
+            self.label_state = resumed.get("session_label_state", {})
+        elif self.committed_checkpoint is not None:
+            raise ValueError("traffic checkpoint has no private worker resume state")
         self.previous_sessions = [
             dataclasses.replace(_session_from_dict(row), requests=())
             for row in saved.get("session_identity_state", saved.get("sessions", []))
@@ -171,26 +171,36 @@ class Worker:
         self.discarded_by_retention += before - len(self.records)
 
     def cycle(self) -> dict[str, Any]:
-        self.records.extend(self.tail.read_new())
-        # Freshly read restart/rotation batches must be bounded before parsing/scoring.
-        self._retain()
-        stats = IngestStats()
-        sessions, labels = parse_access_records(self.records, secret=self.secret, stats=stats)
-        previous_by_client = defaultdict(list)
-        for old in self.previous_sessions:
-            previous_by_client[(old.ip, old.user_agent)].append(old)
-        mapping = {}
-        used = set()
-        for session in sessions:
-            previous = next((old for old in previous_by_client[(session.ip, session.user_agent)]
-                             if old.id not in used
-                             and old.started_at <= session.started_at
-                             <= old.ended_at + timedelta(minutes=5)), None)
-            mapping[session.id] = previous.id if previous else stable_id(session)
-            used.add(mapping[session.id])
-        sessions = [dataclasses.replace(s, id=mapping[s.id]) for s in sessions]
-        labels = [dataclasses.replace(lab, session_id=mapping[lab.session_id]) for lab in labels]
+        before = (self.tail.checkpoint(), self.records[:], self.discarded_by_retention,
+                  dict(self.intel_cache))
+        try:
+            return self._cycle()
+        except Exception:
+            # A failed transaction must not acknowledge source bytes or mutate the retained window.
+            self.tail.restore(before[0])
+            self.records, self.discarded_by_retention, self.intel_cache = before[1:]
+            raise
 
+    def _cycle(self) -> dict[str, Any]:
+        self.tail.read_new()
+        private_keys = {"_session_id", "_source_event"}
+        self.records.extend(
+            {k: v for k, v in event["record"].items() if k not in private_keys}
+            | {"_source_event": {"generation": event["generation"],
+                                 "byte_offset": event["byte_offset"]}}
+            for event in self.tail.events
+        )
+        # Persist source history before bounding the expensive detection/read-model window.
+        history_records = self.records[:]
+        history_sessions, history_labels, stats, next_labels = sessionize(
+            history_records, self.previous_sessions, self.secret, self.label_state
+        )
+        self._retain()
+        known = {s.id: s for s in self.previous_sessions}
+        known.update({s.id: s for s in history_sessions})
+        sessions, labels, _, _ = sessionize(
+            self.records, list(known.values()), self.secret, next_labels
+        )
         if self.max_records is not None or self.window_seconds is not None:
             active_ips = {session.ip for session in sessions}
             self.intel_cache = {
@@ -220,7 +230,7 @@ class Worker:
                 "asn_type": intel[s.ip].asn_type,
             }
         identities = {s.id: s for s in self.previous_sessions}
-        for session in sessions:
+        for session in history_sessions:
             old = identities.get(session.id, session)
             identities[session.id] = dataclasses.replace(
                 session, requests=(), started_at=min(old.started_at, session.started_at),
@@ -234,6 +244,8 @@ class Worker:
         payload = {
             # Private continuity state survives eviction of visible request records.
             "session_identity_state": [_serialize_session(s) for s in identity_state],
+            "session_label_state": {s.id: next_labels[s.id] for s in identity_state
+                                    if s.id in next_labels},
             "sessions": [_serialize_session(s) for s in sessions],
             "labels": [_serialize_label(lab) for lab in labels],
             "synthetic": self.synthetic,
@@ -243,14 +255,56 @@ class Worker:
             "ingest": {
                 **stats.as_dict(),
                 "bad_lines": self.tail.bad_lines,
+                "rotation_gaps": self.tail.rotation_gaps,
                 "retained_records": len(self.records),
                 "discarded_by_retention": self.discarded_by_retention,
                 "updated_at": datetime.now(UTC).isoformat(),
             },  # fmt: skip
         }
-        _write_raw(payload, self.store)
+        if self.repository is None:
+            payload["worker_resume_state"] = self._resume_state(payload)
+            _write_raw(payload, self.store)
+        else:
+            self._persist_traffic(payload, history_records, history_sessions, history_labels)
         self.previous_sessions = identity_state
+        self.label_state = payload["session_label_state"]
         return payload
+
+    def _resume_state(self, payload):
+        return {"tail": self.tail.checkpoint(), "records": self.records,
+                "session_identity_state": payload["session_identity_state"],
+                "session_label_state": payload["session_label_state"],
+                "discarded_by_retention": self.discarded_by_retention}
+
+    def _persist_traffic(self, payload, history_records, history_sessions, history_labels):
+        from bouncer.db.traffic import Checkpoint, SourceEvent
+
+        visible_ids = {id(raw) for raw in self.records}
+        events, visible_events = [], []
+        for raw in history_records:
+            try:
+                request, _ = parse_access_record(raw, secret=self.secret)
+            except (ValueError, TypeError, OverflowError, OSError, AttributeError):
+                continue
+            position = raw["_source_event"]
+            event = SourceEvent(
+                generation=position["generation"], byte_offset=position["byte_offset"],
+                request=request, session_id=raw["_session_id"],
+            )
+            events.append(event)
+            if id(raw) in visible_ids:
+                visible_events.append(event)
+        resume_state = self._resume_state(payload)
+        self.committed_checkpoint = self.repository.apply_batch(
+            self.source_key, events=events, snapshot=payload,
+            checkpoint=Checkpoint(generation=self.tail.generation, byte_offset=self.tail.offset),
+            expected_checkpoint=self.committed_checkpoint, resume_state=resume_state,
+            history_sessions=history_sessions, history_labels=history_labels,
+            visible_events=visible_events,
+            retention_before=(datetime.fromtimestamp(
+                _retention_now() - self.history_retention_seconds, tz=UTC
+            ) if self.history_retention_seconds is not None else None),
+        )
 
     def run(self, interval: float, stop: threading.Event) -> None:
         while not stop.is_set():
@@ -292,7 +346,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not a.offline:
         intel_fn = ip_intel_contract
     w = Worker(a.log, a.store or store_path(), secret=secret, intel_fn=intel_fn,
-               campaigns_fn=campaigns_fn, synthetic=not a.real)  # fmt: skip
+               campaigns_fn=campaigns_fn, synthetic=not a.real,
+               repository=traffic_repository(), source_key=traffic_source(),
+               history_retention_seconds=traffic_retention())  # fmt: skip
     if a.once:
         w.cycle()
         return 0

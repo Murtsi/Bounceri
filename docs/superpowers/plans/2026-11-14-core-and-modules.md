@@ -10,7 +10,7 @@ The owner approved execution of modules plan.md and the audit fixes. Work is on 
 - [x] Remaining reliability: bounded case list, interrupted review reconciliation without inference retry, browser suite in CI.
 - [ ] Phase 0: baseline verification, reconcile runtime/challenge docs, docs/MODULES.md.
 - [x] Phase 1.1: additive migrations for existing/new tables, populated upgrade and fresh/restart/concurrent tests.
-- [ ] Phase 1.2: SQL request/session/label repository, atomic source checkpoints/event identity, readers/cutover/backfill/rollback and retention.
+- [x] Phase 1.2: SQL request/session/label repository, atomic source checkpoints/event identity, readers/cutover/backfill/rollback and retention.
 - [ ] Phase 1.3–4: bounded cached live network evidence and complete scoped campaign/rule provenance.
 - [ ] Phase 1.5: authenticated private log import with redaction/limits/reports.
 - [ ] Phase 1.6: detailed health, pagination, backup/restore, measured resources, deployment smoke.
@@ -28,7 +28,7 @@ All new regression tests were observed failing before the corresponding implemen
 
 Isolated Docker/Caddy smoke: production image builds; 139 signed synthetic requests; scanner, stuffing campaign, human false-alarm, evidence and dashboard/metrics gates passed. Fake-crawler gate remained uncertain because DNS verification was unavailable. This is an outstanding live DNS acceptance gate, not a passing six-gate demo. Containers/network used isolated scratch data and were removed. Repository hygiene passed; shellcheck unavailable.
 
-Case-list pagination is in progress (test first, bounded limit/offset and 3 SQL queries). UI navigation and API pagination regressions remain to finish before marking that task done. Versioned schema runner is in progress independently. Phase 0 docs are reconciled but the full demo/DNS gate is still open.
+Historical note, superseded by the verified increments below: case-list pagination was in progress (test first, bounded limit/offset and 3 SQL queries). UI navigation and API pagination regressions remain to finish before marking that task done. Versioned schema runner is in progress independently. Phase 0 docs are reconciled but the full demo/DNS gate is still open.
 
 ## Evidence: Phase 1.1 and reliability increment
 
@@ -38,4 +38,12 @@ Case paging and interrupted-review recovery are implemented with test-first evid
 
 ## Evidence: repeatable browser CI
 
-Pinned dev-only Playwright with native Node test/Vite API runner. Root reran7unit tests, TypeScript/Vite build and36Chromiumchecks; exactNode22.18.0 was independently verified. Failure probes exitnonzero and closebrowser/server. CI frontendjob nowinstallsexplicitChromiumdeps andrunssuite; actualGitHubjobnotyetexecuted. Phase1.2SQL/history/checkpointintegration remainsinprogress andisnotmarkedcomplete.
+Pinned dev-only Playwright with native Node test/Vite API runner. Root reran7 unit tests, TypeScript/Vite build and36Chromiumchecks; exactNode22.18.0 was independently verified. Failure probes exitnonzero and closebrowser/server. CI frontendjob nowinstallsexplicitChromiumdeps andrunssuite; actualGitHubjobnotyetexecuted. Phase 1.2SQL/history/checkpointintegration remainsinprogress andisnotmarkedcomplete.
+
+## Evidence: Phase 1.2 locally verified
+
+Normalized traffic, exact source-byte identities, revision CAS, full fresh history before read-window eviction, atomic age retention, immutable origins/archives, private checkpoint/session/truth state, and consistent multi-query reads are implemented. Runtime/API SQL selection is explicit; JSON stays the compatibility default. Backfill verifies opaque IDs/native data and freezes an archive, and rollback exports current source state without overwriting the original. The SQL startup guard also protects empty visible JSON windows that still own source coordinates.
+
+Review reproduced and fixed late/bridging ownership, stale gold labels, origin flips, dropped overflow history, stat/open/copytruncate/gzip/retained-rotation races, archive inode reuse and mixed-batch read snapshots. Final full checks:616 Python tests with PostgreSQL enabled and Ruff passed;7frontendunit+build+36 browserchecks passed. Packaged SQL Docker stack:21 sessions/235 synthetic requests, checkpoint revision 8, no primaryJSON, no paidrequests; resources cleaned. Wheels and SQL assets build; repository hygiene and both Compose configs pass. Independent final review approved after focused regressions.
+
+Next:Phase 1.3–4 bounded live network provenance and complete scoped evidence, followed by imports, remaining operations/study/evaluation and the three modules. Live Hostinger cutover is NOT performed. Archive/backup deletion lifecycle, external real-human/hidden evidence and liveDNS/final release gates remain open in their corresponding later tasks. Do not mark the overall goal complete from this storage increment.

@@ -65,7 +65,7 @@ jobs:
       - name: PostgreSQL migration and upgrade acceptance
         env:
           BOUNCER_TEST_POSTGRES: '1'
-        run: uv run --no-sync pytest tests/a/test_migrations.py -q
+        run: uv run --no-sync pytest tests/a/test_migrations.py tests/a/test_traffic_repository.py tests/a/test_worker_postgres.py -q
       - name: Python lint
         run: uv run --no-sync ruff check src tests notebooks tools/hostinger
 

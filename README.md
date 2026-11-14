@@ -95,3 +95,7 @@ For vulnerability reports, see [SECURITY.md](SECURITY.md). Bounceri is an adviso
 ## License
 
 [MIT](LICENSE).
+
+## Durable traffic cutover
+
+The SQL traffic path now stores normalized events, sessions and labels with atomic source checkpoints. It is selected explicitly; the JSON compatibility path remains the default until its stopped writer is archived and verified. See [traffic storage, cutover, retention and fresh rollback](docs/TRAFFIC_STORAGE.md). Local PostgreSQL and packaged-runtime checks establish storage behavior, not real-world detector accuracy or live Hostinger deployment.

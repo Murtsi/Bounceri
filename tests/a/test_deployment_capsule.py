@@ -82,3 +82,21 @@ def test_capsule_includes_versioned_sql_but_not_arbitrary_sql(tmp_path):
     assert "src/bouncer/db/migrations/001_init.sql" in names
     assert "src/bouncer/db/migrations/002_investigations_enforcement.sql" in names
     assert "src/bouncer/private.sql" not in names
+
+
+def test_sql_traffic_cutover_is_explicit_and_simulator_has_no_database(tmp_path):
+    for name in ("frontend/dist/index.html", "tools/hostinger/bootstrap.py"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fixture", encoding="utf-8")
+    env = {name: "x" * 64 for name in ("POSTGRES_PASSWORD", "BOUNCER_ADMIN_TOKEN",
+                                       "BOUNCER_DEMO_ACTOR_SECRET", "SIM_RUN_SECRET")}
+    old = compose(tmp_path, "test.example", env)
+    assert "BOUNCER_TRAFFIC_DATABASE_URL" not in old["services"]["ingest"]["environment"]
+    selected = compose(tmp_path, "test.example", env, traffic_sql=True)
+    for service in ("ingest", "api"):
+        config = selected["services"][service]["environment"]
+        assert config["BOUNCER_TRAFFIC_DATABASE_URL"] == config["BOUNCER_DATABASE_URL"]
+        assert config["BOUNCER_TRAFFIC_SOURCE"] == "private-simulation"
+        assert config["BOUNCER_TRAFFIC_RETENTION_SECONDS"] == "86400"
+    assert "BOUNCER_TRAFFIC_DATABASE_URL" not in selected["services"]["simulator"]["environment"]

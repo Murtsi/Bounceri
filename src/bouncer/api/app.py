@@ -20,7 +20,7 @@ from bouncer.api.enforcement import router as enforcement_router
 from bouncer.api.evaluation import router as evaluation_router
 from bouncer.api.investigations import admin_context, is_admin, public_legacy, router
 from bouncer.api.overview import enrich_campaigns, overview
-from bouncer.db.store import _read_raw, store_path
+from bouncer.db.store import read_snapshot
 from bouncer.eval.metrics import METRICS_PATH
 from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
 
@@ -45,7 +45,7 @@ app.include_router(evaluation_router)
 
 
 def _store() -> dict[str, Any]:
-    snapshot = _read_raw(store_path())
+    snapshot = read_snapshot()
     return snapshot if admin_context.get() else public_legacy(snapshot)
 
 

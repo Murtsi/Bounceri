@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- [A] Checkpointed ingestion recovers retained numeric/gzip rotations and partial lines, detects changed source prefixes, preserves committed session ownership for late/bridging events, and keeps signed-label conflicts invalid across eviction/restart; observed missing segments are reported.
 - [A] Investigation history uses bounded pages and three SQL reads rather than three queries per case; server-side origin filtering preserves private visibility, and Previous/Next controls retain access to older cases.
 - [X] Core audit regressions: malformed log records no longer stop later valid requests, origin-form double slashes retain their path, fixture investigations accept serialized sessions, and private session identity survives request retention and worker restart.
 - [C] Forward DNS lookup failures remain unknown, while successful mismatches remain false; crawler confirmation now supports normalized IPv4 and IPv6 addresses.
@@ -12,6 +13,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] Explicit SQL traffic selection for worker/API, bounded immutable JSON backfill and fresh rollback exports, private source resume state, and transactional 24-hour historical retention; Hostinger packaging enables the path only with an explicit cutover switch and keeps database credentials out of the simulator.
 - [A] BREAKING: Source-scoped normalized traffic storage replaces lossy natural request uniqueness with immutable generation/byte identities, opaque external session IDs, atomic checkpoint revisions, immutable provenance/archives and explicit retention; PostgreSQL upgrades preserve existing rows as private unknown-origin legacy data.
 - [A] Repeatable headless Chromium regression command runs the existing 36-check dashboard suite in CI, with browser/server cleanup on failure and a pinned development-only Playwright dependency.
 - [A] BREAKING: Checked, additive PostgreSQL migrations adopt existing investigation/review/enforcement data, serialize startup, reject schema/checksum drift, and ship in wheels and Hostinger capsules; CI exercises fresh databases, populated upgrades, rollback and concurrent writers.

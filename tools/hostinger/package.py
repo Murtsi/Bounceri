@@ -98,7 +98,8 @@ def capsule(root: Path) -> tuple[str, str]:
 
 
 def compose(
-    root: Path, host: str, environment: dict, *, local: bool = False, aliases: tuple[str, ...] = ()
+    root: Path, host: str, environment: dict, *, local: bool = False, aliases: tuple[str, ...] = (),
+    traffic_sql: bool = False,
 ) -> dict:
     if any(not re.fullmatch(r"[a-z0-9.-]+", value) for value in (host, *aliases)):
         raise ValueError("Invalid deployment host")
@@ -119,6 +120,12 @@ def compose(
         "BOUNCERI_REVIEW_ENABLED": "false",
         "BOUNCER_RELEASE": digest,
     }
+    if traffic_sql:
+        common_env.update({
+            "BOUNCER_TRAFFIC_DATABASE_URL": database,
+            "BOUNCER_TRAFFIC_SOURCE": "private-simulation",
+            "BOUNCER_TRAFFIC_RETENTION_SECONDS": "86400",
+        })
     review_env = {
         key: str(value)
         for key, value in environment.items()
@@ -230,7 +237,7 @@ def compose(
         services[service]["environment"].update(review_env)
     for service in ("ingest", "simulator"):
         services[service]["environment"]["SIM_RUN_SECRET"] = environment["SIM_RUN_SECRET"]
-    for key in ("BOUNCER_DATABASE_URL", "BOUNCERI_DATABASE_URL"):
+    for key in ("BOUNCER_DATABASE_URL", "BOUNCERI_DATABASE_URL", "BOUNCER_TRAFFIC_DATABASE_URL"):
         services["simulator"]["environment"].pop(key, None)
     services["ingest"]["volumes"].append("logs:/logs:ro")
     services["simulation-gateway"]["healthcheck"] = {
@@ -286,6 +293,8 @@ def main():
         "--alias", action="append", default=[], help="Additional dashboard hostname"
     )
     parser.add_argument("--local", action="store_true")
+    parser.add_argument("--traffic-sql", action="store_true",
+                        help="Use SQL traffic after verified archive/cutover; default keeps JSON")
     parser.add_argument(
         "--review-config", type=Path, help="Verified server review env as private JSON"
     )
@@ -317,7 +326,8 @@ def main():
                 env["FEATHERLESS_API_KEY"] = value.strip().strip("\"'")
     target = args.output / "compose.private.json"
     target.write_text(
-        json.dumps(compose(ROOT, args.host, env, local=args.local, aliases=tuple(args.alias))),
+        json.dumps(compose(ROOT, args.host, env, local=args.local, aliases=tuple(args.alias),
+                           traffic_sql=args.traffic_sql)),
         encoding="utf-8",
     )
     print(f"Private deployment bundle written to {target}; secret values are not displayed.")

@@ -1,15 +1,13 @@
-"""Paikallinen S3-store: JSON-tiedosto tai tyhjä muisti.
-
-B:n ``python -m bouncer.eval.run --source db`` toimii kun store on seedattu
-samplella. Postgres-polku tulee myöhemmin samojen funktioiden taakse.
-"""
+"""Traffic readers with explicit SQL selection and a private JSON compatibility adapter."""
 
 from __future__ import annotations
 
 import json
+import math
 import os
 from dataclasses import asdict
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +20,34 @@ DEFAULT_STORE = Path(__file__).resolve().parents[3] / ".bouncer_store.json"
 def store_path() -> Path:
     raw = os.getenv("BOUNCER_STORE_PATH")
     return Path(raw) if raw else DEFAULT_STORE
+
+
+
+def traffic_source() -> str:
+    return os.getenv("BOUNCER_TRAFFIC_SOURCE", "monitored")
+
+
+def traffic_retention() -> float:
+    seconds = float(os.getenv("BOUNCER_TRAFFIC_RETENTION_SECONDS", "86400"))
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError("traffic retention must be a finite positive number of seconds")
+    return seconds
+
+
+@lru_cache(maxsize=8)
+def _traffic_database(url: str):
+    from bouncer.db.traffic import TrafficRepository
+    return TrafficRepository(url)
+
+
+def traffic_repository():
+    url = os.getenv("BOUNCER_TRAFFIC_DATABASE_URL", "").strip()
+    return _traffic_database(url) if url else None
+
+
+def read_snapshot(*, path: Path | None = None) -> dict[str, Any]:
+    repository = traffic_repository() if path is None else None
+    return repository.load_snapshot(traffic_source()) if repository else _read_raw(path)
 
 
 def _dt(value: Any) -> datetime:
@@ -138,6 +164,9 @@ def load_sessions(
     path: Path | None = None,
 ) -> list[Session]:
     """S3: sessiot alkaen ``since`` (inklusiivinen). Tyhjä store → []."""
+    repository = traffic_repository() if path is None else None
+    if repository is not None:
+        return repository.load_sessions(since, source_key=traffic_source())
     raw = _read_raw(path)
     sessions = [_session_from_dict(row) for row in raw.get("sessions") or []]
     if since is not None:
@@ -149,6 +178,9 @@ def load_sessions(
 
 def load_labels(*, path: Path | None = None) -> list[SessionLabel]:
     """S3: kaikki simulaattorilabelit (session_id = str)."""
+    repository = traffic_repository() if path is None else None
+    if repository is not None:
+        return repository.load_labels(source_key=traffic_source())
     raw = _read_raw(path)
     labels = [_label_from_dict(row) for row in raw.get("labels") or []]
     labels.sort(key=lambda lab: lab.session_id)
@@ -156,4 +188,7 @@ def load_labels(*, path: Path | None = None) -> list[SessionLabel]:
 
 
 def is_synthetic(*, path: Path | None = None) -> bool:
-    return bool(_read_raw(path).get("synthetic"))
+    origin = read_snapshot(path=path).get("synthetic")
+    if type(origin) is not bool:
+        raise ValueError("traffic source provenance is unknown; classify the source explicitly")
+    return origin

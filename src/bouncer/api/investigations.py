@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from bouncer.contracts import IpIntel
-from bouncer.db.store import _read_raw, _serialize_session, store_path
+from bouncer.db.store import _serialize_session, read_snapshot
 from bouncer.ingest.sample import load_sample_data
 from bouncer.investigations import InvestigationStore
 from bouncer.investigations.store import ReviewIneligible
@@ -228,7 +228,7 @@ async def create_case(request: Request):
         }
         source_key = "fixture"
     else:
-        snapshot, source_key = _read_raw(store_path()), body.source_key
+        snapshot, source_key = read_snapshot(), body.source_key
     try:
         return get_store().create_from_legacy(snapshot, source_key, body.public_demo)
     except ValueError as exc:

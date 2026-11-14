@@ -156,3 +156,8 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 ### Core/module implementation checkpoint — 14 November 2026
 
 Committed core fixes are independently reviewed. Versioned PostgreSQL schema upgrades, bounded three-query case pages with origin filtering/UI controls, and explicit stopped-worker review recovery are verified locally. Integrated checks: 492 Python tests including 20 disposable-PostgreSQL acceptance tests, Ruff, 7 frontend tests/build, repository/Compose checks; browser suite reports 36 passing checks. Browser CI runner remains pending. Main traffic still uses the JSON compatibility path: SQL repository, atomic event checkpoints, backfill/read cutover and retention are the next Phase 1 task. New modules remain unavailable. External DNS, real-human/independent-hidden evidence and Hostinger release smoke gates remain open.
+
+
+### Durable traffic checkpoint — 14 November 2026
+
+Phase 1.2 is implemented and verified locally: normalized SQL history, atomic source checkpoints/retention, stable late-event/session truth state, retained rotations/gzip recovery, explicit readers, immutable backfill and fresh rollback. Integrated backend616 tests pass with PostgreSQL; packagedDocker SQL runtime ingests21 sessions/235 synthetic requests without a JSON primary or paidcalls. Browser CI now executes the36-check suite. Live deployment/cutover is not claimed. Next work is bounded network evidence and scoped case completeness; imports, remaining operations/study evaluation and all 3 new modules remain pending.

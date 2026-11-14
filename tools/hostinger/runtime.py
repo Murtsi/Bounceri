@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from bouncer.db.store import _read_raw
+from bouncer.db.store import traffic_repository, traffic_retention, traffic_source
 from bouncer.ingest.worker import Worker
 from bouncer.investigations import InvestigationStore
 from bouncer.network import find_campaigns
@@ -75,16 +75,16 @@ def ingest(stop: threading.Event) -> None:
         synthetic=True,
         max_records=6000,
         window_seconds=1800,
+        repository=traffic_repository(),
+        source_key=traffic_source(),
+        history_retention_seconds=traffic_retention(),
     )
     last_evidence = None
     last_capture = 0.0
     selection = 0
     while not stop.is_set():
         # Keep at most 30 minutes/6000 records in memory. No real-user source is published.
-        worker.cycle()
-        # Read the JSON adapter boundary: dataclass.asdict preserves tuple-valued
-        # requests in memory, while the persisted legacy contract uses JSON arrays.
-        snapshot = _read_raw(worker.store)
+        snapshot = worker.cycle()
         if snapshot["sessions"] and time.monotonic() - last_capture >= 120:
             case = store.create_from_legacy(
                 snapshot, source_key="private-simulation", public_demo=True
