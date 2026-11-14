@@ -11,9 +11,23 @@ Bounceri is a Junction 2026 prototype for **Hostinger — Decode the Noise**. It
 
 The repository contains session features and detection rules, temporal evaluation and threshold selection, IP intelligence, campaign detection, and optional explanations through Hostinger AI Router. Rule-based explanations work without an API key. A's starter integration draft is already on `main` via PR #5: shared type proposals, a six-row synthetic Caddy log, sample parser/sessionizer, and trap-path list.
 
-The application is not end-to-end yet. Postgres migrations, log ingestion and `load_sessions()`/`load_labels()`, demo site, API and dashboard are missing. B's evaluation tooling is implemented, but committed metrics remain stubs until sufficient non-synthetic data exists. Session/campaign IDs are strings at the Python boundary (S2). Seed a local store with `PYTHONPATH=src python -m bouncer.db seed`, then B can use `--source db`. Login-event schema and Postgres writer are still open.
+**The MVP runs end to end locally** ([docs/MVP.md](docs/MVP.md)): a demo shop behind real Caddy, signed traffic simulators, a live worker (Caddy log → sessions → IP intelligence and campaigns → verdict → explanation), a read-only API and a React dashboard. `make demo` starts it and checks all six acceptance criteria automatically. All demo traffic is synthetic, so `models/metrics.json` remains a stub: no measured numbers are claimed until labelled non-synthetic traffic exists.
 
-Hostinger VPS/domain are reported to exist, but a working public application and AI Router key are not verified. The local Compose file starts development database tools only.
+Not done yet: the Postgres writer (the worker uses a JSON store), the public Hostinger deployment, a verified AI Router key, and the hidden attack. Session/campaign IDs are strings at the Python boundary (S2).
+
+## Run the MVP demo
+
+Needs Docker (running), [uv](https://docs.astral.sh/uv/) and Make:
+
+```sh
+make demo        # build, start Caddy + site + worker + API, run simulators, check criteria 1–6
+make demo-logs   # follow worker and API
+make demo-down   # stop
+```
+
+Dashboard: http://127.0.0.1:8001 · demo shop (monitored through Caddy): http://127.0.0.1:8080. The dashboard is served outside Caddy on purpose, so its own traffic never enters the analysed log. Ports can be changed with `API_PORT` and `DEMO_PORT`.
+
+The local Caddyfile trusts `X-Forwarded-For` from private networks so the simulators can present many client IPs from one machine (decision 050). Production uses `deploy/Caddyfile`, which trusts no proxies. Set a real `SIM_RUN_SECRET` on any shared deployment (decision 046).
 
 ## Run the tests
 
@@ -22,7 +36,7 @@ Install Git and [uv](https://docs.astral.sh/uv/), then run:
 ```sh
 git clone https://github.com/Murtsi/Bounceri.git
 cd Bounceri
-uv run --no-project --python 3.12 --with pytest pytest tests -q
+uv run pytest -q      # or: make test
 ```
 
 The test command works in PowerShell as well as a Unix shell. It does not require database containers or an AI Router key.
@@ -44,7 +58,7 @@ Copy `.env.example` to `.env` and run:
 docker compose up -d --wait
 ```
 
-PostgreSQL listens on `127.0.0.1:5432`; Adminer is at `http://127.0.0.1:8080`. The example credentials are public development defaults. Set unique credentials before deployment. This setup uses PostgreSQL 16; TimescaleDB is planned in the architecture.
+PostgreSQL listens on `127.0.0.1:5432`; Adminer is at `http://127.0.0.1:8080` (the same port as the demo's Caddy: run one at a time or set `DEMO_PORT`). The example credentials are public development defaults. Set unique credentials before deployment. This setup uses PostgreSQL 16; TimescaleDB is planned in the architecture.
 
 Keep credentials in the ignored `.env` file. Never commit raw visitor logs, database exports, or real request headers. The log fixture in `samples/` is synthetic and uses documentation IP addresses.
 
@@ -56,8 +70,11 @@ Keep credentials in the ignored `.env` file. Never commit raw visitor logs, data
 | `src/bouncer/eval/` | Dataset assembly, evaluation and metrics |
 | `src/bouncer/network/` | IP intelligence, campaigns and graph export |
 | `src/bouncer/explain/` | Grounded explanations and fallback text |
-| `src/bouncer/ingest/`, `samples/` | Sample-log parsing and synthetic fixtures |
-| `deploy/traps.txt` | Proposed trap paths; no deployed routes yet |
+| `src/bouncer/ingest/`, `samples/` | Caddy log parsing, signed simulator labels, live worker, synthetic fixtures |
+| `src/bouncer/site/` | Demo shop (pages, login, hidden trap link) |
+| `src/bouncer/api/`, `frontend/` | Read-only API and React dashboard |
+| `tools/sim/` | Traffic simulators and the MVP acceptance check |
+| `deploy/` | Docker Compose, Caddyfiles, trap paths |
 | `tests/` | Tests for each team lane |
 | `models/metrics.json` | Metrics schema placeholder |
 

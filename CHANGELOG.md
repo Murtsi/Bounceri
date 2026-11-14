@@ -47,6 +47,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] MVP vaihe 3: live-worker `python -m bouncer.ingest.worker` seuraa Caddy-lokia (sietää rikkinäiset rivit, katkaisun ja rotaation), sessioi allekirjoitetuilla merkinnöillä, hakee C:n IP-tiedot kerran per IP ja kampanjat, pisteyttää B:n `score()`:lla ja selittää C:n `explain()`:lla ilman LLM:ää, ja kirjoittaa päätökset storeen. Session ID on vakaa (`ip|ua|alkuaika`). MVP:n Caddy-lokilla kriteerit 1–4 täyttyvät (A-5/A-6)
 - [A] MVP vaihe 4a: ohut API `bouncer.api` (`/api/summary`, `/api/sessions`, `/api/sessions/{id}`, `/api/campaigns`, `/api/metrics`) lukee workerin storea; `/api/metrics` kertoo stub- ja synteettinen-tilan sekä tunnetut heikkoudet. Tarjoilee myös `frontend/dist`:in, jos se on käännetty (A-11)
 - [A] MVP vaihe 4b: React-dashboard `frontend/` (sessiolista suodattimella, session kortti: päätös, P(botti), syyt, kampanja, pyynnöt, selitys; kampanjat; mittarisivu, joka näyttää stub- ja synteettinen-tilan sekä tunnetut heikkoudet). Tarkistettu selaimessa oikealla Caddy → worker → API -datalla: MVP-kriteerit 1–6 täyttyvät (A-12, päätös 054)
+- [X] MVP vaihe 5: `make demo` rakentaa ja käynnistää Caddyn, demosivun, workerin ja API:n Docker Composella (yksi image, dashboard käännetään buildissa), ajaa simulaattorit ja tarkistaa kriteerit 1–6 automaattisesti (`python -m tools.sim.check`); `make demo-down`, `make demo-logs`. Tarkistettu puhtaalta pöydältä: 6/6. README päivitetty (docs/MVP.md)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
@@ -80,6 +81,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [X] Testit eivät enää riipu kehittäjän ympäristön `SIM_RUN_SECRET`-arvosta (yhteinen `tests/conftest.py`); PoC lukee repon fixturet ilman allekirjoitusvaatimusta. Löytyi, kun Makefile vei avaimen myös `make test` -ajoon
 - [B] Tunnettu heikkous päivitetty: kirjautumishyökkäykset tunnistetaan nyt C:n kampanjan kautta (053); vanha teksti väitti B:n jättävän ne epävarmoiksi
 - [A] JSON-store kirjoitetaan atomisesti (väliaikainen tiedosto + `os.replace`), joten API ei koskaan lue puolikasta tiedostoa workerin kirjoittaessa
 - [A] Parseri lukee Caddyn oikean aikaleiman (Unix-aika liukulukuna); aiemmin vain käsin kirjoitettujen fixturejen ISO-muoto toimi, joten yhtään oikeaa Caddy-riviä ei olisi luettu. Löytyi MVP:n vaiheen 1 tarkistuksessa oikealla Caddyllä

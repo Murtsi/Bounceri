@@ -43,6 +43,8 @@ simulaattorit (tools/sim) ──HTTP──▶ Caddy :8080 ──▶ demosivu (sr
 | 4 | API + React-dashboard | selaimessa kriteerit 1–6 |
 | 5 | `make demo` + README | toimii puhtaasta checkoutista |
 
+**Tila 2026-11-14:** vaiheet 0–5 valmiit; `make demo` → 6/6 kriteeriä Docker Composella puhtaalta pöydältä.
+
 ## Päätökset (docs/DECISIONS.md 048–051)
 
 - Caddy ajetaan Docker Composella myös paikallisesti (sama kuin VPS).

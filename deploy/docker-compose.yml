@@ -1,13 +1,17 @@
-# MVP (docs/MVP.md). Paikallisesti: CADDYFILE=Caddyfile.local (oletus).
-# VPS:llä: CADDYFILE=Caddyfile ja SITE_ADDRESS=<domain>.
+# MVP (docs/MVP.md): `make demo`. Paikallisesti CADDYFILE=Caddyfile.local (oletus).
+# VPS:llä: CADDYFILE=Caddyfile, SITE_ADDRESS=<domain> ja oikea SIM_RUN_SECRET.
 name: bouncer
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: deploy/app.Dockerfile
+  image: bouncer-app:local
+  restart: unless-stopped
 
 services:
   site:
-    build:
-      context: ..
-      dockerfile: deploy/site.Dockerfile
-    restart: unless-stopped
+    <<: *app
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
       interval: 5s
@@ -27,3 +31,31 @@ services:
     volumes:
       - ./${CADDYFILE:-Caddyfile.local}:/etc/caddy/Caddyfile:ro
       - ../logs/caddy:/var/log/caddy
+
+  # Seuraa Caddyn lokia → sessiot → C → B → store (päätös 046: allekirjoitus pakollinen).
+  worker:
+    <<: *app
+    command: ["uv", "run", "--no-sync", "python", "-m", "bouncer.ingest.worker",
+              "--log", "/var/log/caddy/access.log", "--interval", "2"]
+    environment:
+      SIM_RUN_SECRET: ${SIM_RUN_SECRET:?aseta SIM_RUN_SECRET (make demo asettaa paikallisen arvon)}
+      BOUNCER_STORE_PATH: /data/store.json
+    volumes:
+      - ../logs/caddy:/var/log/caddy:ro
+      - ../data:/data
+
+  # API + dashboard. EI Caddyn takana: dashboardin liikenne ei saa päätyä analysoitavaan lokiin.
+  api:
+    <<: *app
+    command: ["uv", "run", "--no-sync", "uvicorn", "bouncer.api.app:app", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      BOUNCER_STORE_PATH: /data/store.json
+    ports:
+      - "127.0.0.1:${API_PORT:-8001}:8001"
+    volumes:
+      - ../data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
