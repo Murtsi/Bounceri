@@ -10,7 +10,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "glass inline-flex h-11 w-fit max-w-full items-center justify-start overflow-x-auto rounded-full border p-1 text-muted-foreground",
+        "glass inline-flex h-11 w-fit max-w-full items-center justify-start overflow-x-auto rounded-full border p-1 text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
       {...props}

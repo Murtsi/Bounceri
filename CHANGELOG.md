@@ -55,6 +55,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ### Changed
 - [X] Dashboard on nyt vain tumma: syvänvihreä sumea tausta, lasikortit, limenvihreä korostus (aktiivinen välilehti, pääpainikkeet) ja pilleripainikkeet; vaalea/tumma-kytkin poistettu. Kaaviovärit validoitu uudelleen vihreää lasipintaa vasten, ja "Epävarma" piirretään harmaana vinoviivoituksella. Punainen hälytyskehys ja -merkki korvattu lasikortilla ja sykkivällä lime-"Käynnissä"-merkillä; Estä-kuvakkeen sävy lämpimämpi koralli (päätös 058)
 - [X] Liikennekaavio widget-tyyliin: ohuet pinotut pylväät himmeiden raitojen päällä, ei y-akselia, kokonaismäärä ja huippu otsikossa, vihje hiirellä; Recharts poistettu riippuvuuksista (JS-paketti 632 → 298 kB) (päätös 059)
+- [X] Viimeistely: taulukko/kaavio-vaihto kuvakepainikkeena kortin kulmassa, pylväät leveämmät (max 24 px), jakaumapalkki pillerinä, välilehtipalkin vierityspalkki piilotettu mobiilissa
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
 - [A] BREAKING: S2 — `Request`-sopimukseen uusi valinnainen kenttä `username` (oletus `None`); vanha koodi toimii ennallaan (päätös 047, needs-ack)
 - [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)

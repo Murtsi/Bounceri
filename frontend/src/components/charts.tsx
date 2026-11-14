@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from "react";
+import { ChartColumn, Table2 } from "lucide-react";
 import { LABEL_TEXT, type Label } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -99,15 +100,23 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
 
   return (
     <figure className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-3xl font-semibold tabular-nums tracking-tight">{sum.toLocaleString("fi-FI")}</p>
           <figcaption className="text-xs text-muted-foreground">
             pyyntöä · {unit} välein{peak && peak.n > 0 ? ` · huippu ${peak.n} klo ${peak.label}` : ""}
           </figcaption>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setTable((v) => !v)} aria-pressed={table}>
-          {table ? "Kaavio" : "Taulukko"}
+        <Button
+          variant="outline"
+          size="icon"
+          className="self-start"
+          onClick={() => setTable((v) => !v)}
+          aria-pressed={table}
+          aria-label={table ? "Näytä kaaviona" : "Näytä taulukkona"}
+          title={table ? "Näytä kaaviona" : "Näytä taulukkona"}
+        >
+          {table ? <ChartColumn /> : <Table2 />}
         </Button>
       </div>
 
@@ -151,7 +160,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
                 {/* Raita: koko korkeus, himmeä — näyttää myös tyhjät välit. */}
                 <div
                   className={cn(
-                    "flex h-full w-full max-w-[18px] flex-col justify-end overflow-hidden rounded-full transition-colors",
+                    "flex h-full w-full max-w-6 flex-col justify-end overflow-hidden rounded-full transition-colors",
                     hover === i ? "bg-white/[0.09]" : "bg-white/[0.045]",
                   )}
                 >
@@ -198,7 +207,7 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
   const label = parts.map((l) => `${LABEL_TEXT[l]} ${counts[l]} (${pct(counts[l], total)} %)`).join(", ");
   return (
     <div className="flex flex-col gap-3">
-      <div role="img" aria-label={label} className="flex h-7 gap-0.5">
+      <div role="img" aria-label={label} className="flex h-7 gap-0.5 overflow-hidden rounded-full">
         {parts.map((l) => {
           const p = pct(counts[l], total);
           const f = fill(l);
@@ -206,7 +215,7 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
             <div
               key={l}
               className={cn(
-                "flex items-center overflow-visible rounded-md px-2 text-xs font-semibold text-white",
+                "flex items-center px-3 text-xs font-semibold text-white",
                 f.className,
               )}
               style={{ width: `${(counts[l] / total) * 100}%`, ...f.style }}
