@@ -2,6 +2,40 @@
 
 Kolme henkilöä, kolme kaistaa (oletusvastuut). Hackathonissa kaistarajat **eivät estä** toisen polun korjausta (päätös 044); CODEOWNERS pyytää silti review’ta. Kaksi kolmesta tekee tunnistusta, koska tuomarit pisteyttävät ensisijaisesti tunnistuksen vahvuutta ja rehellisyyttä, eivät käyttöliittymää.
 
+## Nykyiset integraatiorajat — 2026-11-14
+
+Kaistat ovat oletusvastuita, eivät muokkauskieltoja. Alla säilytetty T+-aikataulu
+ja stub-taulukko ovat alkuperäinen hackathon-suunnitelma, eivät nykyinen työtila.
+Nykytila ja vaiheistus ovat [README.md](README.md):ssä ja [TODO.md](TODO.md):ssä.
+
+- **A:** Caddy-demo, allekirjoitetut simulaattorit, ingest-worker, JSON-store ja
+  `load_sessions()`/`load_labels()`, API sekä dashboard ovat toteutettu. Liikenteen
+  SQL repository, yhtenäinen versioitu migraatioajo ja replay/checkpointit ovat
+  seuraavaa ydintyötä; PostgreSQL-investigations ei vielä korvaa JSON-liikennestorea.
+- **B:** paikalliset piirteet/säännöt, mallin latauspolku ja arviointityökalut ovat
+  toteutettu. Production `models/metrics.json` on stub/null. Erillinen
+  [synteettinen raportti](../../docs/EVALUATION.md) ei täytä oikeiden ihmisten
+  FPR- tai aidosti piilotetun hyökkäyksen näyttövaatimusta.
+- **C:** HTTP-kampanjat, IP/DNS-funktiot, NAT-suodatus ja selitykset ovat toteutettu.
+  Hosted-worker käyttää nyt `intel_fn=None`; live-DNS-näyttöä ei pidä päätellä
+  paikallisten funktioiden olemassaolosta. Investigation-paketista puuttuvat
+  crawler-varmennuksen provenienssi ja mallille riittävä kampanjasuhdenäyttö.
+- **Yhteinen review-runtime:** `src/bouncer/review/` sisältää asynkronisen bounded
+  decision → final advisory reviewer -runnerin/workerin. Molemmat roolit käyttävät
+  eksplisiittisesti aktivoitua Featherless-konfiguraatiota; investigation-store
+  omistaa jobit, immutable-havainnot/arviot ja yhteisen reservation/budget-ledgerin.
+  Native Microsoft Decision on erikseen varmennettava unavailable-optio.
+- **Uudet moduulit:** [MODULES.md](../../docs/MODULES.md) määrittää erilliset syötteet,
+  analyysit ja näyttörajat. Trust the Source, sosiaalinen Spot the Swarm ja tekstin
+  Name the Technique ovat kaikki toteuttamatta ja pois käytöstä. Nykyinen HTTP-
+  kampanjatunnistus pysyy Clean the Traffic -moduulissa.
+
+Hostinger-deploy ja maksulliset synteettiset kokeet on kirjattu
+[runtime-ohjeeseen](../../docs/HOSTINGER_LIVE.md) ja
+[malliraporttiin](../../docs/LIVE_AI_VALIDATION.md). Dokumenttien sovitus ei ole uusi
+live-terveystarkistus. Kaikki hyväksytyt lopulliset malliarviot kirjatussa kokeessa
+olivat `uncertain`; ne eivät ole totuuslabeleita eivätkä osoita parempaa laatua.
+
 ## Kuka tekee mitä
 
 | | Kuka | GitHub | Haaraetuliite | Rooli | Vastaa kysymykseen |
@@ -38,6 +72,7 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 | `notebooks/b/` | B | Tutkiminen |
 | `src/bouncer/network/` | C | `ip_intel()`, tunnusten kokeilun tunnistus, `find_campaigns()` |
 | `src/bouncer/explain/` | C | `explain()` AI Routerin kautta + varateksti |
+| `src/bouncer/investigations/`, `src/bouncer/review/`, `src/bouncer/enforcement/` | A/C, yhteinen integraatio | Toteutetut case/evidence-, job/budget-, advisory-review- ja manuaalisen testipolitiikan rajat |
 | `src/bouncer/network/eval.py` | C | `campaign_metrics.json` |
 | `notebooks/c/` | C | Tutkiminen |
 | `tests/<kaista>/` | kukin omansa | `tests/a`, `tests/b`, `tests/c` |
@@ -45,7 +80,10 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 
 ### Tietokantataulut
 
-**Vain A kirjoittaa tietokantaan.** B ja C kirjoittavat puhtaita funktioita, joita A:n worker kutsuu. Näin kukaan ei kilpaile samoista riveistä.
+**Kirjoituslogiikka pidetään store/ingest-rajalla.** B:n ja C:n tunnistusfunktiot
+ovat puhtaita; worker integroi ne. Kaista ei estä korjaamasta yhteistä storea.
+Seuraava taulukko on historiallinen tavoiteskeema; nykyinen liikennepolku käyttää
+JSON-storea ja investigations/review/enforcement omia SQLAlchemy-taulujaan.
 
 | Taulu | Lähde | Lukee |
 |---|---|---|
@@ -56,11 +94,16 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 | `verdicts` | A:n worker ← B:n `score()` | A:n dashboard |
 | `verdicts.explanation` | A:n API ← C:n `explain()` (pyydettäessä, välimuistiin) | A:n dashboard |
 
-Workerin järjestys minuutin välein: uudet sessiot → `ip_intel()` → `find_campaigns()` (viimeinen 30 min) → `score(session, intel, campaign)` → `verdicts`.
+Historiallinen worker-tavoite: uudet sessiot → `ip_intel()` → `find_campaigns()`
+(viimeinen 30 min) → `score(session, intel, campaign)` → `verdicts`. Nykyinen
+worker ajaa syklin konfiguroidulla välillä ja tallentaa paikalliset selitykset;
+asynkroninen maksullinen review on siitä erillinen prosessi.
 
 ## Sopimukset kaistojen välillä
 
-Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
+Seuraava taulukko säilyttää **historiallisen T+1-stub- ja aikataulusopimuksen**.
+Sen tulevaisuusmuotoja ja avoimia handoffeja ei pidä lukea nykytilana; nykyiset
+rajat on kuvattu tämän tiedoston alussa.
 
 | # | Sopimus | Tuottaja → käyttäjä | Stub T+1 | Oikea versio |
 |---|---|---|---|---|
@@ -76,21 +119,21 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 | S10 | `X-Sim-Run: <ajo-id>:<luokka>:<kampanja-id>` | A (sisäinen) → `labels` | `X-Sim-Run` HTTP-pyyntöotsakkeessa; kampanja-id voi olla `-` tai puuttua. Asetetaan vain simulaattoripyynnöissä, poistetaan julkisista lokeista | Luokat ja lopullinen parseri vahvistetaan B:n/C:n kanssa ennen ajoa; **allekirjoitus `X-Sim-Sig` = HMAC-SHA256(`SIM_RUN_SECRET`, merkintä)** (046) |
 | S11 | `deploy/traps.txt` | A → B | Lista | — |
 
-`metrics.json` (B):
+`metrics.json` (B), nykyinen production-stub (ei esimerkkitulos):
 
 ```json
 {
-  "model_version": "rules-v1",
-  "test_window": {"from": "...", "to": "..."},
-  "threshold": {"bot": 0.8, "human": 0.3},
-  "human_fpr": 0.006,
-  "per_class": {"scraper": {"precision": 0.97, "recall": 0.91}},
-  "uncertain_share": 0.07,
-  "confusion": [[0]],
+  "model_version": "rules-v2",
+  "test_window": {"from": null, "to": null},
+  "threshold": {"bot": null, "human": null},
+  "human_fpr": null,
+  "per_class": {},
+  "uncertain_share": null,
+  "confusion": [],
   "split": {"simulated": {}, "real": {}, "hidden_attack": {}},
-  "ablation": {"without_network_signals": {"human_fpr": 0.0, "recall": 0.0}},
+  "ablation": {"without_network_signals": {"human_fpr": null, "recall": null}},
   "known_weaknesses": [],
-  "stub": false
+  "stub": true
 }
 ```
 
@@ -98,7 +141,8 @@ Kaikki ovat olemassa **stubeina tunnissa T+1**, jotta kukaan ei odota ketään.
 
 ## Integraatiopisteet
 
-Ainoat hetket, jolloin kaistat kytketään yhteen. A integroi, muut ovat paikalla.
+Historialliset T+-integraatiopisteet; taulukko ei todista toteutunutta ulkoista
+labelkeräystä, hidden-hyökkäystä tai feature freezeä. A integroi, muut katselmoivat.
 
 | Aika | Mitä kytketään | Valmis kun |
 |---|---|---|
@@ -115,14 +159,14 @@ Yhteinen. T+38 jälkeen jokainen kirjoittaa omat diansa: **A** demo ja arkkiteht
 
 ## Työtavat
 
-- **Haarat:** `a/…`, `b/…`, `c/…`. PR koskee vain omia polkuja. Poikkeus = sopimusmuutos, jonka kaikki kolme hyväksyvät.
-- **Valmis aikaisin?** Ota oman kaistan *jos aikaa jää* -kortti (`TODO.md`). Jos haluat auttaa toista, kysy ensin — omistaja päättää.
+- **Haarat:** `a/…`, `b/…`, `c/…`. Kaistat ovat oletusvastuita; kuka tahansa saa korjata pullonkaulan toisella polulla (AGENTS.md, päätös 044). Sopimusmuutokset kirjataan ja katselmoidaan yhdessä.
+- **Valmis aikaisin?** Auta nykyisen TODO-prioriteetin mukaan ja kirjaa muutos oikealla kaistatunnisteella; kaistaraja ei vaadi erillistä lupaa.
 - **Standup** 10 min joka 4. tunti: tehty / seuraavaksi / jumissa / tarvitsee sopimusmuutoksen.
 - **Jumissa > 15 min?** Sano ääneen.
 - Päätökset `../../docs/DECISIONS.md`:hen.
 
 ## Vastuut tiivistettynä
 
-- **Murtsi (A):** demo pysyy pystyssä, vain hän kirjoittaa tietokantaan, integroi kaistat (T+1, T+12, T+20, T+30, T+34), pitää piilotetun hyökkäyksen salassa T+34 asti, tekee palautuksen.
+- **Murtsi (A):** demo ja ingest/store-integraatio; historiallinen T+-suunnitelma antoi hänelle myös itsenäisen hidden-hyökkäyksen ja palautuksen. Tämä vastuu ei tarkoita, että ne olisi tehty.
 - **Niko (B):** `score()` ja `metrics.json`; kukaan muu ei muuta lukuja. Lukitsee luvut T+42.
 - **Joonas (C):** `ip_intel()`, `find_campaigns()`, `explain()` ja `campaign_metrics.json`. Hoitaa kysymykset Hostingerin mentoreille (PRE-4).

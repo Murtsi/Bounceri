@@ -1,6 +1,40 @@
-# Todo — Junction kanban (Hostinger: Decode the Noise)
+# Todo — Hostinger: Decode the Noise
 
-Kolme kaistaa, jokainen tekee **vain omia korttejaan** järjestyksessä ylhäältä alas. Omistajuus ja sopimukset (S1–S11): `TEAM.md`.
+## Nykyinen toteutustyö — 2026-11-14
+
+Työjärjestys: [modules plan.md](../../modules%20plan.md). Kaistat kuvaavat
+oletusvastuita, eivät muokkauskieltoja (AGENTS.md, päätös 044).
+
+| Työ | Tila | Näyttö / seuraava portti |
+|---|---|---|
+| Kriittiset korjaukset ennen ydintyötä | **Ready for review** | Virheellisten batch-rivien ohitus/laskenta ja origin-path `//`-käsittely; fixture-importin 201/list-serialisointi; DNS unknown/dual-stack; yksityisen sessioidentiteetin säilyminen retentionin, tyhjän ikkunan ja restartin yli idle-vanhenemisella; loginin 8 KiB/ASCII-rajat. Riippumaton koodikatselmointi hyväksyi korjaukset. |
+| Phase 0 — dokumentit ja lähtötason tarkistus | **In progress** | Nykytila ja moduulimatriisi sovitetaan koodiin. Python-testit/Ruff, frontend-testit/build ja Docker-image build tarkistettu. Eristetyn Docker/Caddy-demon hyväksymisajo on vielä kesken; uutta live-deployn tarkistusta ei väitetä. |
+| Phase 1 — ydin ennen moduuleja | **Pending** | Versioidut migraatiot ja liikenteen SQL repository/checkpointit; rajattu live-IP-näyttö ja case-näytön täydellisyys; yksityinen loki-import; health/backup/retention; suostumuksellinen oikea ihmisdata ja vuotovapaa arviointi. |
+| Phase 2 — Trust the Source | **Pending / unavailable** | Erillinen media-import, C2PA-validointi, näyttö, conformance-arviointi ja UI. |
+| Phase 3 — Spot the Swarm | **Pending / unavailable** | Erillinen sosiaalisten tapahtumien putki, koordinaatiosignaalit ja ryhmä-/aikaholdout; nykyiset HTTP-kampanjat eivät toteuta tätä. |
+| Phase 4 — Name the Technique | **Pending / unavailable** | Rajattu tekstisyöte, tuettu taksonomia/kieli, tarkat spanit ja riippumaton korpusarviointi lisenssirajoineen. |
+| Phase 5 — yhteinen rollout | **Pending** | Todellisiin adaptereihin/edellytyksiin perustuvat capabilities, moduulikohtaiset review-portit ja julkaisu-/restore-/resurssitestit. |
+
+Nykyinen HTTP-demo, worker, API/dashboard, investigations, kahden Featherless-roolin
+asynkroninen review/budget-ledger ja manuaalinen synteettisen toimijan testipolitiikka
+ovat toteutettu. Maksullinen review on erikseen portitettu; Native Microsoft
+Decision on unavailable kunnes varmennettu. Uudet kolme moduulia ovat edelleen
+`implemented=false, enabled=false`; [MODULES.md](../../docs/MODULES.md) kertoo rajat.
+
+`models/metrics.json` on production-stub. Erillinen
+[synteettinen benchmark](../../docs/EVALUATION.md) ja
+[kirjattu live-mallikoe](../../docs/LIVE_AI_VALIDATION.md) eivät korvaa suostumuksellista
+ihmistutkimusta tai aidosti ulkopuolisesti pidettyä hyökkäystä. Näitä ulkoisia
+tehtäviä, mentorivastauksia ja palautusta ei merkitä valmiiksi toteutuskoodin perusteella.
+
+## Historiallinen hackathon-kanban — korvattu nykyisellä vaiheistuksella
+
+Alla säilytetään 13.11.2026 T+-suunnitelma ja sen silloiset tilat audit trailina.
+Vanhat live/API/UI/Router-estot kuvaavat sen ajan tietoa, eivät nykyisiä estäjiä;
+nykyiset toteutetut osat on lueteltu yllä. Historiallisia kortteja ei ole rastittu
+valmiiksi ilman näyttöä niiden ulkoisista hyväksymisehdoista.
+
+Alkuperäisen kanbanin kaistat ja sopimukset (S1–S11): `TEAM.md`.
 Sizes: S ≈ 15 min, M ≈ 1 h, L ≈ half a day. `P0` = demo dies without it, `P1` = judges notice, `P2` = only if idle.
 Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 
@@ -108,7 +142,7 @@ Jos aika loppuu, toimitetaan tässä järjestyksessä ja lopetetaan:
 3. Dashboard (A-12) + varavideo + pitch
 4. Selitykset, piilotettu hyökkäys, ablaatio — sanotaan pitchissä jos jäivät kesken
 
-## Blocked
+## Historiallinen Blocked — ei nykyinen estolista
 
 | ID | Card | Blocked on | Since | Owner |
 |---|---|---|---|---|

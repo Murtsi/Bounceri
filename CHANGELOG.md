@@ -11,6 +11,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [X] Four-module evidence/capability matrix and a dependency-ordered implementation checklist; current documentation distinguishes implemented review/storage paths from pending durability and external real/hidden validation gates.
 - [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.
 - [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.

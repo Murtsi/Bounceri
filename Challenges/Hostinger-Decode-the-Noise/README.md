@@ -1,62 +1,64 @@
 # Hostinger — Decode the Noise
 
-> **Status: suunnittelu ja prototyypit käynnissä.** Roolit (päätös 014) ja stack (004–013) on päätetty, ks. [`docs/DECISIONS.md`](../../docs/DECISIONS.md). Hostinger Connectorilla on vahvistettu käynnissä oleva KVM 2 VPS ja bounceri.tech-domain. Sovelluksen live-deployta ja AI Router -avainta ei ole vahvistettu.
+> **Status 2026-11-14:** Bouncerin synteettinen HTTP-demo, dashboard,
+> investigation-tallennus ja asynkroninen kahden Featherless-roolin arviointi on
+> toteutettu. Hostinger-deploy ja maksullinen synteettinen arviointi on kirjattu
+> [runtime-ohjeeseen](../../docs/HOSTINGER_LIVE.md) ja
+> [validointiraporttiin](../../docs/LIVE_AI_VALIDATION.md). Tämä päivitys perustuu
+> koodiin ja kirjattuihin tuloksiin, ei uuteen live-terveystarkistukseen.
 
-Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä botti vai hyökkääjä, miksi, ja kuinka usein työkalu on väärässä.
+**Bounceri** auttaa sivuston omistajaa arvioimaan liikennettä havaintojen perusteella
+ja palauttaa `uncertain`, kun näyttö ei riitä. Julkinen dashboard:
+[bounceri.tech](https://bounceri.tech). Julkinen demo on synteettinen; oikea seurattu
+liikenne vaatii ylläpitäjän tunnistautumisen.
 
 | Tiedosto | Sisältö |
 |---|---|
-| [IDEA.md](IDEA.md) | Ongelma, ratkaisu, demo, rajaus, riskit, mittarit |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Rakenne, tunnistuslogiikka, arviointi, tietomalli, API |
-| [TEAM.md](TEAM.md) | Kaistat A/B/C, omistajuus, sopimukset S1–S11, integraatiopisteet |
-| [TODO.md](TODO.md) | Kortit kaistoittain T+0 → palautus; A:n avoimet ja estetyt työt on eritelty alla |
+| [IDEA.md](IDEA.md), [ARCHITECTURE.md](ARCHITECTURE.md) | Alkuperäinen hackathon-suunnitelma ja rakenne; nykytila alla ja runtime-ohjeessa |
+| [TEAM.md](TEAM.md) | Vastuut, nykyiset sopimusrajat ja historiallinen T+-integraatiosuunnitelma |
+| [TODO.md](TODO.md) | Nykyinen vaiheistus ja erikseen säilytetty historiallinen kanban |
+| [MODULES.md](../../docs/MODULES.md) | Moduulien kysymykset, syötteet, näyttö, labelit, rajat ja mittarit |
+| [RUNTIME-PLAN.md](../../docs/RUNTIME-PLAN.md) | Toteutettu runtime ja seuraavat portit |
 
-## Missä mennään
+## Toteutettu ja vielä avoin
 
-*Päivitetty 2026-11-13: `main` sisältää A starterin (PR #5/#11), B-6…B-11 (PR #6–#10/#12), C-1…C-9 + S2/C-4/C-10-prep (PR #8).*
-
-| Kaista | Kuka | `main`issa | Seuraava handoff | Odottaa |
-|---|---|---|---|---|
-| **A** alusta + hyökkääjä | Murtsi | sopimustyypit, 6-rivin Caddy JSONL -fixture, parseri/sessionointi, ansalista, ingest-suunnitelma | S3 Postgres-ingest + `load_sessions()`/`load_labels()`; sitten simut/dashboard | Hostinger-live-deploy ja AI Router -avain; 50 rivin S1-fixture |
-| **B** session tunnistus + arviointi | Niko | B-1…B-8 ja B-11: piirteet, säännöt, malli `lr-v1`, datasetti, arviointi + ablaatio, `bouncer.eval.run`, `bouncer.eval.hidden` | A:n Postgres-lataajat (S3) → `bouncer.eval.run --source db` | S3 ja labeloitu ei-synteettinen liikenne (≥ 300 ihmissessiota FPR-väitteeseen) |
-| **C** verkosto + kampanjat + selitykset | Joonas | C-1…C-9 + S2 `str`-ID:t + C-4 fixture + `network_pass` + hidden prep (PR #8); ExplainCache / fixture-metrics follow-up | C-8 dashboard UI, live Router | A-8 stuffing-simu (S9 lock), A-11/A-12, A-15, PRE-1 avain |
-
-### Sopimukset S1–S11
-
-| # | Sopimus | Tila |
+| Alue | Toteutettu | Avoin raja |
 |---|---|---|
-| S1 | `samples/access.sample.jsonl` | ✅ 6-rivinen synteettinen Caddy-fixture; live-loki puuttuu |
-| S2 | `src/bouncer/contracts.py` | ✅ **Lukittu `str` (039)** B+C; A:n sample-parseri voi vielä syöttää int-id:itä runtimeen — C stringifioi |
-| S3 | `load_sessions(since)` + `load_labels()` | ❌ Postgres-toteutus puuttuu |
-| S4 | `ip_intel()` | ✅ `verified_bot: bool \| None`; DNS-virhe → `None` (020/027); `country` curated FI-prefixeistä (040) |
-| S5 | `find_campaigns()` | ✅ stuffing, behavior-klusterit ja shared-NAT-suodatus |
-| S6 | `score()` | ✅ `rules-v1` + mallikäyttö, kun hyväksytty mallifile löytyy; todellinen opetus odottaa dataa |
-| S7 | `explain()` | ✅ Router-polku + fallback + `ExplainCache`; live-avainta ei ole vahvistettu |
-| S8 | `metrics.json` | ⚠️ arviointityökalu on olemassa; repositoryssa oleva metrics-tiedosto on stub |
-| S9 | `campaign_metrics.json` | ✅ stub + evaluaattori; synteettinen `campaign_metrics.fixture.json` erillään |
-| S10 | `X-Sim-Run` | ⚠️ `run-id:class[:campaign-id]` toimii fixture-parserissa; täydellinen luokkasanasto vahvistettava |
-| S11 | `deploy/traps.txt` | ✅ lista ja B:n testikäyttö; reitit eivät ole vielä demo-sivustossa |
+| A — alusta | Caddy-demo, allekirjoitetut simulaattorit, worker, JSON-yhteensopivuusstore/lataajat, API ja dashboard; PostgreSQL-investigations, arviointijonot/budjetti ja rajattu manuaalinen testienforcement | Yhtenäinen versioitu migraatioajo, liikenteen kestävä SQL-tallennus/checkpointit, yksityinen loki-import ja operatiiviset tarkistukset |
+| B — sessiot/arviointi | Piirteet, `rules-v2`, valinnainen mallipolku, datasetti/arviointi, ablaatio ja hidden-ajotyökalut | Suostumukselliset riippumattomat ihmislabelit, vuotovapaa oikean datan arviointi ja aidosti ulkopuolisesti pidetty hyökkäys |
+| C — verkosto/arviointi | IP/DNS-funktiot, HTTP-kampanjat, NAT-suodatus, selitykset sekä bounded decision → final advisory review -runner/worker | Hosted-workerin `intel_fn=None` ei osoita live-DNS-varmennusta; nykyinen redaktoitu mallipaketti ei sisällä kampanjasuhteita tai crawler-varmennuksen provenienssia |
+| Uudet moduulit | Vain suunnitelma ja capability-paikkamerkit | Trust the Source, sosiaalinen Spot the Swarm ja tekstin Name the Technique: kaikki `implemented=false`, `enabled=false` |
 
-### Seuraavaksi
+S2:n session/kampanjasessio/label-ID:t ovat `str`. S3:n `load_sessions()` ja
+`load_labels()` toimivat JSON-adapterista; tämä ei tarkoita, että liikenteen SQL
+repository olisi toteutettu. S10:n labelit on allekirjoitettu; ne eivät mene
+mallin havaintopakettiin. S11:n ansareitit ovat demosivussa. S7:n vanhan
+selityspolun lisäksi nykyinen investigation-arviointi on toteutettu kahdella
+Featherless-roolilla ja yhteisellä persistentillä kulukatolla. Native Microsoft
+Decision on erikseen varmennettava, toistaiseksi unavailable-optio.
 
-1. **A:** paikallinen Caddy JSONL → Postgres ingest + `load_sessions`/`load_labels` + worker (S3).
-2. **A+B+C:** testatkaa loader B:n datasettiä ja C:n stuffing/campaign-funktioita vasten. Älkää kerätkö salasanoja.
-3. **A:** demo-site, simulaattorit (sis. stuffing A-8), live-deploy/dashboard.
-4. **B:** `eval.run --source db` → lukitse `metrics.json`.
-5. **C:** S9 lock stuffing-simulla; C-8 UI; C-10 A-15:n jälkeen.
+## Mitä luvut osoittavat
 
-- **A:** A-2…A-15 eivät ole valmiita; A-3…A-6 ovat paikallisen E2E-putken seuraava työ.
-- **B:** voi jatkaa synteettisillä testeillä; mittarit odottavat ei-synteettistä dataa.
-- **C:** PR #8 mergetty; odottaa A:n stuffing-simua / dashboardia / Router-avainta.
-- **Kaikki:** S4 sovittu (020 + 027); pidä Googlebot/Bingbot-listat samoina B:n ja C:n koodissa.
+`models/metrics.json` on edelleen production-stub, tulokset `null`.
+[Erillinen synteettinen benchmark](../../docs/EVALUATION.md) sisältää reserved-
+osassa 14 simuloitua ihmissessiota: 0 väärää positiivista, mutta 95 % Wilson-yläraja
+on 21,53 %. Se ei osoita alle 1 %:n oikeiden ihmisten FPR:ää. Tunnetut generaattorin
+mallit eivät ole aidosti piilotettu hyökkäys.
 
-## Avoimet kysymykset
+[Kirjatussa live-mallikokeessa](../../docs/LIVE_AI_VALIDATION.md) jokainen hyväksytty
+lopullinen arvio oli `uncertain`. Koe osoitti sopimusyhteensopivuutta, ei parempaa
+tunnistuslaatua. Oikean liikenteen, simulaation ja aidosti piilotetun arvioinnin
+tuloksia ei yhdistetä eikä mallin arviota muuteta totuuslabeliksi.
 
-- [x] Kuka on A, B, C? → Murtsi, Niko, Joonas (päätös 014)
-- [x] Kieli ja stack? → Python + FastAPI, React, PostgreSQL + TimescaleDB (004–013)
-- [x] S4 `verified_bot: bool \| None` + DNS-virhe → `None` (020 + 027)
-- [x] S2 ID:t `str` (039)
-- [ ] Virallinen palautusaika? (`DEADLINE` TODO.md:ssä)
-- [x] PRE-1: VPS ja domain vahvistettu Hostinger Connectorilla
-- [ ] PRE-1: AI Router -avain ja toimiva sovellusdeploy vahvistamatta
-- [ ] Hostingerilta (PRE-4, Joonas): saako DB olla muualla? Decision-1:n tarkka endpoint/mallitunniste ja rajat? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? Arvioija on Featherless (061).
+## Seuraavaksi
+
+Nykyinen työ etenee [modules plan.md](../../modules%20plan.md) -järjestyksessä:
+vaihe 0 sovittaa dokumentit ja tarkistaa lähtötason; vaihe 1 koventaa nykyisen
+ytimen ennen uusien moduulien toteutusta. [TODO.md](TODO.md) kertoo työtilan.
+
+13.11.2026 README kuvasi vielä starter-vaihetta (PR #5/#11, #6–#10/#12 ja #8):
+simut, worker, API/dashboard ja live-arviointi olivat silloin handoffeja tai
+vahvistamattomia. Se on historiallinen tilanne, jonka yllä oleva koodiin ja
+raportteihin perustuva tilanne korvaa. Alkuperäisen T+-kanbanin ulkoisia tehtäviä,
+mentorivastauksia, ihmiskeräystä, palautusta tai hidden-hyökkäystä ei merkitä
+valmiiksi pelkän toteutuskoodin perusteella.

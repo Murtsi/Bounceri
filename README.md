@@ -82,7 +82,9 @@ Keep credentials in the ignored `.env` file. Never commit raw visitor logs, data
 
 See the [project status](Challenges/Hostinger-Decode-the-Noise/README.md), [architecture](Challenges/Hostinger-Decode-the-Noise/ARCHITECTURE.md), and [decision log](docs/DECISIONS.md). Some planning documents are in Finnish.
 
-The [selected runtime direction](docs/RUNTIME-PLAN.md) uses Microsoft-Decision-1 followed by a Featherless reviewer, with Clean the traffic first. The S7 provider groundwork is implemented; the final-review orchestrator and its budget enforcement are still pending.
+The [implemented runtime](docs/RUNTIME-PLAN.md) uses Featherless for both bounded evidence questions and final advisory review. The asynchronous orchestrator and persistent shared budget ledger are implemented; paid review remains disabled unless its model, provider, pricing and limit checks pass. Native Microsoft Decision is unavailable until separately verified. The [recorded live synthetic validation](docs/LIVE_AI_VALIDATION.md) established contract compatibility, with every accepted final review returning `uncertain`; it did not establish better detection quality.
+
+See the [module evidence matrix](docs/MODULES.md) for supported inputs, labels, limitations and capability states. Core hardening comes before the three planned modules: Trust the Source, Spot the Swarm (social coordination), and Name the Technique (text). Existing HTTP campaigns belong to Clean the Traffic. The [synthetic benchmark](docs/EVALUATION.md) is separate from production metrics; consented real-human evaluation and a genuinely withheld attack remain unavailable.
 
 ## Contributing and security
 
