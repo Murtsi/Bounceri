@@ -101,3 +101,18 @@ def test_rate_limit_is_actual_429_with_retry_after(clients):
     responses = [site_client.get("/enforcement-demo/attack/probe", headers=auth) for _ in range(4)]
     assert [r.status_code for r in responses] == [200, 200, 200, 429]
     assert int(responses[-1].headers["Retry-After"]) >= 1
+
+
+def test_admin_auth_precedes_body_read_and_approval_size_is_bounded(clients):
+    api, _, case = clients
+    route = f"/api/investigations/{case['id']}/enforcements"
+    assert api.post(route, content="{malformed").status_code == 401
+    assert api.post(route, headers=ADMIN, content="x" * 8193).status_code == 413
+
+
+def test_demo_policy_truthfully_records_manual_override_basis(clients):
+    api, _, case = clients
+    route = f"/api/investigations/{case['id']}/enforcements"
+    result = api.post(route, headers=ADMIN, json={"actor_id": "attack", "action": "rate_limit"})
+    assert result.json()["approval_basis"] == "manual_demo_override"
+    assert api.get(route).json()[0]["approval_basis"] == "manual_demo_override"

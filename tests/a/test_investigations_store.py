@@ -197,3 +197,24 @@ def test_crawler_label_without_verification_origin_is_explicitly_unknown(store):
     case = store.create_from_legacy(raw)
     assert case["evidence"][0]["data"]["verified_bot"] is None
     assert any("verification provenance" in limit for limit in case["missing_information"])
+
+
+@pytest.mark.parametrize("actual_cost", [6_000_000, 1_100_000])
+def test_provider_overcharge_halts_existing_jobs_and_new_reservations_durably(store, actual_cost):
+    case = store.create_from_legacy(snapshot())
+    first = store.enqueue_review(case["id"], "first-config", 2_000_000)
+    second = store.enqueue_review(case["id"], "second-config", 2_000_000)
+    store.claim_job("w")
+    reservation = store.start_request(first["id"], "reviewer", "fixture", "model", 1_000_000, "v1")
+    store.settle_request(reservation["id"], actual_cost, {}, "overcharge")
+    store.finish_job(first["id"], "unavailable")
+    reopened = InvestigationStore(str(store.engine.url))
+    claimed = reopened.claim_job("w")
+    assert claimed["id"] == second["id"]
+    with pytest.raises(ValueError, match="halted"):
+        reopened.start_request(second["id"], "reviewer", "fixture", "model", 1_000_000, "v1")
+    with pytest.raises(ValueError, match="deferred_budget"):
+        reopened.enqueue_review(case["id"], "third-config", 100)
+    assert reopened.usage()["requests"] == 1
+    assert reopened.usage()["execution_halted"] is True
+    assert reopened.usage()["halt_reason"] == "provider_charge_exceeded_reservation"

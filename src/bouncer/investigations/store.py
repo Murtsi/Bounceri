@@ -244,6 +244,19 @@ class InvestigationStore:
                 ).mappings()
             ]
 
+    def _halt_reason(self, conn, ledger):
+        # An observed pricing-ceiling breach invalidates the verified billing contract.
+        # Derive this durable circuit breaker from retained settlement rows; reopening
+        # the store or releasing other jobs cannot silently authorize more calls.
+        overcharged = conn.execute(
+            select(reservations.c.id).where(reservations.c.actual > reservations.c.maximum).limit(1)
+        ).first()
+        if overcharged:
+            return "provider_charge_exceeded_reservation"
+        if ledger["spent"] + ledger["reserved"] > self.LIMIT:
+            return "project_budget_exceeded"
+        return None
+
     def enqueue_review(self, case_id, config_key, maximum_cost_microusd, max_requests=2):
         if (
             type(maximum_cost_microusd) is not int
@@ -270,7 +283,8 @@ class InvestigationStore:
                 return dict(existing)
             b = row(conn, budget, 1)
             if (
-                b["spent"] + b["reserved"] + maximum_cost_microusd > self.LIMIT
+                self._halt_reason(conn, b) is not None
+                or b["spent"] + b["reserved"] + maximum_cost_microusd > self.LIMIT
                 or b["executions"] >= 100
                 or b["requests"] + max_requests > 200
             ):
@@ -349,6 +363,9 @@ class InvestigationStore:
             raise ValueError("unverified request cost, stage or identity")
         with self.transaction() as conn:
             job, b = row(conn, jobs, job_id), row(conn, budget, 1)
+            halt_reason = self._halt_reason(conn, b)
+            if halt_reason is not None:
+                raise ValueError("paid execution halted: " + halt_reason)
             if (
                 job["status"] != "running"
                 or job["remaining"] < maximum_cost_microusd
@@ -464,7 +481,10 @@ class InvestigationStore:
     def usage(self):
         with self.engine.connect() as conn:
             b = row(conn, budget, 1)
+            halt_reason = self._halt_reason(conn, b)
             return {
+                "execution_halted": halt_reason is not None,
+                "halt_reason": halt_reason,
                 "limit_usd": 5,
                 "spent_usd": b["spent"] / 1_000_000,
                 "reserved_usd": b["reserved"] / 1_000_000,

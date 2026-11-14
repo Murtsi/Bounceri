@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from bouncer.api.investigations import get_store, is_admin, require_admin
@@ -43,8 +44,17 @@ def investigation(case_id, request):
 
 
 @router.post("/api/investigations/{case_id}/enforcements", status_code=201)
-def approve(case_id: str, body: Approval, request: Request):
+async def approve(case_id: str, request: Request):
     require_admin(request)
+    chunks = bytearray()
+    async for chunk in request.stream():
+        chunks.extend(chunk)
+        if len(chunks) > 8192:
+            raise HTTPException(413, "Enforcement approval exceeds 8 KB")
+    try:
+        body = Approval.model_validate(json.loads(chunks))
+    except (ValidationError, ValueError, TypeError) as exc:
+        raise HTTPException(422, "Invalid controlled demo approval") from exc
     case = investigation(case_id, request)
     if case.get("source", {}).get("synthetic") is not True:
         raise HTTPException(

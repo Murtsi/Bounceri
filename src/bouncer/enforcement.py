@@ -188,7 +188,12 @@ class EnforcementRuntime:
                 policy["id"],
                 "approved",
                 current_time,
-                {"action": action, "actor_id": actor_id, "ttl_seconds": ttl_seconds},
+                {
+                    "action": action,
+                    "actor_id": actor_id,
+                    "ttl_seconds": ttl_seconds,
+                    "approval_basis": "manual_demo_override",
+                },
             )
             return self._public(policy, current_time)
 
@@ -218,6 +223,9 @@ class EnforcementRuntime:
         )
         result = {key: policy[key] for key in keys}
         result["status"] = status
+        # The operator enrolls this test actor. Aggregate traffic evidence does not
+        # establish its identity, so never present this as automatic model enforcement.
+        result["approval_basis"] = "manual_demo_override"
         if admin:
             result["approver"] = policy["approver"]
         return result

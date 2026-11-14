@@ -77,6 +77,11 @@ def public_legacy(snapshot: dict) -> dict:
             "synthetic": False,
             "source": "Private monitored traffic",
         }
+
+    def campaign_ref(value):
+        # Legacy campaign IDs can embed the authentication target account.
+        return "campaign-" + hashlib.sha256(str(value).encode()).hexdigest()[:16] if value else None
+
     sessions = []
     verdicts = {}
     for source in snapshot.get("sessions", []):
@@ -127,7 +132,7 @@ def public_legacy(snapshot: dict) -> dict:
             "reasons": [f"Local detector label: {label}."],
             "explanation": f"Local detector label: {label}; advisory finding.",
             "model_version": "local-detector",
-            "campaign_id": verdict.get("campaign_id"),
+            "campaign_id": campaign_ref(verdict.get("campaign_id")),
             "action": verdict.get("action")
             if verdict.get("action") in {"monitor", "block", "rate_limit", "challenge"}
             else "monitor",
@@ -139,7 +144,7 @@ def public_legacy(snapshot: dict) -> dict:
             kind = "behavior_cluster"
         campaigns.append(
             {
-                "id": campaign["id"],
+                "id": campaign_ref(campaign["id"]),
                 "kind": kind,
                 "session_ids": campaign.get("session_ids", []),
                 "size": len(campaign.get("session_ids", [])),
