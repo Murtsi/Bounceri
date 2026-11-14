@@ -78,8 +78,8 @@ def trap_rule(session: Session, traps: frozenset[str]) -> RuleHit | None:
         "trap",
         "bad_bot",
         1.0,
-        f"Haki ansapolun {hits[0]}, jota ihminen ei näe sivulla"
-        + (f" (+{len(hits) - 1} muuta)" if len(hits) > 1 else ""),
+        f"Requested trap path {hits[0]}, which humans never see on the page"
+        + (f" (+{len(hits) - 1} more)" if len(hits) > 1 else ""),
     )
 
 
@@ -90,7 +90,7 @@ def verified_crawler_rule(session: Session, intel: IpIntel | None) -> RuleHit | 
         "verified_crawler",
         "good_bot",
         1.0,
-        "IP varmistettu hakukonebotiksi käänteisellä ja eteenpäin-DNS:llä",
+        "IP verified as a search-engine bot via reverse and forward DNS",
     )
 
 
@@ -111,7 +111,7 @@ def fake_crawler_rule(session: Session, intel: IpIntel | None) -> RuleHit | None
         "fake_crawler",
         "bad_bot",
         1.0,
-        f"User-Agent väittää olevansa {token}, mutta IP:n DNS-varmistus epäonnistui",
+        f"User-Agent claims to be {token}, but the IP failed DNS verification",
     )
 
 
@@ -124,7 +124,7 @@ def vuln_path_rule(session: Session) -> RuleHit | None:
         "vuln_paths",
         "bad_bot",
         1.0,
-        f"Kokeili {len(paths)} tunnettua haavoittuvuuspolkua ({shown})",
+        f"Probed {len(paths)} known vulnerability paths ({shown})",
     )
 
 
@@ -143,8 +143,8 @@ def login_attack_rule(campaign: Campaign | None) -> RuleHit | None:
         "login_attack_campaign",
         "bad_bot",
         1.0,
-        f"Kuuluu kirjautumishyökkäykseen ({campaign.kind}, {len(campaign.session_ids)} "
-        f"sessiota){detail}",
+        f"Part of a login attack ({campaign.kind}, {len(campaign.session_ids)} "
+        f"sessions){detail}",
     )
 
 
@@ -179,22 +179,22 @@ def observations(feats: f.SessionFeatures) -> list[str]:
     """
     out: list[str] = []
     if feats.vuln_path_hits == 1:
-        out.append("Kokeili yhtä tunnettua haavoittuvuuspolkua")
+        out.append("Probed one known vulnerability path")
     if feats.header_inconsistency_share > 0:
         out.append(
-            f"Selaimeksi esittäytyvä, mutta {feats.header_inconsistency_share:.0%} sivupyynnöistä "
-            "puuttuu selaimen otsakkeita"
+            f"Claims to be a browser, but {feats.header_inconsistency_share:.0%} of page requests "
+            "lack browser headers"
         )
     if feats.ua_is_tool:
-        out.append("User-Agent on komentorivityökalu tai ohjelmointikirjasto, ei selain")
+        out.append("User-Agent is a command-line tool or library, not a browser")
     if feats.html_share > 0 and feats.static_share == 0 and feats.n_requests >= 5:
-        out.append(f"Haki {feats.n_requests} pyyntöä ilman yhtään CSS/JS/kuvatiedostoa")
+        out.append(f"Made {feats.n_requests} requests without a single CSS/JS/image file")
     if feats.peak_requests_per_min >= 60:
-        out.append(f"Huipputahti {feats.peak_requests_per_min} pyyntöä minuutissa")
+        out.append(f"Peak rate {feats.peak_requests_per_min} requests per minute")
     if feats.interarrival_cv is not None and feats.interarrival_cv < 0.1 and feats.n_requests >= 10:
-        out.append("Pyyntöjen välit lähes täsmälleen tasaiset")
+        out.append("Request intervals almost perfectly even")
     if feats.not_found_share >= 0.5 and feats.n_requests >= 5:
-        out.append(f"{feats.not_found_share:.0%} pyynnöistä päättyi 404:ään")
+        out.append(f"{feats.not_found_share:.0%} of requests ended in 404")
     if feats.ua_claims_bot:
-        out.append("User-Agent ilmoittaa olevansa botti (ei varmistettu)")
+        out.append("User-Agent says it is a bot (not verified)")
     return out

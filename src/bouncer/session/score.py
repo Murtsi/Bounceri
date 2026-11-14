@@ -20,7 +20,7 @@ from bouncer.session.model import LogisticModel, load_model, reasons, vectorize
 MODEL_VERSION = "rules-v1"
 MAX_REASONS = 3
 UNCERTAIN_SCORE = 0.5
-NO_SIGNAL_REASON = "Ei varmaa sääntöosumaa; malli (B-6) ei ole vielä käytössä"
+NO_SIGNAL_REASON = "No certain rule matched; the model (B-6) is not in use yet"
 
 _DEFAULT = object()
 
@@ -79,7 +79,7 @@ def score(
         return Verdict(
             label=label,
             score=p,
-            reasons=tuple(why[:MAX_REASONS]) or ("Mikään piirre ei poikennut tavallisesta",),
+            reasons=tuple(why[:MAX_REASONS]) or ("No feature deviated from normal",),
             model_version=m.model_version,
         )
 

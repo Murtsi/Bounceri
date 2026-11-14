@@ -8,37 +8,38 @@ emme tunnista tai missä voimme erehtyä, ja miksi. Poista rivi vain, kun korjau
 from __future__ import annotations
 
 KNOWN_WEAKNESSES: tuple[str, ...] = (
-    # Tunnistuksen kattavuus
-    "Varmat säännöt (rules-v1) eivät tunnista scrapereita, jotka käyttävät selain-UA:ta "
-    "ilman haavoittuvuuspolkuja; ne jäävät 'uncertain'-luokkaan, kunnes malli (B-6) on "
-    "opetettu oikealla datalla ja tallennettu (models/model.json).",
-    "Säännöt eivät koskaan päätä 'human'; ihmiseksi luokittelu vaatii mallin ja kalibroidut "
-    "kynnykset.",
-    "Kirjautumishyökkäykset tunnistetaan vain C:n kampanjan kautta (päätös 053): yksittäinen "
-    "tunnusten kokeilu -sessio, joka ei kuulu ≥ 3 session kampanjaan, jää 'uncertain'-"
-    "luokkaan, ja malli oppii kampanjajäsenyyden painon vain, jos opetusdatassa on kampanjoita.",
-    "C:n käyttäytymisklusterointi (behavior_cluster) niputti MVP:ssä kuusi simuloitua ihmistä "
-    "samaksi kampanjaksi (sama selain-otsakesormenjälki, samankaltaiset polut); samaa "
-    "selainversiota käyttävät oikeat ihmiset voivat näyttää samalta. B:n kampanjasääntö "
-    "koskee siksi vain tunnusten kokeilua.",
-    "Malli (lr-v1) on lineaarinen: piirteiden yhteisvaikutukset (esim. nopea tahti vain "
-    "ilman CSS/JS-pyyntöjä) eivät näy, ellei niitä lisätä piirteiksi.",
-    "Väärennetty Googlebot/Bingbot IP-osoitteesta, jolla ei ole PTR-tietuetta, saa "
-    "verified_bot=None eikä jää kiinni väärennössäännöstä (päätös 027: turvallisempi "
-    "ihmisille, mutta osa hyökkääjistä menee läpi).",
-    "Väärennössääntö kattaa vain Googlebotin ja Bingbotin (päätös 026); muut crawler-UA:t "
-    "(Applebot, YandexBot, …) eivät ole varmistettavissa.",
-    # Piirteiden rajat
-    "Otsakkeiden johdonmukaisuus tarkistetaan vain HTML-pyynnöistä ja riippuu siitä, että "
-    "Caddy lokittaa pyynnön otsakkeet; botti, joka kopioi selaimen otsakkeet, ohittaa sen.",
-    "Sec-CH-UA odotetaan vain Chromium 89+ -selaimilta HTTPS:llä; HTTP-liikenteellä "
-    "piirre antaisi vääriä havaintoja.",
-    "Sessio = (IP, User-Agent) + 5 min hiljaisuus: UA:ta tai IP:tä vaihtava botti hajoaa "
-    "moneksi lyhyeksi sessioksi, joista yksikään ei näytä epäilyttävältä yksinään "
-    "(kampanjatunnistus, kaista C, paikkaa osittain).",
-    "Jaettu IP (toimisto, venue-WiFi, mobiili-NAT) yhdistää eri ihmisiä samaan sessioon, "
-    "jos UA on sama.",
-    # Datan rajat
-    "Simuloitu liikenne on hyökkääjätiimin itse kirjoittamaa; luvut raportoidaan erikseen "
-    "simuloidulle ja oikealle liikenteelle, ja simuloidun luvut ovat todennäköisesti liian hyviä.",
+    # Detection coverage
+    "The certain rules (rules-v1) do not catch scrapers that use a browser User-Agent and no "
+    "vulnerability paths; they stay 'uncertain' until the model (B-6) is trained on real data "
+    "and saved (models/model.json).",
+    "Rules never decide 'human'; classifying someone as human needs the model and calibrated "
+    "thresholds.",
+    "Login attacks are only detected through C's campaigns (decision 053): a single "
+    "credential-guessing session that is not part of a campaign of ≥ 3 sessions stays "
+    "'uncertain', and the model only learns the weight of campaign membership if the training "
+    "data contains campaigns.",
+    "C's behaviour clustering (behavior_cluster) grouped six simulated humans into one campaign "
+    "in the MVP (same browser header fingerprint, similar paths); real people on the same "
+    "browser version can look alike. B's campaign rule therefore only covers credential "
+    "guessing.",
+    "The model (lr-v1) is linear: feature interactions (e.g. a fast pace only without CSS/JS "
+    "requests) are invisible unless added as features.",
+    "A fake Googlebot/Bingbot from an IP with no PTR record gets verified_bot=None and is not "
+    "caught by the fake-crawler rule (decision 027: safer for humans, but some attackers get "
+    "through).",
+    "The fake-crawler rule only covers Googlebot and Bingbot (decision 026); other crawler "
+    "User-Agents (Applebot, YandexBot, …) cannot be verified.",
+    # Feature limits
+    "Header consistency is only checked on HTML requests and relies on Caddy logging request "
+    "headers; a bot that copies browser headers bypasses it.",
+    "Sec-CH-UA is only expected from Chromium 89+ over HTTPS; on plain HTTP the feature would "
+    "give false signals.",
+    "Session = (IP, User-Agent) + 5 min of silence: a bot that rotates its User-Agent or IP "
+    "splits into many short sessions, none of which looks suspicious on its own (campaign "
+    "detection, lane C, partly covers this).",
+    "A shared IP (office, venue Wi-Fi, mobile NAT) merges different people into one session "
+    "if their User-Agent is the same.",
+    # Data limits
+    "Simulated traffic is written by our own attacker team; numbers are reported separately "
+    "for simulated and real traffic, and the simulated numbers are probably too good.",
 )

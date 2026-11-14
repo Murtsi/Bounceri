@@ -118,16 +118,16 @@ export const api = {
 };
 
 export const ACTION_TEXT: Record<Action, string> = {
-  none: "Ei toimenpidettä",
-  monitor: "Seuraa",
-  rate_limit: "Rajoita",
-  challenge: "Haaste",
-  block: "Estä",
+  none: "No action",
+  monitor: "Monitor",
+  rate_limit: "Rate-limit",
+  challenge: "Challenge",
+  block: "Block",
 };
 
 export const LABEL_TEXT: Record<Label, string> = {
-  bad_bot: "Haitallinen botti",
-  good_bot: "Hyvä botti",
-  human: "Ihminen",
-  uncertain: "Epävarma",
+  bad_bot: "Bad bot",
+  good_bot: "Good bot",
+  human: "Human",
+  uncertain: "Uncertain",
 };
