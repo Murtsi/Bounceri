@@ -17,7 +17,7 @@ from bouncer.session import rules
 from bouncer.session.features import compute_features
 from bouncer.session.model import LogisticModel, load_model, reasons, vectorize
 
-MODEL_VERSION = "rules-v1"
+MODEL_VERSION = "rules-v2"
 MAX_REASONS = 3
 UNCERTAIN_SCORE = 0.5
 NO_SIGNAL_REASON = "Ei varmaa sääntöosumaa; malli (B-6) ei ole vielä käytössä"
