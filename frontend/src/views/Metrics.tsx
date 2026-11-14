@@ -4,7 +4,7 @@ import { api } from "@/api";
 import { ListSkeleton } from "@/components/Skeletons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)} %` : "—");
+const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)}%` : "—");
 
 function Tile({ title, value, note }: { title: string; value: string; note?: string }) {
   return (
@@ -22,7 +22,7 @@ function Tile({ title, value, note }: { title: string; value: string; note?: str
 
 export default function Metrics() {
   const { data: m, error } = useQuery({ queryKey: ["metrics"], queryFn: api.metrics });
-  if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
+  if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!m) return <ListSkeleton rows={4} />;
   // Rehellisyys (AGENTS.md §7): stub-tilassa lukuja ei näytetä eikä keksitä.
   const hide = m.stub;
@@ -36,24 +36,24 @@ export default function Metrics() {
           <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
           <p>
             {m.stub
-              ? "models/metrics.json on stub: oikeaa labeloitua liikennettä ei vielä ole. Lukuja ei näytetä eikä keksitä."
-              : "Luvut on laskettu synteettisellä datalla: niillä ei ole todistusarvoa."}
+              ? "models/metrics.json is a stub: there is no real labelled traffic yet. No numbers are shown or invented."
+              : "These numbers come from synthetic data: they prove nothing."}
           </p>
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-3">
         <Tile
-          title="Ihmisten väärät hälytykset (FPR)"
+          title="False alarms on humans (FPR)"
           value={hide ? "—" : fmt(m.metrics.human_fpr)}
-          note={`95 % yläraja ${hide ? "—" : fmt(m.metrics["human_fpr_ci95_upper"])} · tavoite alle 1 %`}
+          note={`95% upper bound ${hide ? "—" : fmt(m.metrics["human_fpr_ci95_upper"])} · target under 1%`}
         />
-        <Tile title="Epävarmojen osuus" value={hide ? "—" : fmt(m.metrics["uncertain_share"])} />
-        <Tile title="Malli" value={String(m.metrics["model_version"] ?? "—")} />
+        <Tile title="Uncertain share" value={hide ? "—" : fmt(m.metrics["uncertain_share"])} />
+        <Tile title="Model" value={String(m.metrics["model_version"] ?? "—")} />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Mitä emme tunnista</CardTitle>
-          <CardDescription>Tunnetut heikkoudet — kirjataan, ei piiloteta</CardDescription>
+          <CardTitle>What we don&rsquo;t catch</CardTitle>
+          <CardDescription>Known weaknesses — written down, never hidden</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed">
@@ -64,7 +64,7 @@ export default function Metrics() {
         </CardContent>
       </Card>
       <details className="text-xs text-muted-foreground">
-        <summary className="cursor-pointer">Ingest-tila</summary>
+        <summary className="cursor-pointer">Ingest status</summary>
         <pre className="mt-2 overflow-x-auto rounded-md border bg-muted/30 p-3">{JSON.stringify(m.ingest, null, 2)}</pre>
       </details>
     </div>

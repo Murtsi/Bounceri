@@ -57,7 +57,7 @@ function Loader({ message }: { message: string }) {
   );
 }
 
-export function SplashScreen({ message = "Ladataan…" }: { message?: string }) {
+export function SplashScreen({ message = "Loading…" }: { message?: string }) {
   return (
     <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-5">
       <Loader message={message} />
@@ -76,7 +76,7 @@ export function SplashOverlay({ leaving }: { leaving: boolean }) {
         leaving && "splash-out",
       )}
     >
-      <Loader message="Analysoidaan liikennettä…" />
+      <Loader message="Analysing traffic…" />
     </div>
   );
 }

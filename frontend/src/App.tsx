@@ -12,14 +12,14 @@ import Sessions from "@/views/Sessions";
 type Tab = "overview" | "sessions" | "campaigns" | "metrics";
 
 const TABS: [Tab, string][] = [
-  ["overview", "Yleiskuva"],
-  ["sessions", "Sessiot"],
-  ["campaigns", "Kampanjat"],
-  ["metrics", "Mittarit"],
+  ["overview", "Overview"],
+  ["sessions", "Sessions"],
+  ["campaigns", "Campaigns"],
+  ["metrics", "Metrics"],
 ];
 
 function time(iso: string) {
-  return new Date(iso).toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 /** Logon ponnahdus kestää ≈ 1,55 s (index.css: viive 490 ms + 1050 ms). */
@@ -62,10 +62,15 @@ export default function App() {
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
 {/* Ponnahdus nähtiin avausruudulla; otsikossa logo on valmiina. */}
           <BouncerLogo mode="static" className="text-2xl" />
-          <span className="hidden text-sm text-muted-foreground sm:inline">Kuka sivulla oikeasti käy</span>
+          <span className="hidden items-center gap-2 text-sm sm:inline-flex">
+            <span aria-hidden="true" className="h-4 w-px bg-white/15" />
+            <span className="text-muted-foreground">
+              Know who&rsquo;s <em className="font-semibold not-italic text-primary">really</em> at the door
+            </span>
+          </span>
           <div className="ml-auto flex items-center gap-3 py-1.5">
             <span className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground min-[400px]:inline">
-              {s?.updated_at ? `päivitetty ${time(s.updated_at)}` : ""}
+              {s?.updated_at ? `updated ${time(s.updated_at)}` : ""}
             </span>
           </div>
         </div>
@@ -76,13 +81,13 @@ export default function App() {
             <div role="status" className="glass flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm">
               <FlaskConical className="size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
               <span>
-                <span className="font-medium">Synteettinen data</span>
-                <span className="text-muted-foreground"> — päätökset ovat oikeita, mutta niistä ei lasketa mittareita.</span>
+                <span className="font-medium">Synthetic data</span>
+                <span className="text-muted-foreground"> — decisions are real, but no metrics are computed from them.</span>
               </span>
             </div>
         )}
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="gap-4">
-          <TabsList aria-label="Näkymät" className="self-start">
+          <TabsList aria-label="Views" className="self-start">
             {TABS.map(([t, text]) => (
               <TabsTrigger key={t} value={t}>
                 {text}

@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function Campaigns() {
   const { data, error } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
-  if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
+  if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!data) return <ListSkeleton rows={4} />;
   if (data.length === 0)
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-muted-foreground">
-          Ei kampanjoita: yhtään toimijaa ei ole yhdistetty usean session takaa.
+          No campaigns: no actor has been linked across several sessions.
         </CardContent>
       </Card>
     );
@@ -28,7 +28,7 @@ export default function Campaigns() {
               <CardDescription className="font-mono text-xs">{c.id}</CardDescription>
               <CardTitle>{(c as { title?: string }).title ?? c.kind}</CardTitle>
               <CardDescription>
-                <span className="tabular-nums">{c.size}</span> sessiota · {c.kind}
+                <span className="tabular-nums">{c.size}</span> sessions · {c.kind}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">

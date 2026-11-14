@@ -22,14 +22,14 @@ LABELS = ("human", "good_bot", "uncertain", "bad_bot")
 ACTIVE_WINDOW = timedelta(minutes=10)
 
 _TITLES = {
-    "credential_stuffing": "Koordinoitu kirjautumishyökkäys",
-    "distributed_login_spray": "Hajautettu kirjautumisyritys",
-    "behavior_cluster": "Samankaltaisesti käyttäytyvä ryhmä",
+    "credential_stuffing": "Coordinated login attack",
+    "distributed_login_spray": "Distributed login spray",
+    "behavior_cluster": "Group behaving alike",
 }
 _ACTOR_TITLE = {
-    "fake_crawler": "Väärennetty hakukonebotti",
-    "vuln_paths": "Haavoittuvuusskanneri",
-    "trap": "Ansaan osunut botti",
+    "fake_crawler": "Fake search-engine bot",
+    "vuln_paths": "Vulnerability scanner",
+    "trap": "Bot caught in a trap",
 }
 
 
@@ -64,9 +64,9 @@ def enrich_campaigns(st: dict[str, Any]) -> list[dict[str, Any]]:
         n_ips = len({s["ip"] for s in members})
         title = _TITLES.get(c["kind"], c["kind"])
         if user:
-            title += f": tunnusta ”{user}” yritettiin {n_ips} eri IP-osoitteesta"
+            title += f": account “{user}” tried from {n_ips} different IPs"
         else:
-            title += f" ({n_ips} IP:tä)"
+            title += f" ({n_ips} IPs)"
         action = "rate_limit" if login else "monitor"
         out.append({
             **c,
@@ -150,7 +150,7 @@ def actors(st: dict[str, Any], campaigns: list[dict[str, Any]], limit: int = 6) 
         if cur is None or s["ended_at"] > cur["last_seen"]:
             by_ip[s["ip"]] = {
                 "kind": "ip", "id": s["id"],
-                "title": f"{_ACTOR_TITLE.get(rule, 'Epäilyttävä botti')} · {s['ip']}",
+                "title": f"{_ACTOR_TITLE.get(rule, 'Suspicious bot')} · {s['ip']}",
                 "detail": (v.get("reasons") or [""])[0],
                 "action": action, "action_text": ACTION_TEXT.get(action, action),
                 "last_seen": s["ended_at"],

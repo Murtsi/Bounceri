@@ -51,7 +51,7 @@ def test_trap_hit_is_bad_bot():
 def test_two_vuln_paths_is_bad_bot():
     v = score(curl_scanner_session(), None, None, traps=NO_TRAPS)
     assert v.label == "bad_bot"
-    assert v.reasons[0].startswith("Kokeili 7 tunnettua haavoittuvuuspolkua")
+    assert v.reasons[0].startswith("Probed 7 known vulnerability paths")
     assert len(v.reasons) == 3
 
 
@@ -59,7 +59,7 @@ def test_single_vuln_path_is_not_certain():
     s = session([req(0, "/"), req(5, "/.env", status=404)])
     v = score(s, None, None, traps=NO_TRAPS)
     assert v.label == "uncertain"
-    assert "Kokeili yhtä tunnettua haavoittuvuuspolkua" in v.reasons
+    assert "Probed one known vulnerability path" in v.reasons
 
 
 def test_verified_crawler_is_good_bot():
@@ -71,7 +71,7 @@ def test_verified_crawler_wins_over_trap():
     s = session([req(0, "/hidden-link", ua=GOOGLEBOT_UA)], ua=GOOGLEBOT_UA)
     v = score(s, IpIntel(verified_bot=True), None, traps=TRAPS)
     assert v.label == "good_bot"
-    assert any("ansapolun" in r for r in v.reasons)  # ristiriita näkyy syissä
+    assert any("trap path" in r for r in v.reasons)  # ristiriita näkyy syissä
 
 
 def test_fake_googlebot_is_bad_bot():
@@ -111,7 +111,7 @@ def test_scraper_is_uncertain_with_observations():
     v = score(scraper_session(), None, None, traps=NO_TRAPS)
     assert v.label == "uncertain"
     assert 1 <= len(v.reasons) <= 3
-    assert any("otsakkeita" in r for r in v.reasons)
+    assert any("browser headers" in r for r in v.reasons)
     assert any("CSS/JS" in r for r in v.reasons)
 
 
@@ -148,7 +148,7 @@ def test_login_attack_campaign_is_bad_bot(kind):
     )
     v = score(_login_session(), None, camp, traps=NO_TRAPS)
     assert v.label == "bad_bot" and v.score == 1.0
-    assert v.reasons[0].startswith(f"Kuuluu kirjautumishyökkäykseen ({kind}, 4 sessiota)")
+    assert v.reasons[0].startswith(f"Part of a login attack ({kind}, 4 sessions)")
     assert "failed from 4 IPs" in v.reasons[0]
 
 

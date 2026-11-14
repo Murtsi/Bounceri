@@ -47,7 +47,7 @@ def checks(api: str, rows: list[dict[str, Any]]) -> list[Check]:
     def c1() -> tuple[bool, str]:
         s = of("scanner")
         ok = bool(s) and all(
-            r["label"] == "bad_bot" and "haavoittuvuuspolku" in r["reason"] for r in s
+            r["label"] == "bad_bot" and "vulnerability path" in r["reason"] for r in s
         )
         return ok, f"{len(s)} skanneria: {[r['label'] for r in s]}"
 
