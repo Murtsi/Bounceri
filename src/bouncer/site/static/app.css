@@ -1,0 +1,4 @@
+body { margin: 0; font-family: system-ui, sans-serif; color: #16181d; background: #f6f6f3; }
+header { display: flex; gap: 16px; align-items: center; padding: 12px 24px; background: #fff; border-bottom: 1px solid #dddfe3; }
+nav a { margin-right: 12px; color: #1e4fc7; }
+main { max-width: 720px; margin: 24px auto; padding: 0 16px; }

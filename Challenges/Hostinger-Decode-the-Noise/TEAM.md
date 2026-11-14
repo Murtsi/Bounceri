@@ -23,7 +23,7 @@ Päätös 014 (`docs/DECISIONS.md`). Kaistan polkujen katselmoija määräytyy a
 | Polku | Omistaja | Sisältö |
 |---|---|---|
 | `deploy/` | A | Caddyfile, docker-compose (VPS), `.env.example`, `traps.txt` |
-| `src/site/` | A | Demosivusto, kirjautumislomake, ansapolut, QR-sivu |
+| `src/bouncer/site/` (päätös 052) | A | Demosivusto, kirjautumislomake, ansapolut, QR-sivu |
 | `src/bouncer/ingest/` | A | Tail, parsinta, sessiointi, **pipeline-worker** |
 | `src/bouncer/db/` | A | Skeema, migraatiot, `load_sessions()` |
 | `src/bouncer/contracts.py` | A (muutokset 3 hengen sopimuksella) | Jaetut tyypit: `Request`, `Session`, `IpIntel`, `Campaign`, `Verdict`, `SessionLabel`; **S2 lukittu (039):** `Session.id` / `Campaign.session_ids` / `SessionLabel.session_id` = `str` |

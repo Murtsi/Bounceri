@@ -3,15 +3,35 @@ SHELL := bash
 
 # --- project commands: set these once you pick a stack ------------------------
 DEV_CMD   ?= echo "DEV_CMD not set - add your dev server command to the Makefile" && exit 1
-TEST_CMD  ?= echo "TEST_CMD not set - add your test command to the Makefile" && exit 1
-LINT_CMD  ?= echo "LINT_CMD not set - add your lint command to the Makefile" && exit 1
+TEST_CMD  ?= uv run pytest -q
+LINT_CMD  ?= uv run ruff check src tests notebooks
 BUILD_CMD ?= echo "BUILD_CMD not set - add your build command to the Makefile" && exit 1
-FMT_CMD   ?= echo "FMT_CMD not set - add your formatter command to the Makefile" && exit 1
+FMT_CMD   ?= uv run ruff format src tests notebooks
 
 -include .env
 export
 
-.PHONY: help setup hooks check dev test lint build fmt up down logs psql adminer reset-db clean
+.PHONY: help setup hooks check dev test lint build fmt up down logs psql adminer reset-db clean demo demo-down demo-logs
+
+# --- MVP (docs/MVP.md) ----------------------------------------------------------
+# Paikallinen oletusavain vain demolle; VPS:llä aseta oikea SIM_RUN_SECRET .env-tiedostoon.
+DEMO_SECRET := $${SIM_RUN_SECRET:-local-demo}
+COMPOSE := docker compose -f deploy/docker-compose.yml
+
+demo: ## MVP: käynnistä kaikki, aja simulaattorit ja tarkista kriteerit 1–6
+	@SIM_RUN_SECRET=x $(COMPOSE) down --remove-orphans >/dev/null 2>&1 || true
+	@mkdir -p logs/caddy data
+	@rm -f logs/caddy/access.log data/store.json
+	@SIM_RUN_SECRET=$(DEMO_SECRET) $(COMPOSE) up -d --build --wait
+	@SIM_RUN_SECRET=$(DEMO_SECRET) uv run python tools/sim/run.py --run-id demo$$(date +%s)
+	@uv run python -m tools.sim.check
+	@echo "Dashboard: http://127.0.0.1:$${API_PORT:-8001}  ·  demosivu: http://127.0.0.1:$${DEMO_PORT:-8080}"
+
+demo-down: ## MVP: pysäytä kontit
+	@SIM_RUN_SECRET=x $(COMPOSE) down --remove-orphans
+
+demo-logs: ## MVP: workerin ja API:n lokit
+	@SIM_RUN_SECRET=x $(COMPOSE) logs -f --tail=50 worker api
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'

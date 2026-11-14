@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import os
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -101,10 +102,10 @@ def _read_raw(path: Path | None = None) -> dict[str, Any]:
 def _write_raw(payload: dict[str, Any], path: Path | None = None) -> Path:
     target = path or store_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    # Atominen: worker kirjoittaa samalla kun API lukee → ei koskaan puolikasta JSONia.
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(tmp, target)
     return target
 
 
