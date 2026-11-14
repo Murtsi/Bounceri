@@ -16,6 +16,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
+from bouncer.api.enforcement import router as enforcement_router
 from bouncer.api.investigations import admin_context, is_admin, public_legacy, router
 from bouncer.api.overview import enrich_campaigns, overview
 from bouncer.db.store import _read_raw, store_path
@@ -38,6 +39,7 @@ async def privacy_context(request: Request, call_next):
 
 
 app.include_router(router)
+app.include_router(enforcement_router)
 
 
 def _store() -> dict[str, Any]:

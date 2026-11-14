@@ -23,6 +23,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from bouncer.api.enforcement import probe_router
 from bouncer.session.rules import TRAPS_PATH, parse_traps
 
 STATIC = Path(__file__).resolve().parent / "static"
@@ -80,6 +81,7 @@ def _page(title: str, body: str) -> HTMLResponse:
 
 app = FastAPI(title="Bouncer demo site", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+app.include_router(probe_router)
 
 
 @app.get("/", response_class=HTMLResponse)

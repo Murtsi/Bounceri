@@ -27,6 +27,7 @@ import threading
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
+from time import time as _retention_now
 from typing import Any
 
 from bouncer.contracts import Campaign, IpIntel, Session, SessionLabel
@@ -34,7 +35,7 @@ from bouncer.db.store import _serialize_label, _serialize_session, _write_raw, s
 from bouncer.eval.run import network_signals
 from bouncer.explain import explain
 from bouncer.ingest import simrun
-from bouncer.ingest.sample import parse_access_records
+from bouncer.ingest.sample import _timestamp, parse_access_records
 from bouncer.ingest.simrun import IngestStats
 from bouncer.session import rules, score
 from bouncer.session.actions import recommend
@@ -115,7 +116,16 @@ class Worker:
         intel_fn: IntelFn | None,
         campaigns_fn: CampaignsFn | None,
         synthetic: bool,
+        max_records: int | None = None,
+        window_seconds: float | None = None,
     ) -> None:
+        if max_records is not None and (type(max_records) is not int or max_records < 1):
+            raise ValueError("max_records must be a positive integer")
+        if window_seconds is not None and window_seconds <= 0:
+            raise ValueError("window_seconds must be positive")
+        self.max_records = max_records
+        self.window_seconds = window_seconds
+        self.discarded_by_retention = 0
         self.tail = LogTail(log)
         self.store = store
         self.secret = secret
@@ -130,11 +140,35 @@ class Worker:
             self.intel_cache[ip] = self.intel_fn(ip) if self.intel_fn else IpIntel()
         return self.intel_cache[ip]
 
+    def _retain(self) -> None:
+        before = len(self.records)
+        if self.window_seconds is not None:
+            current = _retention_now()
+            retained = []
+            for record in self.records:
+                try:
+                    timestamp = _timestamp(record.get("ts")).timestamp()
+                except (ValueError, TypeError, OverflowError, OSError):
+                    continue
+                if current - self.window_seconds <= timestamp <= current + 60:
+                    retained.append(record)
+            self.records = retained
+        if self.max_records is not None:
+            self.records = self.records[-self.max_records :]
+        self.discarded_by_retention += before - len(self.records)
+
     def cycle(self) -> dict[str, Any]:
         self.records.extend(self.tail.read_new())
+        # Freshly read restart/rotation batches must be bounded before parsing/scoring.
+        self._retain()
         stats = IngestStats()
         sessions, labels = parse_access_records(self.records, secret=self.secret, stats=stats)
         sessions, labels = restamp(sessions, labels)
+        if self.max_records is not None or self.window_seconds is not None:
+            active_ips = {session.ip for session in sessions}
+            self.intel_cache = {
+                ip: intel for ip, intel in self.intel_cache.items() if ip in active_ips
+            }
         intel = {s.ip: self._intel(s.ip) for s in sessions}
         _, camp_by_session = network_signals(sessions, None, self.campaigns_fn)
         campaigns = {id(c): c for c in camp_by_session.values()}.values()
@@ -168,6 +202,8 @@ class Worker:
             "ingest": {
                 **stats.as_dict(),
                 "bad_lines": self.tail.bad_lines,
+                "retained_records": len(self.records),
+                "discarded_by_retention": self.discarded_by_retention,
                 "updated_at": datetime.now(UTC).isoformat(),
             },  # fmt: skip
         }

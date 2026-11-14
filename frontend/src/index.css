@@ -7,3 +7,23 @@
 body {
   @apply bg-stone-50 text-zinc-900;
 }
+
+.investigations-view :is(button, select, summary, a) {
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.investigations-view :focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 3px;
+}
+
+.investigations-view :is(h2, h3) { text-wrap: balance; }
+
+@media (prefers-reduced-motion: reduce) {
+  .investigations-view *, .investigations-view *::before, .investigations-view *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

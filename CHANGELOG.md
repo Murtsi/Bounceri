@@ -5,6 +5,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Add an opt-in investigation workspace with source provenance, evidence snapshots, separate assessment history and capability/budget status; preserve the existing dashboard default and navigation.
+- [A] Administrator-approved synthetic demo actor rate-limit/temporary-block policies, HMAC actor authentication, durable expiry/revoke/history and actual HTTP 403/429 counters; normal site/admin routes remain accessible.
+- [C] Asynchronous two-stage review transport, strict evidence validation and capability gates; no paid retries, automatic model substitution or enforcement authority.
 - [A] Persistent, immutable investigations with redacted evidence, separate assessment history and transactional whole-review cost reservations; unknown provider charges remain reserved (decision 058).
 - [X] Runtime dependencies for transactional investigation storage and bounded provider HTTP transport; existing local demo remains unchanged.
 - [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
@@ -87,6 +90,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Fresh restart/rotation log batches are bounded before detection; quiet cycles expire retained data and cached source metadata.
 - [X] Testit eivät enää riipu kehittäjän ympäristön `SIM_RUN_SECRET`-arvosta (yhteinen `tests/conftest.py`); PoC lukee repon fixturet ilman allekirjoitusvaatimusta. Löytyi, kun Makefile vei avaimen myös `make test` -ajoon
 - [B] Tunnettu heikkous päivitetty: kirjautumishyökkäykset tunnistetaan nyt C:n kampanjan kautta (053); vanha teksti väitti B:n jättävän ne epävarmoiksi
 - [A] JSON-store kirjoitetaan atomisesti (väliaikainen tiedosto + `os.replace`), joten API ei koskaan lue puolikasta tiedostoa workerin kirjoittaessa

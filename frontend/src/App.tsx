@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ACTION_TEXT, api, LABEL_TEXT, type Label, type SessionRow } from "./api";
 import Overview, { ActionChip } from "./Overview";
+import Investigations from "./Investigations";
 
-type Tab = "overview" | "sessions" | "campaigns" | "metrics";
+type Tab = "overview" | "sessions" | "campaigns" | "metrics" | "investigations";
 
 const CHIP: Record<Label, string> = {
   bad_bot: "bg-red-50 text-red-800 ring-red-200",
@@ -40,6 +41,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
     ["sessions", "Sessiot"],
     ["campaigns", "Kampanjat"],
     ["metrics", "Mittarit"],
+    ["investigations", "Investigations"],
   ];
   return (
     <header className="flex flex-col gap-4">
@@ -48,7 +50,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Bouncer</p>
           <h1 className="text-3xl font-bold">Kuka sivulla oikeasti käy</h1>
         </div>
-        {s && tab !== "overview" && (
+        {s && tab !== "overview" && tab !== "investigations" && (
           <dl className="flex flex-wrap gap-3 text-sm">
             {(Object.keys(LABEL_TEXT) as Label[]).map((l) => (
               <div key={l} className="rounded-lg bg-white px-3 py-2 ring-1 ring-zinc-200">
@@ -59,7 +61,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           </dl>
         )}
       </div>
-      <SyntheticBanner show={!!s?.synthetic} />
+      <SyntheticBanner show={tab !== "investigations" && !!s?.synthetic} />
       <nav aria-label="Näkymät" className="flex flex-wrap gap-2">
         {tabs.map(([t, text]) => (
           <button
@@ -73,7 +75,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
             {text}
           </button>
         ))}
-        {s?.updated_at && (
+        {tab !== "investigations" && s?.updated_at && (
           <span className="ml-auto self-center text-xs text-zinc-600">päivitetty {time(s.updated_at)}</span>
         )}
       </nav>
@@ -340,6 +342,7 @@ export default function App() {
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
       <Header tab={tab} setTab={setTab} />
+      {tab === "investigations" && <div lang="en" className="investigations-view"><Investigations goTraffic={() => setTab("overview")} /></div>}
       {tab === "overview" && (
         <Overview
           onPick={(id) => {
