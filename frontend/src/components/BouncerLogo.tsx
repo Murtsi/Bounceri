@@ -1,4 +1,7 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
+
+const TAIL = "ouncer".split("");
 
 type Mode = "play" | "loop" | "static";
 
@@ -38,7 +41,12 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
       </svg>
       {/* "ouncer" yhtenä sanana: syntyy B:n alakaaresta ja pomppii paikalleen. */}
       <span aria-hidden="true" className="bouncer-tail">
-        ouncer
+        {TAIL.map((ch, i) => (
+          // Jokainen kirjain värähtää laskeutuessa, porrastetusti vasemmalta oikealle.
+          <span key={i} className="bouncer-letter" style={{ "--i": i } as CSSProperties}>
+            {ch}
+          </span>
+        ))}
       </span>
     </span>
   );
