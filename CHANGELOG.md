@@ -112,6 +112,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Live variable-simulation verification records two differing zero-error episodes and matching seed replay; existing inference usage/reservations and both domain routes remained intact.
 - [B] rules-v2 stops promoting unrelated ordinary login retries into bad bots merely because they overlap a generic distributed-failure campaign. Same-target detection remains; source findings retain actual detector versions and stub metrics retain null measurements.
 - [C] A real slow-response regression now enforces an absolute 30-second provider deadline; prompt v3 states cross-field evidence constraints explicitly and lowers complete request bounds to 24 KiB.
 - [A] Fix the actual long campaign-reason badge overflow at 375 px and add the existing B logo favicon; preserve the owner's dashboard layout.
