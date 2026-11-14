@@ -163,3 +163,10 @@ Decision: Use Featherless for the planned generative reviewer. Existing S7 defau
 Consequences: Cache keys distinguish configured provider/model; SDK retries are disabled and responses are capped. Actual model access, pricing and the total $5 usage ledger remain preconditions for enabling the future orchestration path. This change does not implement final model-based verdicts or persist an API key.
 Revisit if: held-out evaluation shows another available reviewer has better quality/cost, with explicit owner approval before changing provider.
 
+### 058 — Persistent investigation evidence and conservative review accounting
+Date: 2026-11-14
+Context: Live investigations need durable evidence, independent assessments and a shared spending ceiling across workers.
+Decision: Add SQLAlchemy investigation tables on PostgreSQL 16 in production, with SQLite for offline development. Persist redacted immutable evidence, not raw traffic or simulator labels, in model packets. Reserve the entire bounded two-stage review before queueing; cap total spending at $5, uncached configurations at 100 and outgoing requests at 200. Unknown charges remain reserved until reconciled. Only explicitly published synthetic cases are public; monitored traffic and administrative actions require bearer authentication.
+Consequences: Repeated evidence/configuration requests are idempotent; failed workers do not silently retry paid calls. Missing crawler verification provenance stays unknown, even if an older worker recorded a boolean. Schema initialization runs once before concurrent services start.
+Revisit if: an authenticated multi-tenant product requires migrations, per-account ledgers and separately governed publication.
+

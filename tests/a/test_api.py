@@ -49,13 +49,14 @@ def test_summary(client):
 def test_sessions_list_newest_first_and_filter(client):
     rows = client.get("/api/sessions").json()
     assert [r["id"] for r in rows] == ["s2", "s1"]
-    assert rows[1]["reason"] == "Kokeili 2 polkua" and rows[1]["sim_class"] == "scanner"
+    assert rows[1]["reason"] == "Local detector label: bad_bot."
+    assert rows[1]["sim_class"] == "scanner"
     assert [r["id"] for r in client.get("/api/sessions?label=bad_bot").json()] == ["s1"]
 
 
 def test_session_detail_has_verdict_campaign_and_requests(client):
     d = client.get("/api/sessions/s1").json()
-    assert d["verdict"]["explanation"] == "Verdict: bad_bot."
+    assert d["verdict"]["explanation"] == "Local detector label: bad_bot; advisory finding."
     assert d["campaign"]["kind"] == "credential_stuffing"
     assert d["requests"][0]["path"] == "/.env" and "headers" not in d["requests"][0]
     assert client.get("/api/sessions/nope").status_code == 404

@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Persistent, immutable investigations with redacted evidence, separate assessment history and transactional whole-review cost reservations; unknown provider charges remain reserved (decision 058).
 - [X] Runtime dependencies for transactional investigation storage and bounded provider HTTP transport; existing local demo remains unchanged.
 - [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
 - [A] Public-release preparation: English setup/status README and private vulnerability-reporting guidance; preserve synthetic ingestion fixtures and tests in Git.
@@ -53,6 +54,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Suositeltu toimenpide jokaiselle päätökselle (`bouncer.session.actions`): kirjautumishyökkäys → rajoita, varma hyökkäys → estä, mallin botti → haaste, epävarma → seuraa; worker tallentaa `rule_id`:n ja `action`:in (päätös 055)
 
 ### Changed
+- [A] BREAKING: Public investigation and legacy traffic APIs expose only explicitly published synthetic demonstrations; monitored visitor data requires an administrator bearer token.
 - [X] Featherless replaces Gemini as the selected reviewer provider; S7 requires an explicit model, separates provider/model cache entries and avoids automatic retries or paid-provider fallback. Final Decision-1 orchestration remains planned, and no live key or inference request is included (decision 057).
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
 - [A] BREAKING: S2 — `Request`-sopimukseen uusi valinnainen kenttä `username` (oletus `None`); vanha koodi toimii ennallaan (päätös 047, needs-ack)
