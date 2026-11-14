@@ -44,6 +44,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] MVP vaihe 2: simulaattorit `tools/sim/run.py` (ihmistä matkiva selaus, scraper, skanneri, tunnusten kokeilu kuudesta IP:stä, väärennetty Googlebot), allekirjoitetut merkinnät, `--dry-run`. Tarkistettu oikeaa Caddyä vasten: skanneri ja väärennetty Googlebot → `bad_bot`, ihmiset eivät koskaan `bad_bot`; tunnusten kokeilu löytyy kampanjana mutta B:n päätös puuttuu vielä (vaihe 3) (A-4/A-8)
 - [B] Tunnettu heikkous: C:n käyttäytymisklusterointi niputti MVP:ssä simuloidut ihmiset kampanjaksi
 - [B] Varma sääntö kirjautumishyökkäyksille: session kuuluminen C:n `credential_stuffing`- tai `distributed_login_spray`-kampanjaan (≥ 3 sessiota) → `bad_bot`, syynä kampanjan kuvaus. MVP:n Caddy-lokilla kaikki 6 tunnusten kokeilu -sessiota tunnistuvat (aiemmin `uncertain`) (päätös 053)
+- [A] MVP vaihe 3: live-worker `python -m bouncer.ingest.worker` seuraa Caddy-lokia (sietää rikkinäiset rivit, katkaisun ja rotaation), sessioi allekirjoitetuilla merkinnöillä, hakee C:n IP-tiedot kerran per IP ja kampanjat, pisteyttää B:n `score()`:lla ja selittää C:n `explain()`:lla ilman LLM:ää, ja kirjoittaa päätökset storeen. Session ID on vakaa (`ip|ua|alkuaika`). MVP:n Caddy-lokilla kriteerit 1–4 täyttyvät (A-5/A-6)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
@@ -77,6 +78,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] JSON-store kirjoitetaan atomisesti (väliaikainen tiedosto + `os.replace`), joten API ei koskaan lue puolikasta tiedostoa workerin kirjoittaessa
 - [A] Parseri lukee Caddyn oikean aikaleiman (Unix-aika liukulukuna); aiemmin vain käsin kirjoitettujen fixturejen ISO-muoto toimi, joten yhtään oikeaa Caddy-riviä ei olisi luettu. Löytyi MVP:n vaiheen 1 tarkistuksessa oikealla Caddyllä
 - [A] Virheellinen tai ristiriitainen `X-Sim-Run`-merkintä ei enää kaada lukemista: sessio jää ilman labelia ja ohitus lasketaan (päätös 046)
 - [B] `python -m bouncer.eval.run --source db` lukee A:n storesta tiedon, onko data synteettistä (`bouncer.db seed` näytteestä → synteettinen), joten `--write` ei tallenna näytteen lukuja oikeiksi

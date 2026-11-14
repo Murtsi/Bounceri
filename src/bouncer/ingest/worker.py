@@ -1,0 +1,223 @@
+"""Live-worker (A-5/A-6, MVP vaihe 3): Caddy-loki → sessiot → C → B → store.
+
+    SIM_RUN_SECRET=… uv run python -m bouncer.ingest.worker --log logs/caddy/access.log
+
+Joka kierroksella:
+1. lukee lokin uudet rivit (sietää rikkinäiset rivit, katkaisun ja rotaation),
+2. sessioi kaikki rivit (parseri, allekirjoitetut merkinnät, päätös 046),
+3. hakee C:n IP-tiedot (kerran per IP, välimuistissa) ja kampanjat,
+4. pisteyttää jokaisen session B:n `score()`:lla ja selittää C:n `explain()`:lla
+   ilman LLM:ää (AI Router -saldoa ei kuluteta silmukassa),
+5. kirjoittaa kaiken atomisesti JSON-storeen, josta API lukee.
+
+Session ID on vakaa (`ip|ua|alkuaika` → hash), joten sama sessio pitää ID:nsä,
+vaikka uusia sessioita tulee ja parserin juokseva numerointi muuttuu.
+"""
+
+from __future__ import annotations
+
+import argparse
+import dataclasses
+import hashlib
+import json
+import os
+import signal
+import sys
+import threading
+from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from bouncer.contracts import Campaign, IpIntel, Session, SessionLabel
+from bouncer.db.store import _serialize_label, _serialize_session, _write_raw, store_path
+from bouncer.eval.run import network_signals
+from bouncer.explain import explain
+from bouncer.ingest import simrun
+from bouncer.ingest.sample import parse_access_records
+from bouncer.ingest.simrun import IngestStats
+from bouncer.session import score
+
+IntelFn = Callable[[str], IpIntel]
+CampaignsFn = Callable[[Sequence[Session]], list[Any]]
+
+
+class LogTail:
+    """Lukee JSONL-lokia lisäyksinä. Kesken jäänyt viimeinen rivi odottaa seuraavaan kertaan."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.offset = 0
+        self.inode: int | None = None
+        self.partial = b""
+        self.bad_lines = 0
+
+    def read_new(self) -> list[dict[str, Any]]:
+        try:
+            st = self.path.stat()
+        except FileNotFoundError:
+            return []
+        if self.inode is not None and (st.st_ino != self.inode or st.st_size < self.offset):
+            self.offset, self.partial = 0, b""  # rotaatio tai katkaisu
+        self.inode = st.st_ino
+        with self.path.open("rb") as f:
+            f.seek(self.offset)
+            chunk = f.read()
+            self.offset = f.tell()
+        data = self.partial + chunk
+        lines = data.split(b"\n")
+        self.partial = lines.pop()  # tyhjä, jos data päättyi rivinvaihtoon
+        out = []
+        for raw in lines:
+            raw = raw.replace(b"\x00", b"").strip()
+            if not raw:
+                continue
+            try:
+                row = json.loads(raw)
+            except ValueError:
+                self.bad_lines += 1
+                continue
+            if isinstance(row, dict) and isinstance(row.get("request"), dict):
+                out.append(row)
+            else:
+                self.bad_lines += 1
+        return out
+
+
+def stable_id(s: Session) -> str:
+    key = f"{s.ip}|{s.user_agent}|{s.started_at.isoformat()}"
+    return hashlib.sha1(key.encode()).hexdigest()[:12]
+
+
+def restamp(
+    sessions: list[Session], labels: list[SessionLabel]
+) -> tuple[list[Session], list[SessionLabel]]:
+    mapping = {s.id: stable_id(s) for s in sessions}
+    new_sessions = [dataclasses.replace(s, id=mapping[s.id]) for s in sessions]
+    new_labels = [dataclasses.replace(lab, session_id=mapping.get(lab.session_id, lab.session_id))
+                  for lab in labels]  # fmt: skip
+    return new_sessions, new_labels
+
+
+def _campaign_dict(c: Any) -> dict[str, Any]:
+    return {"id": c.id, "kind": c.kind, "session_ids": [str(x) for x in c.session_ids],
+            "reasons": list(c.reasons), "size": len(c.session_ids)}  # fmt: skip
+
+
+class Worker:
+    def __init__(
+        self,
+        log: Path,
+        store: Path,
+        *,
+        secret: str | None,
+        intel_fn: IntelFn | None,
+        campaigns_fn: CampaignsFn | None,
+        synthetic: bool,
+    ) -> None:
+        self.tail = LogTail(log)
+        self.store = store
+        self.secret = secret
+        self.intel_fn = intel_fn
+        self.campaigns_fn = campaigns_fn
+        self.synthetic = synthetic
+        self.records: list[dict[str, Any]] = []
+        self.intel_cache: dict[str, IpIntel] = {}
+
+    def _intel(self, ip: str) -> IpIntel:
+        if ip not in self.intel_cache:
+            self.intel_cache[ip] = self.intel_fn(ip) if self.intel_fn else IpIntel()
+        return self.intel_cache[ip]
+
+    def cycle(self) -> dict[str, Any]:
+        self.records.extend(self.tail.read_new())
+        stats = IngestStats()
+        sessions, labels = parse_access_records(self.records, secret=self.secret, stats=stats)
+        sessions, labels = restamp(sessions, labels)
+        intel = {s.ip: self._intel(s.ip) for s in sessions}
+        _, camp_by_session = network_signals(sessions, None, self.campaigns_fn)
+        campaigns = {id(c): c for c in camp_by_session.values()}.values()
+
+        verdicts = {}
+        for s in sessions:
+            camp: Campaign | None = camp_by_session.get(s.id)
+            v = score(s, intel[s.ip], camp)
+            verdicts[s.id] = {
+                "label": v.label,
+                "score": v.score,
+                "reasons": list(v.reasons),
+                "model_version": v.model_version,
+                "campaign_id": camp.id if camp else None,
+                "explanation": explain(v, s, camp, use_llm=False),
+                "verified_bot": intel[s.ip].verified_bot,
+                "asn_type": intel[s.ip].asn_type,
+            }
+        payload = {
+            "sessions": [_serialize_session(s) for s in sessions],
+            "labels": [_serialize_label(lab) for lab in labels],
+            "synthetic": self.synthetic,
+            "source": f"caddy:{self.tail.path}",
+            "verdicts": verdicts,
+            "campaigns": [_campaign_dict(c) for c in campaigns],
+            "ingest": {
+                **stats.as_dict(),
+                "bad_lines": self.tail.bad_lines,
+                "updated_at": datetime.now(UTC).isoformat(),
+            },  # fmt: skip
+        }
+        _write_raw(payload, self.store)
+        return payload
+
+    def run(self, interval: float, stop: threading.Event) -> None:
+        while not stop.is_set():
+            p = self.cycle()
+            counts: dict[str, int] = {}
+            for v in p["verdicts"].values():
+                counts[v["label"]] = counts.get(v["label"], 0) + 1
+            ing = p["ingest"]
+            print(
+                f"[worker] {len(p['sessions'])} sessiota {counts} "
+                f"kampanjoita {len(p['campaigns'])} ohitettu {ing['unsigned_markers']}",
+                flush=True,
+            )
+            stop.wait(interval)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument(
+        "--log", type=Path, default=Path(os.getenv("CADDY_LOG", "logs/caddy/access.log"))
+    )
+    ap.add_argument("--store", type=Path, default=None, help="oletus BOUNCER_STORE_PATH")
+    ap.add_argument("--interval", type=float, default=2.0)
+    ap.add_argument("--once", action="store_true", help="yksi kierros ja lopetus")
+    ap.add_argument("--offline", action="store_true", help="ei C:n DNS-hakuja")
+    ap.add_argument("--real", action="store_true", help="data ei ole synteettistä (oletus: on)")
+    ap.add_argument("--allow-unsigned", action="store_true", help="hyväksy allekirjoittamattomat")
+    a = ap.parse_args(argv)
+
+    secret = simrun.secret_from_env()
+    if not secret and not a.allow_unsigned:
+        print(f"{simrun.SECRET_ENV} puuttuu: labeleita ei voi tarkistaa (päätös 046). "
+              "Aseta se tai käytä --allow-unsigned paikallisesti.")  # fmt: skip
+        return 1
+    intel_fn = campaigns_fn = None
+    from bouncer.network import find_campaigns, ip_intel_contract
+
+    campaigns_fn = find_campaigns
+    if not a.offline:
+        intel_fn = ip_intel_contract
+    w = Worker(a.log, a.store or store_path(), secret=secret, intel_fn=intel_fn,
+               campaigns_fn=campaigns_fn, synthetic=not a.real)  # fmt: skip
+    if a.once:
+        w.cycle()
+        return 0
+    stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    w.run(a.interval, stop)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
