@@ -14,9 +14,9 @@ KNOWN_WEAKNESSES: tuple[str, ...] = (
     "opetettu oikealla datalla ja tallennettu (models/model.json).",
     "Säännöt eivät koskaan päätä 'human'; ihmiseksi luokittelu vaatii mallin ja kalibroidut "
     "kynnykset.",
-    "Malli oppii C:n kampanjajäsenyyden painon vain, jos opetusdatassa on kampanjoita: "
-    "PoC:ssa (synteettinen data) C löysi tunnusten kokeilun, mutta B jätti sessiot "
-    "'uncertain'-luokkaan.",
+    "Kirjautumishyökkäykset tunnistetaan vain C:n kampanjan kautta (päätös 053): yksittäinen "
+    "tunnusten kokeilu -sessio, joka ei kuulu ≥ 3 session kampanjaan, jää 'uncertain'-"
+    "luokkaan, ja malli oppii kampanjajäsenyyden painon vain, jos opetusdatassa on kampanjoita.",
     "C:n käyttäytymisklusterointi (behavior_cluster) niputti MVP:ssä kuusi simuloitua ihmistä "
     "samaksi kampanjaksi (sama selain-otsakesormenjälki, samankaltaiset polut); samaa "
     "selainversiota käyttävät oikeat ihmiset voivat näyttää samalta. B:n kampanjasääntö "
