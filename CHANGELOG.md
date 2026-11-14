@@ -43,6 +43,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] MVP vaihe 1: demosivu `bouncer.site` (FastAPI; sivut, CSS/JS/kuva, `POST /login` → 401 + `X-Login-User`, piilotettu ansalinkki, `robots.txt` kieltää ansat) ja Caddy Docker Composella (`deploy/`: tuotanto- ja paikallinen Caddyfile). Parseri käyttää Caddyn laskemaa `client_ip`:tä (A-3, päätökset 049–050, 052)
 - [A] MVP vaihe 2: simulaattorit `tools/sim/run.py` (ihmistä matkiva selaus, scraper, skanneri, tunnusten kokeilu kuudesta IP:stä, väärennetty Googlebot), allekirjoitetut merkinnät, `--dry-run`. Tarkistettu oikeaa Caddyä vasten: skanneri ja väärennetty Googlebot → `bad_bot`, ihmiset eivät koskaan `bad_bot`; tunnusten kokeilu löytyy kampanjana mutta B:n päätös puuttuu vielä (vaihe 3) (A-4/A-8)
 - [B] Tunnettu heikkous: C:n käyttäytymisklusterointi niputti MVP:ssä simuloidut ihmiset kampanjaksi
+- [B] Varma sääntö kirjautumishyökkäyksille: session kuuluminen C:n `credential_stuffing`- tai `distributed_login_spray`-kampanjaan (≥ 3 sessiota) → `bad_bot`, syynä kampanjan kuvaus. MVP:n Caddy-lokilla kaikki 6 tunnusten kokeilu -sessiota tunnistuvat (aiemmin `uncertain`) (päätös 053)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)

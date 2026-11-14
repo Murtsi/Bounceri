@@ -59,7 +59,7 @@ def score(
     m = _default_model() if model is _DEFAULT else model
     feats = compute_features(session)
 
-    hits = rules.evaluate(session, intel, traps)
+    hits = rules.evaluate(session, intel, traps, campaign)
     if hits:
         top = hits[0]
         why = [h.reason for h in hits]
