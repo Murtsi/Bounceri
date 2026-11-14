@@ -179,7 +179,7 @@ def compose(
                 "CAPSULE_SHA256": digest,
                 "CAPSULE_CHUNKS": str(len(chunks)),
             },
-            "volumes": ["source:/app", "data:/data", "logs:/logs"],
+            "volumes": ["source:/app", "data:/data", "logs:/logs", "simulation:/simulation"],
             "depends_on": {"db": {"condition": "service_healthy"}},
             "mem_limit": "768m",
         },
@@ -230,6 +230,17 @@ def compose(
         services[service]["environment"]["SIM_RUN_SECRET"] = environment["SIM_RUN_SECRET"]
     for key in ("BOUNCER_DATABASE_URL", "BOUNCERI_DATABASE_URL"):
         services["simulator"]["environment"].pop(key, None)
+    services["simulator"]["volumes"].append("simulation:/simulation")
+    for name, default in {
+        "SIMULATION_MODE": "dynamic",
+        "SIMULATION_STATE_DIR": "/simulation",
+        "SIMULATION_MAX_ROUNDS": "0",
+        "SIMULATION_MAX_ACTORS": "24",
+        "SIMULATION_MAX_REQUESTS": "240",
+        "SIMULATION_MAX_DURATION_SECONDS": "120",
+        "SIMULATION_REQUESTS_PER_SECOND": "4",
+    }.items():
+        services["simulator"]["environment"][name] = str(environment.get(name, default))
     services["ingest"]["volumes"].append("logs:/logs:ro")
     services["simulation-gateway"]["healthcheck"] = {
         "test": ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"],
@@ -272,7 +283,7 @@ def compose(
     return {
         "name": "bounceri-live",
         "services": services,
-        "volumes": {name: {} for name in ("postgres", "source", "data", "logs")},
+        "volumes": {name: {} for name in ("postgres", "source", "data", "logs", "simulation")},
     }
 
 

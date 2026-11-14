@@ -47,6 +47,9 @@ def main():
     Path("/logs").mkdir(exist_ok=True)
     os.chown("/logs", 10001, 10001)
     os.chmod("/logs", 0o700)
+    Path("/simulation").mkdir(exist_ok=True)
+    os.chown("/simulation", 10001, 10001)
+    os.chmod("/simulation", 0o700)
     for logfile in Path("/logs").glob("access*"):
         if logfile.is_file() and not logfile.is_symlink():
             os.chown(logfile, 10001, 10001)

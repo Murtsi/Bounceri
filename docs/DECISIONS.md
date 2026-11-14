@@ -182,3 +182,10 @@ Decision: Keep local detection independent. Use two explicitly identified Feathe
 Consequences: Never claim Microsoft Decision ran for a Featherless call, that two calls are independent votes, or that test enforcement establishes evasion-resistant Internet blocking. Native Hostinger remains gated. Actual credentials, pricing/access metadata and a bounded validation experiment are required before live AI activation; missing access leaves an honest unavailable state.
 Revisit if: evidence linkage and held-out measurements justify a different review or enforcement policy.
 
+### 064 — Variable private workloads with independent reference intent
+Date: 2026-11-14
+Context: The owner observed that repeating fixed scenarios lets a detector succeed on familiar templates rather than varied behavior.
+Decision: Compose seeded stochastic actor journeys with changing timing, paths, headers, cache behavior, source mix and campaign shape. Choose fresh live entropy on every episode/restart, persist bounded private replay/intent manifests and retain the original fixed generator separately. Limit episodes to 24 actors/240 requests/120 seconds; globally pace actual private HTTP at 4 requests/second, burst 4, with 8 connections. Honor overload cooldowns and stop/deadline. Use role-independent addresses and shared realistic user agents; exclude reference intent, episode/seed identity and simulator tags from ordinary behavior headers. Unknown authorization stays unknown; no simulated DNS verification or fabricated login success is added.
+Consequences: Continuous varying requests exercise the existing detector without changing its thresholds, weights or AI budget. Reference labels stay signed/private and are stripped from detector/provider input. The simulator alone mounts its rotated replay volume; recent session identities are excluded across restarts. Variety does not establish real-world or independently hidden-attack accuracy. Existing PostgreSQL state and review ceilings survive deployment.
+Revisit if: consented real traffic or independently authored adversarial cases reveal gaps not represented by these procedural behaviors.
+

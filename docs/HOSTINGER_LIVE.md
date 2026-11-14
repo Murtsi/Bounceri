@@ -77,21 +77,44 @@ older `make demo` stack; the deployment does not stop other local projects.
 ## Overnight simulation and learning foundation
 
 The simulator sends actual HTTP requests through the private Caddy gateway into
-our own demo service. The default is 12 browser-like actors, a scraper, a probe
-scanner, six distributed failed-login actors and an unverified claimed crawler:
-21 actors / 235 requests per round, every six minutes, at most 240 rounds per
-process. It then idles. The target is fixed to `simulation-gateway:8080`; redirects
-are not followed. It never sends attack requests to another person's website.
+our own demo service. Dynamic mode composes fresh episodes continuously, with
+6–24 actors and variable request counts, behavior mixes, paths, timing and headers.
+Each episode has at most 240 planned requests and a 120-second deadline. The global
+player limit is 4 requests/second with burst 4 and at most 8 connections. Episodes
+have a varied 1–6-second gap instead of repeating fixed six-minute waves.
+`SIMULATION_MAX_ROUNDS=0` runs until stopped; a positive value bounds the run and
+then idles. The target is fixed to `simulation-gateway:8080`; redirects and implicit
+environment proxies are disabled. No attack requests target another person's site.
 
-The six-minute interval exceeds the five-minute session idle window, preventing
-different rounds' signed truth labels from conflicting in one session. Labels are
-HMAC authenticated and kept out of model evidence. Browser timings/content vary
-with each round's seed. This is a reproducible synthetic test environment, not
-verified real-human traffic and not a comprehensive attack distribution.
+Profiles include cached/assetless and privacy-oriented browsing, ordinary login
+mistakes, shared NAT, benign monitors, authorization-unknown scrapers/browser-like
+automation, varied probing and dispersed/coordinated login attempts. Some episodes
+are benign-only, some mixed and some attack-heavy. Address ranges and shared user
+agent pools do not encode reference intent. No simulated crawler claims real DNS
+verification, and the demo does not fabricate successful logins.
+
+Every live episode uses fresh entropy, including after a restart. A private
+`simulation` volume retains bounded rotated replay manifests with the seed,
+generator version, plan/behavior hashes and reference intent. It is not mounted by
+the detector, API or review worker. Previously retained IP/user-agent pairs are
+excluded from new episodes to avoid five-minute session label conflicts. Signed
+truth headers are stripped from normal detector input as before. This remains a
+procedural synthetic workload, not verified real-human or novel-attack evidence.
+
+Inspect a retained episode without sending requests:
+
+```sh
+docker compose -p bounceri-live -f /docker/bounceri-live/docker-compose.yml exec -T simulator .venv/bin/python -m tools.sim.replay --episode EPISODE_ID
+```
+
+Use `--log /simulation/episodes.jsonl.1` for a rotated record. An explicit `--play`
+reissues the same private plan and does not constitute an independent test. Version
+or fingerprint mismatch rejects replay. Original fixed scenarios remain available
+through `tools/sim/run.py` and explicit `SIMULATION_MODE=legacy` for debugging.
 
 The worker retains at most 30 minutes / 6000 records, including after a restart,
 and publishes redacted immutable synthetic investigations. It keeps full traffic
-snapshots plus round-robin cases covering one complete retained session. Those
+snapshots plus selected findings/control cases covering one complete retained session. Those
 small cases can fit the AI evidence budget without silently truncating a large
 window. Large snapshots remain inspectable and explicitly AI-ineligible when they
 exceed the shared contract. The old JSON store still feeds the existing dashboard;

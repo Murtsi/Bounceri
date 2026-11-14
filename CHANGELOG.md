@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Seed-replayable variable traffic episodes compose browsing, cached/privacy/NAT controls, benign automation, unknown-intent scraping, varied probes and login campaigns; fresh live entropy replaces the repeating fixed wave.
 - [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.
 - [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.
@@ -62,6 +63,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Dashboardin ammattitason UI: kaikki näkymät (yleiskuva, sessiot, kampanjat, mittarit) shadcn/ui-komponenteilla, dataviz-skillin validoima paletti (ihminen → hyvä botti → haitallinen → epävarma, CVD ΔE ≥ 9,2) vaaleaan ja tummaan tilaan, vaalea/tumma-kytkin (oletus käyttöjärjestelmän mukaan), liikennekaavio ja segmentoitu jakaumapalkki taulukkonäkymineen, toimenpidemerkit tilaväreillä + kuvakkeilla, sessiosuodatin määrineen, ja Bouncer-logoanimaatio ("ouncer" pomppaa B:stä) otsikkoon ja latausnäyttöön (pois päältä, jos käyttäjä on pyytänyt vähemmän liikettä) (päätös 057)
 
 ### Changed
+- [A] Live simulation now runs continuously with bounded actors, request volume, concurrency and rate, plus private rotated replay manifests isolated from detector/provider inputs; legacy fixed scenarios remain available for reproducible MVP checks (decision 064).
 - [C] Owner approved at most 20 additional synthetic-case review experiments after live validation; alternate local findings and controls, retain explicit experimental status, and preserve the $5 shared ledger and per-request ceilings.
 - [X] Investigations-näkymä siirretty uuteen sivupalkkiin omaksi kohdakseen (main-yhdistäminen)
 - [X] Dashboardille sovelluksen runko: lasinen sivupalkki (logo, navigaatio kuvakkeineen ja määrineen, live-tila, synteettisen datan merkintä) ja mobiilissa kelluva navigaatio alhaalla; yleiskuvaan neljän tunnusluvun rivi minikaavioineen (Requests, Sessions, Bad bots, Live attacks), live-syöte uusimmista sessioista ja kuvakkeet korttien otsikoihin kaikissa näkymissä
