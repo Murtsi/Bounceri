@@ -99,10 +99,10 @@ def test_score_with_model_gives_three_reasons(trained):
     v = score(sessions["scr19"], None, None, traps=frozenset(), model=m)
     assert v.label == "bad_bot" and v.model_version == "lr-v1"
     assert len(v.reasons) == 3
-    assert all("nosti bottitodennäköisyyttä" in r for r in v.reasons)
+    assert all("raised bot probability" in r for r in v.reasons)
     h = score(sessions["human19"], None, None, traps=frozenset(), model=m)
     assert h.label == "human"
-    assert all("laski bottitodennäköisyyttä" in r for r in h.reasons)
+    assert all("lowered bot probability" in r for r in h.reasons)
 
 
 def test_reasons_skip_unmeasurable_features(trained):
@@ -113,12 +113,12 @@ def test_reasons_skip_unmeasurable_features(trained):
     v = score(one, None, None, traps=frozenset(), model=m)
     joined = " ".join(v.reasons)
     for word in (
-        "Keskitahti",
-        "Huipputahti",
-        "Session kesto",
-        "välien vaihtelu",
+        "Average rate",
+        "Peak rate",
+        "Session lasted",
+        "interval variation",
         "Referer",
-        "otsakkeita",
+        "browser headers",
     ):
         assert word not in joined, (word, v.reasons)
 
@@ -127,7 +127,7 @@ def test_rules_still_win_over_model(trained):
     sessions, _, m = trained
     v = score(sessions["scan19"], None, None, traps=frozenset(), model=m)
     assert v.label == "bad_bot" and v.score == 1.0
-    assert v.reasons[0].startswith("Kokeili")
+    assert v.reasons[0].startswith("Probed")
 
 
 def test_synthetic_model_and_metrics_are_never_saved(trained, tmp_path):

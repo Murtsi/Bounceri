@@ -99,37 +99,42 @@
   }
 }
 
-/* --- Bouncer-logo: "ouncer" pomppaa ulos B-kirjaimesta ------------------------- */
-@keyframes b-launch {
-  0%, 100% { transform: scale(1, 1); }
-  8% { transform: scale(1.12, 0.82); }
-  16% { transform: scale(0.94, 1.06); }
-  26% { transform: scale(1, 1); }
+/* --- Bouncer-logo: B:n alakaari painuu sisään ja ponnauttaa "ouncer"-sanan ulos ---- */
+/* Fysiikkamainen pomppu: jokaisella välillä oma käyrä (nousu hidastuu, lasku kiihtyy),
+   pompun korkeus vaimenee, alastulossa lyhyt litistys. Liike tapahtuu kerran; sana jää näkyviin. */
+
+/* Alakaari = jousi: painuu sisään (kohti vartta), pidättää, laukeaa yli ja asettuu. */
+@keyframes bowl-spring {
+  0% { transform: scale(1, 1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  30% { transform: scale(0.56, 0.94); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  38% { transform: scale(0.52, 0.93); animation-timing-function: cubic-bezier(0.16, 0.9, 0.3, 1.25); }
+  50% { transform: scale(1.12, 1.03); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  60% { transform: scale(0.96, 0.99); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  70% { transform: scale(1.02, 1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  80%, 100% { transform: scale(1, 1); }
 }
-@keyframes letter-bounce {
-  0% { transform: translateX(var(--from)) translateY(0) scale(0.2); opacity: 0; }
-  12% { opacity: 1; }
-  38% { transform: translateX(0) translateY(-0.55em) scale(1); }
-  55% { transform: translateX(0) translateY(0) scale(1.08, 0.9); }
-  66% { transform: translateY(-0.18em) scale(1); }
-  76% { transform: translateY(0) scale(1.03, 0.97); }
-  84%, 100% { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+/* Sana: syntyy kaaresta, lakipiste, 3 vaimenevaa pomppua. */
+@keyframes tail-bounce {
+  0% { transform: translate(-0.36em, 0.02em) scale(0.06); opacity: 0; animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
+  8% { opacity: 1; }
+  30% { transform: translate(-0.08em, -0.55em) scale(0.96); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
+  48% { transform: translate(0, 0) scale(1.06, 0.9); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  53% { transform: translate(0, 0) scale(1, 1); animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
+  64% { transform: translate(0, -0.18em) scale(1, 1); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
+  75% { transform: translate(0, 0) scale(1.03, 0.96); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  79% { transform: translate(0, 0) scale(1, 1); animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
+  86% { transform: translate(0, -0.05em); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
+  93%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
-.bouncer-b { display: inline-block; transform-origin: 50% 100%; }
-.bouncer-letter { display: inline-block; transform-origin: 50% 100%; opacity: 0; }
-.bouncer-play .bouncer-b { animation: b-launch 900ms ease-out both; }
-.bouncer-play .bouncer-letter {
-  animation: letter-bounce 900ms cubic-bezier(0.3, 0.7, 0.4, 1) both;
-  animation-delay: calc(80ms + var(--i) * 70ms);
-}
-.bouncer-loop .bouncer-b { animation: b-launch 1800ms ease-out infinite; }
-.bouncer-loop .bouncer-letter {
-  animation: letter-bounce 1800ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
-  animation-delay: calc(80ms + var(--i) * 70ms);
-}
-.bouncer-static .bouncer-letter { opacity: 1; }
+.bouncer-bowl { transform-box: fill-box; transform-origin: 0% 50%; }
+.bouncer-tail { display: inline-block; transform-origin: 0% 80%; opacity: 0; }
+.bouncer-play .bouncer-bowl { animation: bowl-spring 1300ms both; }
+/* Sana lähtee jousen lauetessa (≈ 36–44 % = 470–570 ms). */
+.bouncer-play .bouncer-tail { animation: tail-bounce 1050ms 490ms both; }
+
+.bouncer-static .bouncer-tail { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .bouncer-b, .bouncer-letter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .bouncer-bowl, .bouncer-tail { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* --- Lasi ja tekstuuri ---------------------------------------------------------- */

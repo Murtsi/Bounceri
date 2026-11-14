@@ -43,7 +43,7 @@ def test_sample_verdicts(sample):
     sessions, _ = sample
     curl = score(_by_ua(sessions, "curl/"), None, None)
     assert curl.label == "bad_bot"
-    assert curl.reasons[0].startswith("Kokeili 2 tunnettua haavoittuvuuspolkua")
+    assert curl.reasons[0].startswith("Probed 2 known vulnerability paths")
 
     gb = _by_ua(sessions, "Googlebot")
     assert score(gb, None, None).label == "uncertain"  # ei C:n tietoa → ei päätöstä

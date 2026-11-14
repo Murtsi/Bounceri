@@ -20,7 +20,7 @@ STORE = {
     "labels": [{"session_id": "s1", "run_id": "r", "sim_class": "scanner", "campaign_id": None}],
     "synthetic": True,
     "verdicts": {
-        "s1": {"label": "bad_bot", "score": 1.0, "reasons": ["Kokeili 2 polkua"],
+        "s1": {"label": "bad_bot", "score": 1.0, "reasons": ["Probed 2 paths"],
                "campaign_id": "c1",
                "explanation": "Verdict: bad_bot.", "model_version": "rules-v1"},
         "s2": {"label": "uncertain", "score": 0.5, "reasons": ["x"], "campaign_id": None},

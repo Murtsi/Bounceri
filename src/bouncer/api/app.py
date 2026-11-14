@@ -107,7 +107,7 @@ def session(sid: str) -> dict[str, Any]:
     st = _store()
     s = next((x for x in st.get("sessions", []) if x["id"] == sid), None)
     if s is None:
-        raise HTTPException(404, "sessiota ei löytynyt")
+        raise HTTPException(404, "session not found")
     v = st.get("verdicts", {}).get(sid, {})
     camp = next((c for c in st.get("campaigns", []) if c["id"] == v.get("campaign_id")), None)
     return {

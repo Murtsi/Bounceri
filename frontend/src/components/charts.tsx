@@ -50,7 +50,7 @@ export function Legend({ counts }: { counts?: Partial<Record<Label, number>> }) 
 type Point = { t: string } & Record<Label, number>;
 
 function clock(iso: string, seconds: boolean) {
-  return new Date(iso).toLocaleTimeString("fi-FI", {
+  return new Date(iso).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     ...(seconds ? { second: "2-digit" } : {}),
@@ -73,7 +73,7 @@ function Tip({ p, label }: { p: Point; label: string }) {
         ))}
       </ul>
       <p className="mt-1.5 flex justify-between border-t pt-1.5 text-muted-foreground">
-        <span>Yhteensä</span>
+        <span>Total</span>
         <span className="tabular-nums text-foreground">{sumOf(p)}</span>
       </p>
     </div>
@@ -105,9 +105,9 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
     <figure className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("fi-FI")}</p>
+          <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("en-GB")}</p>
           <figcaption className="text-xs text-muted-foreground">
-            pyyntöä · {unit} välein{peak && peak.n > 0 ? ` · huippu ${peak.n} klo ${peak.label}` : ""}
+            requests · per {unit}{peak && peak.n > 0 ? ` · peak ${peak.n} at ${peak.label}` : ""}
           </figcaption>
         </div>
         <Button
@@ -116,8 +116,8 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
           className="self-start"
           onClick={() => setTable((v) => !v)}
           aria-pressed={table}
-          aria-label={table ? "Näytä kaaviona" : "Näytä taulukkona"}
-          title={table ? "Näytä kaaviona" : "Näytä taulukkona"}
+          aria-label={table ? "Show as chart" : "Show as table"}
+          title={table ? "Show as chart" : "Show as table"}
         >
           {table ? <ChartColumn /> : <Table2 />}
         </Button>
@@ -128,7 +128,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Aika</TableHead>
+                <TableHead>Time</TableHead>
                 {SERIES.map((l) => (
                   <TableHead key={l} className="text-right">
                     {LABEL_TEXT[l]}
@@ -154,7 +154,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
         <div>
           <div
             role="img"
-            aria-label={`Pinottu pylväskaavio: pyynnöt ${unit} väleissä luokittain, yhteensä ${sum}. Tarkat luvut taulukkonäkymässä.`}
+            aria-label={`Stacked bar chart: requests per ${unit} by class, ${sum} in total. Exact numbers in the table view.`}
             className={cn("flex h-48 items-stretch", GAP)}
             onMouseLeave={() => setHover(null)}
           >
@@ -207,7 +207,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
 /** Yksi kokonaisuus osiin: tall segmented bar (28 px), osuus palkin sisällä jos mahtuu. */
 export function SegmentedBar({ counts, total }: { counts: Record<Label, number>; total: number }) {
   const parts = SERIES.filter((l) => counts[l] > 0);
-  const label = parts.map((l) => `${LABEL_TEXT[l]} ${counts[l]} (${pct(counts[l], total)} %)`).join(", ");
+  const label = parts.map((l) => `${LABEL_TEXT[l]} ${counts[l]} (${pct(counts[l], total)}%)`).join(", ");
   return (
     <div className="flex flex-col gap-3">
       <div role="img" aria-label={label} className="fill-x flex h-7 gap-0.5 overflow-hidden rounded-full">
@@ -222,9 +222,9 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
                 f.className,
               )}
               style={{ width: `${(counts[l] / total) * 100}%`, ...f.style }}
-              title={`${LABEL_TEXT[l]}: ${counts[l]} (${p} %)`}
+              title={`${LABEL_TEXT[l]}: ${counts[l]} (${p}%)`}
             >
-              {p >= 12 ? `${p} %` : ""}
+              {p >= 12 ? `${p}%` : ""}
             </div>
           );
         })}

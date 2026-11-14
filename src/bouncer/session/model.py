@@ -66,61 +66,61 @@ def _browser_pages(f: SessionFeatures) -> bool:
 
 FEATURES: tuple[Feature, ...] = (
     Feature("log_n_requests", lambda f, i, c: math.log1p(f.n_requests),
-            lambda f, i, c: f"{f.n_requests} pyyntöä sessiossa"),
+            lambda f, i, c: f"{f.n_requests} requests in session"),
     Feature("log_duration", lambda f, i, c: math.log1p(f.duration_s),
-            lambda f, i, c: f"Session kesto {f.duration_s:.0f} s",
+            lambda f, i, c: f"Session lasted {f.duration_s:.0f} s",
             applies=_pace),
     Feature("log_rpm", lambda f, i, c: math.log1p(f.requests_per_min),
-            lambda f, i, c: f"Keskitahti {f.requests_per_min:.0f} pyyntöä/min",
+            lambda f, i, c: f"Average rate {f.requests_per_min:.0f} requests/min",
             applies=_pace),
     Feature("log_peak_rpm", lambda f, i, c: math.log1p(f.peak_requests_per_min),
-            lambda f, i, c: f"Huipputahti {f.peak_requests_per_min} pyyntöä/min",
+            lambda f, i, c: f"Peak rate {f.peak_requests_per_min} requests/min",
             applies=_pace),
     Feature("interarrival_cv", lambda f, i, c: f.interarrival_cv or 0.0,
-            lambda f, i, c: "Pyyntöjen välien vaihtelu "
-            + ("ei mitattavissa" if f.interarrival_cv is None else f"{f.interarrival_cv:.2f}"),
+            lambda f, i, c: "Request interval variation "
+            + ("not measurable" if f.interarrival_cv is None else f"{f.interarrival_cv:.2f}"),
             applies=_cv),
     Feature("cv_missing", lambda f, i, c: _b(f.interarrival_cv is None),
-            lambda f, i, c: "Alle 3 pyyntöä: välien vaihtelua ei voi mitata"),
+            lambda f, i, c: "Fewer than 3 requests: interval variation not measurable"),
     Feature("static_share", lambda f, i, c: f.static_share,
-            lambda f, i, c: f"CSS/JS/kuvien osuus {f.static_share:.0%}"),
+            lambda f, i, c: f"CSS/JS/image share {f.static_share:.0%}"),
     Feature("html_share", lambda f, i, c: f.html_share,
-            lambda f, i, c: f"HTML-sivujen osuus {f.html_share:.0%}"),
+            lambda f, i, c: f"HTML page share {f.html_share:.0%}"),
     Feature("path_diversity", lambda f, i, c: f.path_diversity,
-            lambda f, i, c: f"Eri polkujen osuus {f.path_diversity:.0%}"),
+            lambda f, i, c: f"Distinct path share {f.path_diversity:.0%}"),
     Feature("robots_txt", lambda f, i, c: _b(f.robots_txt_fetched),
-            lambda f, i, c: "Haki robots.txt:n" if f.robots_txt_fetched
-            else "Ei hakenut robots.txt:ää"),
+            lambda f, i, c: "Fetched robots.txt" if f.robots_txt_fetched
+            else "Did not fetch robots.txt"),
     Feature("error_4xx_share", lambda f, i, c: f.error_4xx_share,
-            lambda f, i, c: f"4xx-virheiden osuus {f.error_4xx_share:.0%}"),
+            lambda f, i, c: f"4xx error share {f.error_4xx_share:.0%}"),
     Feature("not_found_share", lambda f, i, c: f.not_found_share,
-            lambda f, i, c: f"404-vastausten osuus {f.not_found_share:.0%}"),
+            lambda f, i, c: f"404 response share {f.not_found_share:.0%}"),
     Feature("log_vuln_hits", lambda f, i, c: math.log1p(f.vuln_path_hits),
-            lambda f, i, c: f"{f.vuln_path_hits} haavoittuvuuspolkua"),
+            lambda f, i, c: f"{f.vuln_path_hits} vulnerability paths"),
     Feature("header_inconsistency", lambda f, i, c: f.header_inconsistency_share,
-            lambda f, i, c: "Selaimen otsakkeita puuttui "
-            f"{f.header_inconsistency_share:.0%} sivuista",
+            lambda f, i, c: "Browser headers missing on "
+            f"{f.header_inconsistency_share:.0%} of pages",
             applies=_browser_pages),
     Feature("missing_referer", lambda f, i, c: f.missing_referer_share,
-            lambda f, i, c: f"Referer puuttui {f.missing_referer_share:.0%} sisäsivuista",
+            lambda f, i, c: f"Referer missing on {f.missing_referer_share:.0%} of inner pages",
             applies=_pages),
     Feature("ua_is_tool", lambda f, i, c: _b(f.ua_is_tool),
-            lambda f, i, c: "User-Agent on työkalu tai kirjasto" if f.ua_is_tool
-            else "User-Agent on selain"),
+            lambda f, i, c: "User-Agent is a tool or library" if f.ua_is_tool
+            else "User-Agent is a browser"),
     Feature("ua_claims_bot", lambda f, i, c: _b(f.ua_claims_bot),
-            lambda f, i, c: "User-Agent ilmoittaa olevansa botti" if f.ua_claims_bot
-            else "User-Agent ei ilmoita olevansa botti"),
+            lambda f, i, c: "User-Agent says it is a bot" if f.ua_claims_bot
+            else "User-Agent does not say it is a bot"),
     Feature("asn_datacenter", lambda f, i, c: _b(i is not None and i.asn_type == "datacenter"),
-            lambda f, i, c: "IP on datakeskuksessa" if i is not None and i.asn_type == "datacenter"
-            else "IP ei ole datakeskuksessa", network=True),
+            lambda f, i, c: "IP is in a datacenter" if i is not None and i.asn_type == "datacenter"
+            else "IP is not in a datacenter", network=True),
     Feature("asn_consumer",
             lambda f, i, c: _b(i is not None and i.asn_type in ("residential", "mobile")),
-            lambda f, i, c: "IP on koti- tai mobiililiittymä"
+            lambda f, i, c: "IP is a home or mobile connection"
             if i is not None and i.asn_type in ("residential", "mobile")
-            else "IP ei ole koti- tai mobiililiittymä", network=True),
+            else "IP is not a home or mobile connection", network=True),
     Feature("in_campaign", lambda f, i, c: _b(c is not None),
-            lambda f, i, c: f"Kuuluu kampanjaan {c.id} ({c.kind})" if c is not None
-            else "Ei kuulu tunnettuun kampanjaan", network=True),
+            lambda f, i, c: f"Part of campaign {c.id} ({c.kind})" if c is not None
+            else "Not part of a known campaign", network=True),
 )  # fmt: skip
 
 
@@ -286,9 +286,9 @@ def reasons(
             break
         if not by_name[name].applies(feats):
             continue
-        verb = "nosti" if c > 0 else "laski"
+        verb = "raised" if c > 0 else "lowered"
         out.append(
-            f"{by_name[name].describe(feats, intel, campaign)} ({verb} bottitodennäköisyyttä)"
+            f"{by_name[name].describe(feats, intel, campaign)} ({verb} bot probability)"
         )
     return out
 

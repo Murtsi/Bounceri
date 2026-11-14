@@ -19,11 +19,11 @@ from typing import Literal
 Action = Literal["none", "monitor", "rate_limit", "challenge", "block"]
 
 ACTION_TEXT: dict[Action, str] = {
-    "none": "Ei toimenpidettä",
-    "monitor": "Seuraa",
-    "rate_limit": "Rajoita",
-    "challenge": "Haaste",
-    "block": "Estä",
+    "none": "No action",
+    "monitor": "Monitor",
+    "rate_limit": "Rate-limit",
+    "challenge": "Challenge",
+    "block": "Block",
 }
 
 _BY_RULE: dict[str, Action] = {

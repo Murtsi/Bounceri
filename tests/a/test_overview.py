@@ -36,7 +36,7 @@ STORE = {
                       "action": "rate_limit",
                       "reasons": ["x"]} for i in range(4)},
         "scan": {"label": "bad_bot", "rule_id": "vuln_paths", "action": "block",
-                 "reasons": ["Kokeili 7 tunnettua haavoittuvuuspolkua"]},
+                 "reasons": ["Probed 7 known vulnerability paths"]},
         "h1": {"label": "uncertain", "rule_id": None, "action": "monitor", "reasons": ["y"]},
         "h2": {"label": "bad_bot", "rule_id": None, "action": "challenge", "reasons": ["z"]},
     },
@@ -66,7 +66,7 @@ def test_login_campaign_is_an_active_alert_with_readable_title():
     o = overview(STORE)
     assert len(o["alerts"]) == 1
     a = o["alerts"][0]
-    assert a["title"].startswith("Koordinoitu kirjautumishyökkäys: tunnusta ”admin”")
+    assert a["title"].startswith("Coordinated login attack: account “admin”")
     assert a["n_ips"] == 4 and a["duration_s"] == 15 and a["action"] == "rate_limit"
 
 
@@ -81,7 +81,7 @@ def test_actors_group_the_campaign_and_list_others_by_ip():
     actors = overview(STORE)["actors"]
     assert actors[0]["kind"] == "campaign"
     titles = [a["title"] for a in actors]
-    assert "Haavoittuvuusskanneri · 203.0.113.24" in titles
+    assert "Vulnerability scanner · 203.0.113.24" in titles
     assert sum(a["kind"] == "campaign" for a in actors) == 1  # 4 sessiota → yksi toimija
 
 

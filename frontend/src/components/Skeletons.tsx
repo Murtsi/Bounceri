@@ -17,7 +17,7 @@ function SkeletonCard({ className, children }: { className?: string; children: R
 /** Yleiskuvan muotoinen latausnäkymä: sama asettelu kuin valmiina, ei hyppimistä. */
 export function OverviewSkeleton() {
   return (
-    <div role="status" aria-label="Ladataan yleiskuvaa" className="flex flex-col gap-4">
+    <div role="status" aria-label="Loading overview" className="flex flex-col gap-4">
       <Card className="p-6">
         <Skeleton className="h-5 w-24 rounded-full" />
         <Skeleton className="h-8 w-3/4" />
@@ -49,7 +49,7 @@ export function OverviewSkeleton() {
 export function ListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <SkeletonCard>
-      <div role="status" aria-label="Ladataan" className="flex flex-col gap-3">
+      <div role="status" aria-label="Loading" className="flex flex-col gap-3">
         {Array.from({ length: rows }, (_, i) => (
           <Skeleton key={i} className="h-10 w-full" style={{ animationDelay: `${i * 80}ms` }} />
         ))}
