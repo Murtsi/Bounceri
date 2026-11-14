@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { capabilityState, formatScore, reviewState, sourceState } from "../src/investigationPresentation.ts";
+import {
+  assessmentStage,
+  capabilityState,
+  formatScore,
+  reviewState,
+  sourceState,
+} from "../src/investigationPresentation.ts";
+
+test("actual API assessment stage takes precedence with a legacy kind fallback", () => {
+  assert.equal(assessmentStage({ stage: "decision_model" }), "decision_model");
+  assert.equal(assessmentStage({ stage: "local", kind: "reviewer" }), "local");
+  assert.equal(assessmentStage({ kind: "reviewer" }), "reviewer");
+  assert.equal(assessmentStage({}), undefined);
+});
 
 test("future modules cannot appear implemented merely because a server enables them", () => {
   assert.equal(capabilityState("spot_the_swarm", { enabled: true }).enabled, false);

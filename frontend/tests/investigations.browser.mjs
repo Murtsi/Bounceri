@@ -49,6 +49,9 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   };
   let mode = "empty";
   let reviewStatus = "unavailable";
+  let enforcementStatus = "active";
+  let affectedRequests = 3;
+  let enforcementMode = "populated";
   const records = () => ({
     "/api/capabilities": {
       modules: {
@@ -75,13 +78,13 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     "/api/investigations/fixture-case/assessments": [
       {
         id: "local-revision",
-        kind: "local",
+        stage: "local",
         created_at: synthetic.created_at,
         payload: { label: "uncertain", evidence_ids: ["ev-1"] },
       },
       {
         id: "decision-revision",
-        kind: "decision_model",
+        stage: "decision_model",
         created_at: synthetic.created_at,
         payload: {
           outcome: "abstain",
@@ -90,6 +93,28 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
         },
       },
     ],
+    "/api/investigations/fixture-case/enforcements":
+      enforcementMode === "empty"
+        ? []
+        : [
+            {
+              id: "policy-1",
+              case_id: "fixture-case",
+              actor_id: "attack",
+              scope: "controlled_demo_actor",
+              action: "rate_limit",
+              status: enforcementStatus,
+              evidence_version: 1,
+              evidence_hash: "a".repeat(64),
+              created_at: 1794650400,
+              expires_at: 1794650460,
+              revoked_at: null,
+              expired_at: null,
+              affected_requests: affectedRequests,
+              allowed_requests: 2,
+              audit: [{ event: "approved", at: 1794650400, details: { ttl_seconds: 60 } }],
+            },
+          ],
     "/api/summary": {
       updated_at: null,
       synthetic: true,
@@ -103,7 +128,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     const data = records();
-    const unavailable = mode === "error" || (mode === "history-error" && path.endsWith("/assessments"));
+    const unavailable =
+      mode === "error" ||
+      (mode === "history-error" && path.endsWith("/assessments")) ||
+      (enforcementMode === "error" && path.endsWith("/enforcements"));
     return route.fulfill({
       status: unavailable || !(path in data) ? 503 : 200,
       contentType: "application/json",
@@ -157,6 +185,48 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   check(await page.getByText("Detector score: Not reported", { exact: true }).isVisible(), "Null score fabricated");
   check(await page.getByRole("heading", { name: "Microsoft Decision-1" }).isVisible(), "Decision stage missing");
   check(await page.getByRole("heading", { name: "Featherless reviewer" }).isVisible(), "Reviewer stage missing");
+  check(
+    await page
+      .getByRole("heading", { name: "Local detector", exact: true })
+      .locator("..")
+      .getByText("local-revision", { exact: true })
+      .isVisible(),
+    "Actual stage-local assessment was misplaced",
+  );
+  check(
+    await page
+      .getByRole("heading", { name: "Microsoft Decision-1", exact: true })
+      .locator("..")
+      .getByText("decision-revision", { exact: true })
+      .isVisible(),
+    "Actual stage-decision assessment was misplaced",
+  );
+  check(
+    (await page.getByText("Other assessment stages", { exact: false }).count()) === 0,
+    "Known API stages were treated as unknown",
+  );
+  await page.getByText("Affected requests: 3", { exact: true }).waitFor();
+  check(await page.getByText("Active", { exact: true }).isVisible(), "Actual enforcement status missing");
+  check(
+    await page.getByText("Allowed requests: 2", { exact: true }).isVisible(),
+    "Actual enforcement counters missing",
+  );
+  check(await page.getByText("Expires", { exact: true }).isVisible(), "Policy expiry missing");
+  affectedRequests = 7;
+  enforcementStatus = "revoked";
+  await page.getByText("Affected requests: 7", { exact: true }).waitFor();
+  await page.getByText("Revoked", { exact: true }).waitFor();
+  enforcementStatus = "expired";
+  await page.getByText("Expired", { exact: true }).waitFor();
+  enforcementMode = "empty";
+  await page.getByText("No enforcement policies recorded for this investigation.", { exact: true }).waitFor();
+  enforcementMode = "error";
+  await page.getByText("Enforcement status could not be loaded", { exact: true }).waitFor();
+  check(
+    (await page.getByText("No enforcement policies recorded for this investigation.", { exact: true }).count()) === 0,
+    "Enforcement outage rendered as empty success",
+  );
+  enforcementMode = "populated";
   check(
     (await page.getByText("No recorded assessment.", { exact: true }).count()) === 1,
     "Missing reviewer assessment was fabricated",
@@ -225,6 +295,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "source filter",
       "null score",
       "separate history stages",
+      "actual API stage grouping",
+      "enforcement endpoint and polling",
+      "enforcement counters and expiry",
+      "enforcement empty versus error",
       "evidence references",
       "mobile width",
       "seven review states",

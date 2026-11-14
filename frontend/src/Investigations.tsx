@@ -8,6 +8,7 @@ import {
   type LocalAssessment,
 } from "./investigationsApi";
 import {
+  assessmentStage,
   capabilityState,
   dateTime,
   findingLabel,
@@ -303,7 +304,7 @@ function AssessmentHistory({
     ["decision_model", "Microsoft Decision-1", "Optional decision assessment"],
     ["reviewer", "Featherless reviewer", "Optional advisory recommendation"],
   ];
-  const other = query.data?.filter((item) => !stages.some(([kind]) => item.kind === kind)) ?? [];
+  const other = query.data?.filter((item) => !stages.some(([kind]) => assessmentStage(item) === kind)) ?? [];
   return (
     <section aria-labelledby="history-title" className="space-y-4">
       <div>
@@ -321,7 +322,7 @@ function AssessmentHistory({
       {query.data && (
         <div className="grid divide-y divide-zinc-200 rounded-lg border border-zinc-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           {stages.map(([kind, title, subtitle]) => {
-            const records = query.data.filter((item) => item.kind === kind);
+            const records = query.data.filter((item) => assessmentStage(item) === kind);
             return (
               <div key={kind} className="min-w-0 p-4">
                 <h4 className="text-sm font-semibold">{title}</h4>
@@ -356,6 +357,114 @@ function AssessmentHistory({
           </ul>
         </details>
       )}
+    </section>
+  );
+}
+
+function EnforcementPanel({ id }: { id: string }) {
+  const query = useQuery({
+    queryKey: ["enforcements", id],
+    queryFn: () => investigationApi.enforcements(id),
+    retry: false,
+    refetchInterval: 2_000,
+  });
+  const timestamp = (value?: number | null) =>
+    typeof value === "number" && Number.isFinite(value) && Math.abs(value) < 8_640_000_000_000
+      ? dateTime(new Date(value * 1000).toISOString())
+      : "Not reported";
+  const count = (value?: number) =>
+    typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : "Not reported";
+  return (
+    <section className="border-t border-zinc-200 pt-5" aria-labelledby="enforcement-title">
+      <h3 id="enforcement-title" className="font-semibold">
+        Enforcement
+      </h3>
+      <p className="mt-2 text-xs leading-relaxed text-zinc-600">
+        These policies apply only to registered demo actors. Assessments are advisory; applying or reversing an action
+        requires an authorised operator.
+      </p>
+      {query.isPending && <Loading label="Loading enforcement policies…" />}
+      {query.error && (
+        <div className="mt-3">
+          <ErrorState
+            title="Enforcement status could not be loaded"
+            error={query.error}
+            retry={() => void query.refetch()}
+          />
+        </div>
+      )}
+      {!query.error &&
+        query.data &&
+        (query.data.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-600">No enforcement policies recorded for this investigation.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-zinc-200">
+            {query.data.map((policy) => {
+              const status = (
+                {
+                  active: { label: "Active", tone: "info" },
+                  revoked: { label: "Revoked", tone: "neutral" },
+                  expired: { label: "Expired", tone: "neutral" },
+                } as Record<string, { label: string; tone: Tone }>
+              )[policy.status ?? ""] ?? { label: "Status unavailable", tone: "warning" as Tone };
+              return (
+                <li key={policy.id} className="min-w-0 space-y-3 py-4 first:pt-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">
+                      {policy.action === "rate_limit"
+                        ? "Rate limit"
+                        : policy.action === "temporary_block"
+                          ? "Temporary block"
+                          : (policy.action ?? "Action not reported")}
+                    </p>
+                    <Badge tone={status.tone}>{status.label}</Badge>
+                  </div>
+                  <p className="break-all font-mono text-xs text-zinc-600">{policy.id}</p>
+                  <p className="text-sm">Controlled demo actor: {policy.actor_id ?? "Not reported"}</p>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm tabular-nums">
+                    <p>Affected requests: {count(policy.affected_requests)}</p>
+                    <p>Allowed requests: {count(policy.allowed_requests)}</p>
+                  </div>
+                  <dl className="grid gap-3 text-xs sm:grid-cols-2">
+                    <div>
+                      <dt className="text-zinc-600">Approved</dt>
+                      <dd className="mt-1">{timestamp(policy.created_at)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-zinc-600">Expires</dt>
+                      <dd className="mt-1">{timestamp(policy.expires_at)}</dd>
+                    </div>
+                    {policy.revoked_at != null && (
+                      <div>
+                        <dt className="text-zinc-600">Revoked at</dt>
+                        <dd className="mt-1">{timestamp(policy.revoked_at)}</dd>
+                      </div>
+                    )}
+                    {policy.expired_at != null && (
+                      <div>
+                        <dt className="text-zinc-600">Expired at</dt>
+                        <dd className="mt-1">{timestamp(policy.expired_at)}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <details>
+                    <summary className="cursor-pointer text-xs font-medium text-blue-800">
+                      Policy scope and audit record
+                    </summary>
+                    <RecordFields
+                      data={{
+                        scope: policy.scope,
+                        evidence_version: policy.evidence_version,
+                        evidence_hash: policy.evidence_hash,
+                        audit: policy.audit,
+                      }}
+                    />
+                  </details>
+                </li>
+              );
+            })}
+          </ul>
+        ))}
     </section>
   );
 }
@@ -482,19 +591,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
             )}
           </section>
           <AssessmentHistory id={id} local={investigation.local_assessment} onEvidence={setExpandedEvidence} />
-          <section className="border-t border-zinc-200 pt-5" aria-labelledby="enforcement-title">
-            <h3 id="enforcement-title" className="font-semibold">
-              Enforcement
-            </h3>
-            {investigation.enforcement ? (
-              <RecordFields data={investigation.enforcement} />
-            ) : (
-              <p className="mt-2 text-sm text-zinc-600">No enforcement status has been supplied for this case.</p>
-            )}
-            <p className="mt-2 text-xs text-zinc-600">
-              Assessments are advisory. Applying or reversing an action requires an authorised operator.
-            </p>
-          </section>
+          <EnforcementPanel id={id} />
           <button
             onClick={goTraffic}
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold hover:bg-zinc-50"

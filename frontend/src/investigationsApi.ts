@@ -10,7 +10,8 @@ export interface Capabilities {
 
 export interface Assessment {
   id: string;
-  kind: string;
+  stage?: string;
+  kind?: string;
   created_at?: string;
   payload?: Record<string, unknown> | null;
 }
@@ -41,7 +42,24 @@ export interface Investigation {
     job_id?: string | null;
     result?: Record<string, unknown> | null;
   };
-  enforcement?: Record<string, unknown> | null;
+}
+
+export interface EnforcementPolicy {
+  id: string;
+  case_id?: string;
+  actor_id?: string;
+  scope?: string;
+  action?: string;
+  status?: string;
+  evidence_version?: number;
+  evidence_hash?: string;
+  created_at?: number;
+  expires_at?: number;
+  revoked_at?: number | null;
+  expired_at?: number | null;
+  affected_requests?: number;
+  allowed_requests?: number;
+  audit?: { event?: string; at?: number; details?: Record<string, unknown> }[];
 }
 
 export interface Usage {
@@ -89,5 +107,6 @@ export const investigationApi = {
   investigation: async (id: string) =>
     record<Investigation>(await get(`/api/investigations/${encodeURIComponent(id)}`)),
   assessments: (id: string) => list<Assessment>(`/api/investigations/${encodeURIComponent(id)}/assessments`),
+  enforcements: (id: string) => list<EnforcementPolicy>(`/api/investigations/${encodeURIComponent(id)}/enforcements`),
   usage: async () => record<Usage>(await get("/api/usage")),
 };

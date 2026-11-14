@@ -1,5 +1,9 @@
 export type Tone = "neutral" | "info" | "warning" | "danger" | "success";
 
+export function assessmentStage(assessment: { stage?: string; kind?: string }) {
+  return assessment.stage ?? assessment.kind;
+}
+
 export function capabilityState(module: string, capability?: { enabled?: boolean; implemented?: boolean }) {
   if (module !== "clean_traffic" && module !== "clean_the_traffic") {
     return { enabled: false, label: "Not implemented" };
