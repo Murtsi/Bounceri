@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from bouncer.db import clear_store, load_labels, load_sessions, seed_from_sample
@@ -30,7 +30,7 @@ def test_seed_and_load_string_ids(tmp_path: Path) -> None:
 def test_since_filter(tmp_path: Path) -> None:
     path = tmp_path / "store.json"
     seed_from_sample(path=path)
-    future = datetime(2099, 1, 1, tzinfo=timezone.utc)
+    future = datetime(2099, 1, 1, tzinfo=UTC)
     assert load_sessions(since=future, path=path) == []
 
 

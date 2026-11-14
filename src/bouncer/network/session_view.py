@@ -7,7 +7,7 @@ testien SimpleNamespace/dict. Session ID normalisoidaan aina merkkijonoksi.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qs
 
@@ -31,10 +31,10 @@ def _as_dt(value: Any) -> datetime | None:
         return None
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+            return value.replace(tzinfo=UTC)
         return value
     if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(value, tz=timezone.utc)
+        return datetime.fromtimestamp(value, tz=UTC)
     if isinstance(value, str):
         text = value.replace("Z", "+00:00")
         try:
@@ -42,7 +42,7 @@ def _as_dt(value: Any) -> datetime | None:
         except ValueError:
             return None
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     return None
 
@@ -142,7 +142,7 @@ def _logins_from(session: Any, session_id: str, ip: str) -> tuple[LoginEvent, ..
             username = str(_get(row, "username", "user", default="") or "")
             if not username:
                 continue
-            ts = _as_dt(_get(row, "ts", "timestamp", "time")) or datetime.now(tz=timezone.utc)
+            ts = _as_dt(_get(row, "ts", "timestamp", "time")) or datetime.now(tz=UTC)
             success = bool(_get(row, "success", "ok", default=False))
             events.append(
                 LoginEvent(
@@ -166,7 +166,7 @@ def _logins_from(session: Any, session_id: str, ip: str) -> tuple[LoginEvent, ..
         if not username:
             continue
         status = int(_get(req, "status", "status_code", default=401) or 401)
-        ts = _as_dt(_get(req, "ts", "timestamp", "time")) or datetime.now(tz=timezone.utc)
+        ts = _as_dt(_get(req, "ts", "timestamp", "time")) or datetime.now(tz=UTC)
         events.append(
             LoginEvent(
                 session_id=session_id,

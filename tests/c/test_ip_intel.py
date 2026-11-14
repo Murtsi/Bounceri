@@ -23,8 +23,8 @@ def test_asn_elisa_prefix_is_residential() -> None:
 
 
 def test_ip_intel_sets_country_for_fi_prefix() -> None:
-    from bouncer.network import ip_intel_contract
     from bouncer.contracts import IpIntel as ContractIpIntel
+    from bouncer.network import ip_intel_contract
 
     with patch(
         "bouncer.network.bots.socket.gethostbyaddr",

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from bouncer.network.session_view import LoginEvent, SessionView
 from bouncer.network.types import Campaign, make_campaign
@@ -58,7 +58,7 @@ def detect_username_stuffing(
         best_ips: set[str] = set()
         best_sessions: set[str] = set()
         best_span = (events[0].ts, events[0].ts)
-        for right, event in enumerate(events):
+        for right, _event in enumerate(events):
             while events[right].ts - events[left].ts > cfg.window:
                 left += 1
             window_events = events[left : right + 1]

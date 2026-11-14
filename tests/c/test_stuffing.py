@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 from bouncer.network import find_campaigns
@@ -11,7 +11,7 @@ from bouncer.network.stuffing import StuffingConfig, detect_credential_stuffing
 
 
 def _session(sid: str, ip: str, username: str, minute: int) -> SimpleNamespace:
-    ts = datetime(2026, 11, 14, 12, 0, tzinfo=timezone.utc) + timedelta(minutes=minute)
+    ts = datetime(2026, 11, 14, 12, 0, tzinfo=UTC) + timedelta(minutes=minute)
     return SimpleNamespace(
         id=sid,
         ip=ip,

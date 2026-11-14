@@ -13,7 +13,6 @@ try:
     from bouncer.contracts import Campaign as Campaign
     from bouncer.contracts import IpIntel as _ContractIpIntel
 except ImportError:  # pragma: no cover - before A merges contracts
-    from dataclasses import field
 
     @dataclass(frozen=True, slots=True)
     class Campaign:  # type: ignore[no-redef]

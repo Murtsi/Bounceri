@@ -26,7 +26,7 @@ Kiinnitetty `docs/DECISIONS.md` (004–012). Älä vaihda teknologiaa ilman uutt
 - **Backend:** Python 3.12, FastAPI, Pydantic v2, `uv`, `ruff`, `pytest`
 - **Frontend:** TypeScript, React 19, Vite, Tailwind CSS v4, shadcn/ui, TanStack Query, Recharts, `pnpm`
 - **Tietokanta:** PostgreSQL 16 + TimescaleDB, `psycopg` 3, SQL-migraatiot `src/bouncer/db/migrations/NNN_*.sql`
-- **LLM:** Featherless oletuksena selityksille/arvioijalle; eksplisiittinen `LLM_MODEL`. Hostinger AI Router säilyy suunnitellun Decision-1-vaiheen reittinä (päätös 061).
+- **LLM:** Featherless kahdessa eksplisiittisessä roolissa: rajattu evidence-only arvio ja lopullinen neuvoa-antava arvioija. Tarkat mallinimet ja aktivointirajat määritetään `BOUNCERI_DECISION_*` / `BOUNCERI_REVIEWER_*` -asetuksilla (päätös 063). Native Microsoft Decision on vain erikseen varmennettava optio.
 - **Ajo:** Docker Compose + Caddy Hostinger-VPS:llä (KVM 2: 2 vCPU, 8 GB RAM, 100 GB NVMe — mitoita sen mukaan)
 - **Hostingerin työkalut:** VPS:n hallinta ja deploy Hostinger Connectorin / MCP-palvelimen kautta (docs.hostinger.com/hostinger-connector, github.com/hostinger/api-mcp-server); etusivu Hostinger AI Builderilla
 - **AI Router -saldo on koko tiimin yhteinen:** älä aja LLM-kutsuja silmukassa testeissä, käytä välimuistia
@@ -101,7 +101,7 @@ Haasteessa pisteytetään tunnistuksen **rehellisyyttä**. Siksi:
 - Älä opeta mallia testijoukolla äläkä piilotetulla hyökkäyksellä.
 - Raportoi simuloitu, oikea ja piilotettu liikenne erikseen.
 - Kun löydät heikkouden, kirjaa se `known_weaknesses`-listaan — älä piilota sitä.
-- LLM ei tee tunnistuspäätöksiä; se vain selittää valmiin päätöksen.
+- Paikallinen tunnistus säilyy itsenäisenä lähtötasona. Omistajan hyväksymässä arkkitehtuurissa LLM saa antaa lopullisen **neuvoa-antavan** arvion backendin validoimana; sen arvio ei ole totuuslabel eikä saa automaattisesti aktivoida estoa. Säilytä vaiheiden erimielisyys, epävarmuus, alkuperäiset havainnot ja todelliset mallinimet.
 
 ## 8. AI-agenteille erikseen
 

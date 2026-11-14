@@ -1,21 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { FlaskConical, Gauge, LayoutDashboard, type LucideIcon, Network, Rows3 } from "lucide-react";
+import { FileSearch, FlaskConical, Gauge, LayoutDashboard, type LucideIcon, Network, Rows3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/api";
 import { BouncerLogo, SplashOverlay } from "@/components/BouncerLogo";
+import Investigations from "@/Investigations";
 import { cn } from "@/lib/utils";
 import Campaigns from "@/views/Campaigns";
 import Metrics from "@/views/Metrics";
 import Overview from "@/views/Overview";
 import Sessions from "@/views/Sessions";
 
-type Tab = "overview" | "sessions" | "campaigns" | "metrics";
+type Tab = "overview" | "sessions" | "campaigns" | "metrics" | "investigations";
 
 const NAV: { id: Tab; label: string; Icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "sessions", label: "Sessions", Icon: Rows3 },
   { id: "campaigns", label: "Campaigns", Icon: Network },
   { id: "metrics", label: "Metrics", Icon: Gauge },
+  { id: "investigations", label: "Investigations", Icon: FileSearch },
 ];
 
 const TITLE: Record<Tab, string> = {
@@ -23,6 +25,7 @@ const TITLE: Record<Tab, string> = {
   sessions: "Sessions",
   campaigns: "Campaigns",
   metrics: "Metrics",
+  investigations: "Investigations",
 };
 
 function time(iso: string) {
@@ -174,7 +177,7 @@ export default function App() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{TITLE[tab]}</h1>
-              {s?.synthetic && (
+              {s?.synthetic && tab !== "investigations" && (
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground lg:hidden">
                   <FlaskConical className="size-3.5" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
                   Synthetic data — decisions are real, no metrics computed.
@@ -194,6 +197,11 @@ export default function App() {
           {tab === "sessions" && <Sessions picked={picked} onPick={setPicked} />}
           {tab === "campaigns" && <Campaigns />}
           {tab === "metrics" && <Metrics />}
+          {tab === "investigations" && (
+            <div lang="en" className="investigations-view">
+              <Investigations goTraffic={() => go("overview")} />
+            </div>
+          )}
         </main>
       )}
 

@@ -10,7 +10,9 @@ from bouncer.network.types import make_campaign
 
 def test_cache_key_stable() -> None:
     verdict = SimpleNamespace(label="bad_bot", reasons=["fast crawl"], model_version="rules-v1")
-    camp = make_campaign(id="c1", kind="behavior_cluster", session_ids=["1"], reasons=["same paths"])
+    camp = make_campaign(
+        id="c1", kind="behavior_cluster", session_ids=["1"], reasons=["same paths"]
+    )
     a = explanation_cache_key(verdict, camp, model="example/reviewer")
     b = explanation_cache_key(verdict, camp, model="example/reviewer")
     assert a == b

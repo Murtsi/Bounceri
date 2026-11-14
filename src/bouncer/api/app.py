@@ -13,9 +13,11 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
+from bouncer.api.enforcement import router as enforcement_router
+from bouncer.api.investigations import admin_context, is_admin, public_legacy, router
 from bouncer.api.overview import enrich_campaigns, overview
 from bouncer.db.store import _read_raw, store_path
 from bouncer.eval.metrics import METRICS_PATH
@@ -27,8 +29,22 @@ LABELS = ("bad_bot", "good_bot", "human", "uncertain")
 app = FastAPI(title="Bouncer API", version="0.1.0")
 
 
+@app.middleware("http")
+async def privacy_context(request: Request, call_next):
+    token = admin_context.set(is_admin(request))
+    try:
+        return await call_next(request)
+    finally:
+        admin_context.reset(token)
+
+
+app.include_router(router)
+app.include_router(enforcement_router)
+
+
 def _store() -> dict[str, Any]:
-    return _read_raw(store_path())
+    snapshot = _read_raw(store_path())
+    return snapshot if admin_context.get() else public_legacy(snapshot)
 
 
 def _truth(store: dict[str, Any]) -> dict[str, str]:

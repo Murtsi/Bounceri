@@ -5,6 +5,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.
+- [A] Reproducible Hostinger Docker deployment with private source capsule, PostgreSQL, bounded HTTP simulation, ingest/detection, dashboard/API and asynchronous review worker; operator smoke test verifies actual 429/403, benign isolation, expiry and revoke without paid inference.
+- [A] Add an opt-in investigation workspace with source provenance, evidence snapshots, separate assessment history and capability/budget status; preserve the existing dashboard default and navigation.
+- [A] Administrator-approved synthetic demo actor rate-limit/temporary-block policies, HMAC actor authentication, durable expiry/revoke/history and actual HTTP 403/429 counters; normal site/admin routes remain accessible.
+- [C] Asynchronous two-stage review transport, strict evidence validation and capability gates; no paid retries, automatic model substitution or enforcement authority.
+- [A] Persistent, immutable investigations with redacted evidence, separate assessment history and transactional whole-review cost reservations; unknown provider charges remain reserved (decision 062).
+- [X] Runtime dependencies for transactional investigation storage and bounded provider HTTP transport; existing local demo remains unchanged.
 - [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
 - [A] Public-release preparation: English setup/status README and private vulnerability-reporting guidance; preserve synthetic ingestion fixtures and tests in Git.
 - [A] S2-tyyppien ehdotus, kuuden rivin synteettinen Caddy JSONL -fixture ja parseri/sessionointi sekä `traps.txt` ovat mainissa (PR #5); yhteinen S2/S10-hyväksyntä, 50-rivin sopimusfixture, Postgres-ingest, live-loki ja sovelluspalvelu puuttuvat vielä (A-1).
@@ -38,8 +45,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Proof of concept `notebooks/b/poc.py`: A:n parseri → C:n IP-tiedot ja kampanjat → B:n säännöt ja malli → C:n selitys ilman LLM:ää, A:n näytteellä ja C:n tunnusten kokeilun fixturella (synteettinen data, ei tietokantaa). B:n ja C:n integraatiotesti `tests/b/test_integration_c.py` (DNS mockattuna) (päätökset 042–043)
 - [A] Kirjautumistunnus lokista: demosivun `X-Login-User`-vastausotsake `POST /login` -pyynnöstä tallentuu kenttään `Request.username`, jolloin C:n tunnusten kokeilun tunnistus toimii oikeasta Caddy-lokista (A-3/A-5, päätös 047)
 - [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
-- [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 048–051)
-- [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 048)
+- [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 057–051)
+- [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 057)
 - [A] MVP vaihe 1: demosivu `bouncer.site` (FastAPI; sivut, CSS/JS/kuva, `POST /login` → 401 + `X-Login-User`, piilotettu ansalinkki, `robots.txt` kieltää ansat) ja Caddy Docker Composella (`deploy/`: tuotanto- ja paikallinen Caddyfile). Parseri käyttää Caddyn laskemaa `client_ip`:tä (A-3, päätökset 049–050, 052)
 - [A] MVP vaihe 2: simulaattorit `tools/sim/run.py` (ihmistä matkiva selaus, scraper, skanneri, tunnusten kokeilu kuudesta IP:stä, väärennetty Googlebot), allekirjoitetut merkinnät, `--dry-run`. Tarkistettu oikeaa Caddyä vasten: skanneri ja väärennetty Googlebot → `bad_bot`, ihmiset eivät koskaan `bad_bot`; tunnusten kokeilu löytyy kampanjana mutta B:n päätös puuttuu vielä (vaihe 3) (A-4/A-8)
 - [B] Tunnettu heikkous: C:n käyttäytymisklusterointi niputti MVP:ssä simuloidut ihmiset kampanjaksi
@@ -53,9 +60,15 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Dashboardin ammattitason UI: kaikki näkymät (yleiskuva, sessiot, kampanjat, mittarit) shadcn/ui-komponenteilla, dataviz-skillin validoima paletti (ihminen → hyvä botti → haitallinen → epävarma, CVD ΔE ≥ 9,2) vaaleaan ja tummaan tilaan, vaalea/tumma-kytkin (oletus käyttöjärjestelmän mukaan), liikennekaavio ja segmentoitu jakaumapalkki taulukkonäkymineen, toimenpidemerkit tilaväreillä + kuvakkeilla, sessiosuodatin määrineen, ja Bouncer-logoanimaatio ("ouncer" pomppaa B:stä) otsikkoon ja latausnäyttöön (pois päältä, jos käyttäjä on pyytänyt vähemmän liikettä) (päätös 057)
 
 ### Changed
+- [X] Investigations-näkymä siirretty uuteen sivupalkkiin omaksi kohdakseen (main-yhdistäminen)
 - [X] Dashboardille sovelluksen runko: lasinen sivupalkki (logo, navigaatio kuvakkeineen ja määrineen, live-tila, synteettisen datan merkintä) ja mobiilissa kelluva navigaatio alhaalla; yleiskuvaan neljän tunnusluvun rivi minikaavioineen (Requests, Sessions, Bad bots, Live attacks), live-syöte uusimmista sessioista ja kuvakkeet korttien otsikoihin kaikissa näkymissä
 - [X] Käyttöliittymä ja API:n näkyvät tekstit englanniksi: dashboard, toimenpiteet (Monitor / Rate-limit / Challenge / Block), hälytysotsikot, B:n sääntöjen ja mallin syyt sekä tunnetut heikkoudet. Otsikon iskulause "Know who's really at the door" (really korostettuna). Testit ja `tools/sim/check.py` päivitetty englanninkielisiin syihin
 - [X] Bouncer-logo: B piirretään SVG:nä; sen alakaari painuu sisään kuin jousi (viiva pysyy tasapaksuna) ja vapautuessaan ponnauttaa koko loppusanan "ouncer" ulos, joka pomppii kuin pallo paikalleen ja jää näkyviin. Ponnahdus nähdään kerran avausruudulla, joka poistuu vasta sen valmistuttua; otsikossa logo on valmiina, ja korttien animaatiot alkavat avausruudun jälkeen
+- [X] Integrate the owner's latest dark glass dashboard from PR #24 with Investigations as an additional tab; preserve its default overview and components. Renumber investigation decisions to 062–063 alongside the existing UI history.
+- [X] CI installs locked runtime/test dependencies, checks Python lint, and builds/tests the frontend; clean legacy lint findings without changing detection behavior.
+- [A] Overnight simulation uses independent signed rounds, bounded retained evidence, full traffic snapshots plus scoped session investigations, and an opt-in 20-execution review experiment under the shared cap; deployment and evaluation instructions document measured versus unmeasured claims.
+- [C] Owner-selected Featherless now supports both a bounded evidence-only decision role and a separate final advisory reviewer; actual provider/model identities are retained and native Microsoft Decision remains an explicit unavailable option until verified (decision 063).
+- [A] BREAKING: Public investigation and legacy traffic APIs expose only explicitly published synthetic demonstrations; monitored visitor data requires an administrator bearer token.
 - [X] Dashboard on nyt vain tumma: syvänvihreä sumea tausta, lasikortit, limenvihreä korostus (aktiivinen välilehti, pääpainikkeet) ja pilleripainikkeet; vaalea/tumma-kytkin poistettu. Kaaviovärit validoitu uudelleen vihreää lasipintaa vasten, ja "Epävarma" piirretään harmaana vinoviivoituksella. Punainen hälytyskehys ja -merkki korvattu lasikortilla ja sykkivällä lime-"Käynnissä"-merkillä; Estä-kuvakkeen sävy lämpimämpi koralli (päätös 058)
 - [X] Liikennekaavio widget-tyyliin: ohuet pinotut pylväät himmeiden raitojen päällä, ei y-akselia, kokonaismäärä ja huippu otsikossa, vihje hiirellä; Recharts poistettu riippuvuuksista (JS-paketti 632 → 298 kB) (päätös 059)
 - [X] Viimeistely: taulukko/kaavio-vaihto kuvakepainikkeena kortin kulmassa, pylväät leveämmät (max 24 px), jakaumapalkki pillerinä, välilehtipalkin vierityspalkki piilotettu mobiilissa
@@ -94,6 +107,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Live enforcement verification waits the server-issued TTL rather than assuming the operator machine and VPS wall clocks are synchronized.
+- [C] Account model discovery preserves verified access/pricing when an output ceiling is absent, reports it as unknown, and rejects invalid supplied limits without activating inference.
+- [A] Synthetic traffic refuses redirects so signed labels cannot escape the owned target; deployment excludes private JSON/TXT exports, correctly routes custom demo subdomains and recreates all processes for each checksummed release.
+- [A] Investigation UI distinguishes bounded-AI eligibility from source completeness and provider availability, retaining evidence inspection for oversized snapshots.
+- [C] Both model decision routes validate attack/coordination prerequisites; malformed or unrepresentable billing values remain reserved and visibly stop review without retry.
+- [A] Validate complete immutable model packets before queueing paid review; oversized/incomplete cases remain inspectable and return explicit review_ineligible without reserving funds or counting execution.
+- [A] Investigation details show actual model provenance, evidence gaps, review failure reasons, manual approval basis and durable spending halts without changing the existing dashboard default.
+- [A] Investigation history reads the API's actual stage field; controlled enforcement status polls its dedicated endpoint and shows real effects, expiry and revocation.
+- [A] Provider billing-ceiling breaches halt all further paid dispatch, including reserved queued jobs, across restarts; public campaign references redact account-bearing IDs; enforcement authenticates before bounded body parsing and records manual demo approval honestly.
+- [A] Fresh restart/rotation log batches are bounded before detection; quiet cycles expire retained data and cached source metadata.
 - [X] Testit eivät enää riipu kehittäjän ympäristön `SIM_RUN_SECRET`-arvosta (yhteinen `tests/conftest.py`); PoC lukee repon fixturet ilman allekirjoitusvaatimusta. Löytyi, kun Makefile vei avaimen myös `make test` -ajoon
 - [B] Tunnettu heikkous päivitetty: kirjautumishyökkäykset tunnistetaan nyt C:n kampanjan kautta (053); vanha teksti väitti B:n jättävän ne epävarmoiksi
 - [A] JSON-store kirjoitetaan atomisesti (väliaikainen tiedosto + `os.replace`), joten API ei koskaan lue puolikasta tiedostoa workerin kirjoittaessa

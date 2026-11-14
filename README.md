@@ -9,11 +9,11 @@ Bounceri is a Junction 2026 prototype for **Hostinger — Decode the Noise**. It
 
 ## Current state
 
-The repository contains session features and detection rules, temporal evaluation and threshold selection, IP intelligence, campaign detection, and optional explanations through Hostinger AI Router. Rule-based explanations work without an API key. A's starter integration draft is already on `main` via PR #5: shared type proposals, a six-row synthetic Caddy log, sample parser/sessionizer, and trap-path list.
+The repository contains session features and detection rules, temporal evaluation, IP intelligence, campaign detection, persistent investigations and a two-role Featherless review pipeline. Local detection works without an API key. Model review requires explicit verified settings and a shared spending reservation; it records advisory assessments separately from evidence.
 
 **The MVP runs end to end locally** ([docs/MVP.md](docs/MVP.md)): a demo shop behind real Caddy, signed traffic simulators, a live worker (Caddy log → sessions → IP intelligence and campaigns → verdict → explanation), a read-only API and a React dashboard. `make demo` starts it and checks all six acceptance criteria automatically. All demo traffic is synthetic, so `models/metrics.json` remains a stub: no measured numbers are claimed until labelled non-synthetic traffic exists.
 
-Not done yet: the Postgres writer (the worker uses a JSON store), the public Hostinger deployment, a verified AI Router key, and the hidden attack. Session/campaign IDs are strings at the Python boundary (S2).
+The Hostinger stack adds PostgreSQL-backed investigations, immutable redacted evidence, a review-job/budget ledger and reversible actor-scoped enforcement. The session worker retains its JSON compatibility store. The existing dashboard remains the default; Investigations is an added tab. See [Hostinger deployment, cost controls and overnight evaluation](docs/HOSTINGER_LIVE.md). Social swarms, text techniques and provenance are clearly labelled future modules. Session/campaign IDs remain strings at the Python boundary.
 
 ## Run the MVP demo
 

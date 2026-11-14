@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 from unittest.mock import patch
-import sys
 
 from bouncer.explain.explain import _llm_explain, explain, explanation_is_grounded, fallback_explain
 from bouncer.network.types import make_campaign
@@ -57,11 +57,15 @@ def _fake_client(monkeypatch, *, fail=False):
             calls.append(kwargs)
             if fail:
                 raise RuntimeError("provider unavailable")
-            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="fast crawl"))])
+            return SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="fast crawl"))]
+            )
 
     monkeypatch.setitem(sys.modules, "openai", SimpleNamespace(OpenAI=Client))
-    for key in ["LLM_PROVIDER", "LLM_MODEL", "FEATHERLESS_API_KEY", "HOSTINGER_AI_API_KEY",
-                "HOSTINGER_ROUTER_API_KEY", "OPENAI_API_KEY", "HOSTINGER_AI_BASE_URL", "OPENAI_BASE_URL"]:
+    for key in (
+        "LLM_PROVIDER", "LLM_MODEL", "FEATHERLESS_API_KEY", "HOSTINGER_AI_API_KEY",
+        "HOSTINGER_ROUTER_API_KEY", "OPENAI_API_KEY", "HOSTINGER_AI_BASE_URL", "OPENAI_BASE_URL",
+    ):
         monkeypatch.delenv(key, raising=False)
     return calls
 

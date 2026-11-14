@@ -40,7 +40,10 @@ def contract_intel_by_ip(sessions: list[Any]) -> dict[str, Any]:
 
 
 def campaigns_by_session(campaigns: list[Campaign]) -> dict[str, Campaign]:
-    """session_id → Campaign. Ensimmäinen osuma voittaa (stuffing ennen behavioria, jos sortattu)."""
+    """session_id → Campaign. Ensimmäinen osuma voittaa.
+
+    Stuffing ennen behavioria, jos sortattu.
+    """
     out: dict[str, Campaign] = {}
     for camp in campaigns:
         for sid in camp.session_ids:
