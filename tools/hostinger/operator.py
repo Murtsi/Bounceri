@@ -68,7 +68,9 @@ def smoke(secrets: dict, *, local: bool = False) -> dict:
             assert block_status == 403, "Temporary-block HTTP effect mismatch"
             assert probe("benign") == 200
             assert client.get(api + "/api/healthz").status_code == 200
-            time.sleep(max(0, policy["expires_at"] - time.time()) + 0.3)
+            # Client and VPS wall clocks can differ. Wait the returned duration
+            # rather than subtracting a remote absolute timestamp from local time.
+            time.sleep(policy["ttl_seconds"] + 0.3)
             expired_status = probe("attack")
             assert expired_status == 200, "Expired test policy still affected actor"
             approve("temporary_block", 30)

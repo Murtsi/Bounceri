@@ -102,6 +102,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Live enforcement verification waits the server-issued TTL rather than assuming the operator machine and VPS wall clocks are synchronized.
 - [C] Account model discovery preserves verified access/pricing when an output ceiling is absent, reports it as unknown, and rejects invalid supplied limits without activating inference.
 - [A] Synthetic traffic refuses redirects so signed labels cannot escape the owned target; deployment excludes private JSON/TXT exports, correctly routes custom demo subdomains and recreates all processes for each checksummed release.
 - [A] Investigation UI distinguishes bounded-AI eligibility from source completeness and provider availability, retaining evidence inspection for oversized snapshots.
