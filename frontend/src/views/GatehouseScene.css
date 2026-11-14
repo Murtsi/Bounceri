@@ -1,144 +1,173 @@
-/* Porttikoppi-kuvitus (GatehouseScene.tsx). Yksi valo, yksi rauhallinen silmukka. */
-.gh { position: relative; min-width: 0; }
+/* Porttikoppi (GatehouseScene.tsx): yksi valo, saapumisanimaatio, oikeaan liikenteeseen sidotut kävelijät. */
+.gh { position: relative; min-width: 0; height: 100%; }
 
 .gh-stage {
   position: relative;
-  height: 300px;
+  height: 100%;
+  min-height: 260px;
   overflow: hidden;
   perspective: 1300px;
   perspective-origin: 50% 30%;
   touch-action: pan-y;
+  /* Reitit liukenevat reunoilla: ei teräviä katkoksia paneelin laidassa. */
+  -webkit-mask-image: radial-gradient(ellipse 72% 78% at 54% 56%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 78% at 54% 56%, #000 58%, transparent 100%);
 }
 
 .gh-world {
   position: absolute;
-  left: 47%;
-  top: 60%;
+  left: var(--gh-left, 50%);
+  top: var(--gh-top, 58%);
   transform-style: preserve-3d;
   transform:
     translate(-50%, -50%) scale(var(--gh-scale, 1)) rotateX(var(--gh-pitch, 57deg))
     rotateZ(var(--gh-yaw, -28deg));
   transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: gh-camera 1700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+/* Saapumisanimaatiot käyttävät fill-modea backwards: lopun jälkeen tavallinen tyyli
+   (ja hiiren kallistuksen transition, JS:n ovivalo) on taas voimassa. */
+/* Saapuminen: kamera laskeutuu ylhäältä ja kiertyy paikalleen. */
+@keyframes gh-camera {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(calc(var(--gh-scale, 1) * 0.86)) rotateX(74deg) rotateZ(-62deg);
+  }
+  30% { opacity: 1; }
 }
 
 .gh-ground { position: absolute; inset: 0; overflow: visible; }
+.gh-measure path { fill: none; stroke: none; }
 
 .gh-wall, .gh-roof, .gh-figure {
   position: absolute;
   left: 0;
   top: 0;
   transform-style: preserve-3d;
+}
+.gh-wall-face, .gh-figure-face {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transform: rotateX(-90deg);
   backface-visibility: visible;
 }
+.gh-wall-face { animation: gh-rise 820ms cubic-bezier(0.16, 1, 0.3, 1) var(--gh-delay, 0ms) backwards; }
 .gh-wall svg { display: block; overflow: visible; }
-
-/* Himmeä lasi: läpinäkymätön, valo osuu etuseinään (vasemmalta takaa ylhäältä). */
-.gh-glass { fill: #1d2b22; stroke: rgba(197, 239, 93, 0.38); stroke-width: 1.5; }
-.gh-front .gh-glass { fill: #2a3d2b; stroke: rgba(214, 245, 140, 0.62); }
-.gh-left .gh-glass { fill: #34492f; stroke: rgba(214, 245, 140, 0.5); }
-.gh-right .gh-glass { fill: #18241c; }
-.gh-back .gh-glass { fill: #18241c; stroke: rgba(197, 239, 93, 0.18); }
-.gh-frame { fill: none; stroke: rgba(238, 243, 234, 0.6); stroke-width: 2; }
-.gh-back .gh-frame { display: none; }
-
-.gh-roof {
-  border: 1.5px solid rgba(214, 245, 140, 0.5);
-  background: linear-gradient(135deg, #3c5233, #2a3b27);
+/* Seinät nousevat maasta pystyyn yksi kerrallaan. */
+@keyframes gh-rise {
+  from { transform: rotateX(0deg); opacity: 0; }
+  25% { opacity: 1; }
 }
 
-/* Maa: sisälattia hieman tummempi, varjot pehmeitä ja samansuuntaisia. */
-.gh-floor { fill: rgba(3, 9, 5, 0.42); }
+/* Himmeä lasi: valo osuu vasempaan seinään ja kattoon, etuseinä puolivarjossa. */
+.gh-glass { fill: #1d2b22; stroke: rgba(197, 239, 93, 0.38); stroke-width: 1.5; }
+.gh-front .gh-glass { fill: #283a29; stroke: rgba(214, 245, 140, 0.6); }
+.gh-left .gh-glass { fill: #344a2f; stroke: rgba(214, 245, 140, 0.5); }
+.gh-right .gh-glass, .gh-back .gh-glass { fill: #17231b; stroke: rgba(197, 239, 93, 0.2); }
+.gh-frame { fill: none; stroke: rgba(238, 243, 234, 0.7); stroke-width: 2; }
+.gh-back .gh-frame { display: none; }
+.gh-rim { fill: none; stroke: rgba(228, 255, 154, 0.75); stroke-width: 2; }
+.gh-back .gh-rim, .gh-right .gh-rim { stroke: rgba(228, 255, 154, 0.3); }
+
+.gh-roof-face {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid rgba(228, 255, 154, 0.6);
+  background:
+    linear-gradient(135deg, rgba(228, 255, 154, 0.22), transparent 55%),
+    linear-gradient(135deg, #42593a, #2b3d28);
+  animation: gh-roof 700ms cubic-bezier(0.16, 1, 0.3, 1) 900ms backwards;
+}
+@keyframes gh-roof {
+  from { transform: translateZ(90px); opacity: 0; }
+}
+
+/* Maa */
+.gh-shadows { animation: gh-fade 700ms ease-out 650ms backwards; }
 .gh-shadow { fill: rgba(0, 0, 0, 0.42); }
 .gh-shadow-figure { fill: rgba(0, 0, 0, 0.5); }
-.gh-contact { fill: rgba(0, 0, 0, 0.55); }
+.gh-contact { fill: rgba(0, 0, 0, 0.55); animation: gh-fade 400ms ease-out 1250ms backwards; }
+.gh-spill { opacity: 0.5; transition: opacity 260ms ease-out; animation: gh-light-on 900ms ease-out 1150ms backwards; }
+@keyframes gh-fade { from { opacity: 0; } }
+/* Ovi syttyy: lyhyt välähdys ja asettuminen. */
+@keyframes gh-light-on {
+  from { opacity: 0; }
+  35% { opacity: 1; }
+}
 
-/* Reitit */
-.gh-route { fill: none; stroke-width: 3; stroke-linecap: round; }
-.gh-route-green { stroke: rgba(117, 229, 160, 0.34); }
-.gh-route-red { stroke: rgba(255, 113, 103, 0.34); }
-.gh-pulse { fill: none; stroke-width: 4.5; stroke-linecap: round; }
-.gh-pulse-green {
-  stroke: #8ff0b3;
-  /* Väli > polun pituus: vain yksi pulssi kerrallaan näkyvissä. */
-  stroke-dasharray: 0.07 2;
-  stroke-dashoffset: 0.07;
-  animation: gh-flow 7s linear infinite;
-}
-.gh-pulse-late { animation-delay: -3.5s; }
-.gh-pulse-red {
-  stroke: #ff8a80;
-  stroke-dasharray: 0.12 2;
-  stroke-dashoffset: 0.12;
-  opacity: 0;
-  animation: gh-stop 7s cubic-bezier(0.3, 0, 0.3, 1) infinite;
-}
-.gh-stop-ring {
+/* Reittien pohjat piirtyvät esiin saapuessa. */
+.gh-route {
   fill: none;
-  stroke: #ff8a80;
-  stroke-width: 1.5;
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: gh-ring 7s ease-out infinite;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: gh-draw 1100ms cubic-bezier(0.16, 1, 0.3, 1) 1300ms backwards;
 }
+.gh-route-pass { stroke: rgba(117, 229, 160, 0.22); }
+.gh-route-stop { stroke: rgba(255, 113, 103, 0.24); }
+@keyframes gh-draw { from { stroke-dashoffset: 1; } }
 
-/* Vihreä: tasainen virta läpi kopin ja ulos takaovesta. */
-@keyframes gh-flow {
-  from { stroke-dashoffset: 0.07; }
-  to { stroke-dashoffset: -1; }
-}
-/* Punainen: tulee ovelle, pysähtyy portsarin käteen, haalistuu. */
-@keyframes gh-stop {
-  0% { stroke-dashoffset: 0.12; opacity: 0; }
-  6% { opacity: 1; }
-  50% { stroke-dashoffset: -0.88; opacity: 1; }
-  66% { stroke-dashoffset: -0.88; opacity: 1; }
-  80%, 100% { stroke-dashoffset: -0.88; opacity: 0; }
-}
+/* Kävelijät (sijainnit asettaa rAF) */
+.gh-trail { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+.gh-walker-pass .gh-trail { stroke: rgba(143, 240, 179, 0.75); }
+.gh-walker-stop .gh-trail { stroke: rgba(255, 138, 128, 0.75); }
+.gh-walker-check .gh-trail { stroke: rgba(201, 211, 203, 0.6); }
+.gh-walker-pass .gh-dot { fill: #b6ffd0; }
+.gh-walker-pass .gh-halo { fill: #5fe39a; }
+.gh-walker-stop .gh-dot { fill: #ffc2bc; }
+.gh-walker-stop .gh-halo { fill: #ff6b5e; }
+.gh-walker-check .gh-dot { fill: #eef3ea; }
+.gh-walker-check .gh-halo { fill: #9aa69c; }
+.gh-ring { fill: none; stroke: #ff8a80; stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.gh-ring.is-on { animation: gh-ring 1100ms ease-out both; }
 @keyframes gh-ring {
-  0%, 49% { opacity: 0; transform: scale(0.4); }
-  52% { opacity: 0.7; transform: scale(0.6); }
-  76%, 100% { opacity: 0; transform: scale(1.7); }
+  from { opacity: 0.8; transform: scale(0.5); }
+  to { opacity: 0; transform: scale(1.9); }
 }
 
-/* Portsari */
+/* Portsari: ponnahtaa paikalleen kopin valmistuttua. */
+.gh-figure-pop {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  animation: gh-pop 520ms cubic-bezier(0.16, 1, 0.3, 1) 1250ms backwards;
+}
+@keyframes gh-pop {
+  from { transform: scale(0.2, 0); opacity: 0; }
+  40% { opacity: 1; }
+}
 .gh-figure-art { display: block; overflow: visible; }
-.gh-leg { fill: none; stroke: #1a2a20; stroke-width: 6.5; stroke-linecap: round; }
-.gh-suit { fill: #233a2b; stroke: rgba(197, 239, 93, 0.35); stroke-width: 1; }
+.gh-leg { fill: none; stroke: #16241b; stroke-width: 6.5; stroke-linecap: round; }
+.gh-suit { fill: #22382a; stroke: rgba(197, 239, 93, 0.4); stroke-width: 1; }
 .gh-collar { fill: none; stroke: #dce7dc; stroke-width: 1.6; stroke-linejoin: round; }
-.gh-arm { fill: none; stroke: #233a2b; stroke-width: 6; stroke-linecap: round; }
-.gh-hand, .gh-head { fill: #d6c3a8; }
-.gh-hair { fill: #1a2a20; }
+.gh-arm { fill: none; stroke: #22382a; stroke-width: 6; stroke-linecap: round; }
+.gh-hand, .gh-skin { fill: #d6c3a8; }
+.gh-hair { fill: #16241b; }
 .gh-earpiece { fill: #c5ef5d; }
-/* Käsi nousee juuri ennen kuin punainen pulssi saapuu ja laskee sen haalistuttua. */
+/* Käsi nousee, kun punainen lähestyy, ja laskee sen haalistuttua. */
 .gh-stop-arm {
   transform-box: view-box;
   transform-origin: 11px 32px;
   transform: rotate(32deg);
-  animation: gh-arm 7s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes gh-arm {
-  0%, 38% { transform: rotate(32deg); }
-  48%, 72% { transform: rotate(-18deg); }
-  86%, 100% { transform: rotate(32deg); }
-}
-
-/* Tauko: painike, näkymän ulkopuolella, taustavälilehti. */
-.gh.is-paused .gh-pulse,
-.gh.is-paused .gh-stop-ring,
-.gh.is-paused .gh-stop-arm { animation-play-state: paused; }
+.gh-figure.is-stopping .gh-stop-arm { transform: rotate(-18deg); }
 
 .gh-toggle {
   position: absolute;
-  right: 4px;
-  bottom: 4px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
   display: grid;
   width: 32px;
   height: 32px;
   place-items: center;
   border: 1px solid rgba(238, 243, 234, 0.14);
   border-radius: 999px;
-  background: rgba(8, 17, 12, 0.5);
+  background: rgba(8, 17, 12, 0.55);
   color: var(--muted-foreground);
   cursor: pointer;
   transition: color 150ms, background-color 150ms;
@@ -147,17 +176,15 @@
 .gh-toggle:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .gh-toggle svg { width: 14px; height: 14px; }
 
-@media (max-width: 760px) {
-  .gh-stage { height: 230px; }
-}
-
-/* Vähennetty liike: staattinen näkymä — reitit näkyvät, portsarin käsi ylhäällä, ei kallistusta. */
-@media (prefers-reduced-motion: reduce) {
-  .gh-world { transition: none; }
-  .gh-pulse-green { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 0.55; }
-  .gh-pulse-late { display: none; }
-  .gh-pulse-red { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 0.6; }
-  .gh-stop-ring { animation: none; opacity: 0.5; transform: none; }
-  .gh-stop-arm { animation: none; transform: rotate(-18deg); }
-  .gh-toggle { display: none; }
-}
+/* Vähennetty liike: valmis, staattinen näkymä ilman saapumista ja kävelijöitä. */
+.gh.is-reduced .gh-world,
+.gh.is-reduced .gh-wall-face,
+.gh.is-reduced .gh-roof-face,
+.gh.is-reduced .gh-shadows,
+.gh.is-reduced .gh-contact,
+.gh.is-reduced .gh-spill,
+.gh.is-reduced .gh-route,
+.gh.is-reduced .gh-figure-pop { animation: none; transition: none; }
+.gh.is-reduced .gh-route-pass { stroke: rgba(117, 229, 160, 0.5); }
+.gh.is-reduced .gh-route-stop { stroke: rgba(255, 113, 103, 0.5); }
+.gh.is-reduced .gh-stop-arm { transform: rotate(-18deg); }
