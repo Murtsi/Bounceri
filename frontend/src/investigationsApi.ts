@@ -6,6 +6,16 @@ export interface Capability {
 
 export interface Capabilities {
   modules?: Record<string, Capability> | (Capability & { id?: string; module?: string; key?: string })[];
+  providers?: { decision_model?: ProviderCapability; reviewer?: ProviderCapability };
+  decision_model?: ProviderCapability;
+  reviewer?: ProviderCapability;
+}
+
+export interface ProviderCapability {
+  provider?: string;
+  model?: string | null;
+  role?: string;
+  available?: boolean;
 }
 
 export interface Assessment {
@@ -14,6 +24,7 @@ export interface Assessment {
   kind?: string;
   created_at?: string;
   payload?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface LocalAssessment {
@@ -25,6 +36,7 @@ export interface LocalAssessment {
   model_version?: string;
   reasons?: unknown[];
   evidence_ids?: string[];
+  limitations?: string[];
 }
 
 export interface Investigation {
@@ -35,12 +47,15 @@ export interface Investigation {
   created_at?: string;
   evidence_version?: string | number;
   evidence_hash?: string;
+  complete?: boolean;
+  missing_information?: string[];
   evidence?: { id: string; kind?: string; data?: Record<string, unknown> }[];
   local_assessment?: LocalAssessment | null;
   review?: {
     status?: string;
     job_id?: string | null;
     result?: Record<string, unknown> | null;
+    reason?: string;
   };
 }
 
@@ -50,6 +65,7 @@ export interface EnforcementPolicy {
   actor_id?: string;
   scope?: string;
   action?: string;
+  approval_basis?: string;
   status?: string;
   evidence_version?: number;
   evidence_hash?: string;
@@ -72,6 +88,8 @@ export interface Usage {
   max_executions?: number;
   max_requests?: number;
   paid_review_enabled?: boolean;
+  execution_halted?: boolean;
+  halt_reason?: string;
 }
 
 async function get(path: string): Promise<unknown> {

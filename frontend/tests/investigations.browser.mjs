@@ -17,6 +17,8 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     created_at: "2026-11-14T10:00:00Z",
     evidence_version: 1,
     evidence_hash: "a".repeat(64),
+    complete: false,
+    missing_information: ["Fixture missing source provenance"],
     evidence: [
       {
         id: "ev-1",
@@ -36,6 +38,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       model_version: "rules-v1",
       reasons: ["Insufficient evidence to classify"],
       evidence_ids: ["ev-1"],
+      limitations: ["Fixture local limitation"],
     },
     review: { status: "unavailable", job_id: null, result: null },
     future_optional_field: { harmless: true },
@@ -58,6 +61,20 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
         clean_traffic: { enabled: true, implemented: true },
         spot_the_swarm: { enabled: true, implemented: true },
       },
+      providers: {
+        decision_model: {
+          provider: "featherless",
+          model: "fixture/bounded-model",
+          role: "bounded_decision",
+          available: false,
+        },
+        reviewer: {
+          provider: "featherless",
+          model: "fixture/final-model",
+          role: "final_advisory_reviewer",
+          available: false,
+        },
+      },
     },
     "/api/usage": {
       limit_usd: 5,
@@ -69,11 +86,13 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       max_executions: 100,
       max_requests: 200,
       paid_review_enabled: false,
+      execution_halted: true,
+      halt_reason: "fixture_budget_halt",
     },
     "/api/investigations": mode === "empty" ? [] : [synthetic, real, { id: "unknown-origin", source: {} }],
     "/api/investigations/fixture-case": {
       ...synthetic,
-      review: { status: reviewStatus },
+      review: { status: reviewStatus, reason: "fixture_review_reason" },
     },
     "/api/investigations/fixture-case/assessments": [
       {
@@ -86,6 +105,13 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
         id: "decision-revision",
         stage: "decision_model",
         created_at: synthetic.created_at,
+        metadata: {
+          provider: "featherless",
+          model: "fixture/historical-model",
+          returned_model: "fixture/returned-model",
+          prompt_version: "prompt-fixture-v1",
+          schema_version: "schema-fixture-v1",
+        },
         payload: {
           outcome: "abstain",
           model: "mock-decision",
@@ -103,6 +129,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
               actor_id: "attack",
               scope: "controlled_demo_actor",
               action: "rate_limit",
+              approval_basis: "manual_demo_override",
               status: enforcementStatus,
               evidence_version: 1,
               evidence_hash: "a".repeat(64),
@@ -159,6 +186,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await reload();
   check(await page.getByText("No investigations published yet", { exact: true }).isVisible(), "Empty state missing");
   check((await page.getByText("Not implemented", { exact: true }).count()) === 3, "Future modules were enabled");
+  check(
+    await page.getByText("Model execution halted: fixture_budget_halt", { exact: true }).isVisible(),
+    "Execution halt missing",
+  );
 
   mode = "error";
   await reload();
@@ -182,9 +213,38 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.getByRole("combobox", { name: "Source" }).selectOption("synthetic");
   await page.getByRole("button", { name: /fixture-case/ }).click();
   await page.getByRole("heading", { name: "Evidence snapshot" }).waitFor();
+  check(
+    await page.getByText("Fixture missing source provenance", { exact: true }).isVisible(),
+    "Missing evidence hidden",
+  );
+  check(await page.getByText("Fixture local limitation", { exact: true }).isVisible(), "Local limitation hidden");
+  check(
+    await page.getByText("Review reason: fixture_review_reason", { exact: true }).isVisible(),
+    "Review reason hidden",
+  );
+  check(
+    await page.getByText("Evidence snapshot is incomplete.", { exact: false }).isVisible(),
+    "Incomplete evidence status hidden",
+  );
   check(await page.getByText("Detector score: Not reported", { exact: true }).isVisible(), "Null score fabricated");
-  check(await page.getByRole("heading", { name: "Microsoft Decision-1" }).isVisible(), "Decision stage missing");
-  check(await page.getByRole("heading", { name: "Featherless reviewer" }).isVisible(), "Reviewer stage missing");
+  check(await page.getByRole("heading", { name: "Bounded decision" }).isVisible(), "Decision stage missing");
+  check(await page.getByRole("heading", { name: "Final advisory reviewer" }).isVisible(), "Reviewer stage missing");
+  check(
+    await page.getByText("fixture/bounded-model", { exact: true }).isVisible(),
+    "Configured decision model missing",
+  );
+  check(await page.getByText("fixture/final-model", { exact: true }).isVisible(), "Configured reviewer model missing");
+  check(
+    await page.getByText("fixture/historical-model", { exact: true }).isVisible(),
+    "Recorded model identity missing",
+  );
+  check(await page.getByText("fixture/returned-model", { exact: true }).isVisible(), "Returned model identity missing");
+  check(await page.getByText("prompt-fixture-v1", { exact: true }).isVisible(), "Recorded prompt version missing");
+  check(await page.getByText("schema-fixture-v1", { exact: true }).isVisible(), "Recorded schema version missing");
+  check(
+    !/Microsoft|Decision-1/.test(await page.locator(".investigations-view").innerText()),
+    "Hardcoded provider/model claim remains",
+  );
   check(
     await page
       .getByRole("heading", { name: "Local detector", exact: true })
@@ -195,7 +255,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   );
   check(
     await page
-      .getByRole("heading", { name: "Microsoft Decision-1", exact: true })
+      .getByRole("heading", { name: "Bounded decision", exact: true })
       .locator("..")
       .getByText("decision-revision", { exact: true })
       .isVisible(),
@@ -206,6 +266,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     "Known API stages were treated as unknown",
   );
   await page.getByText("Affected requests: 3", { exact: true }).waitFor();
+  check(
+    await page.getByText("Manually approved demo policy", { exact: true }).isVisible(),
+    "Manual approval basis omitted",
+  );
   check(await page.getByText("Active", { exact: true }).isVisible(), "Actual enforcement status missing");
   check(
     await page.getByText("Allowed requests: 2", { exact: true }).isVisible(),
@@ -271,7 +335,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       unavailable: "Unavailable",
       deferred_budget: "Deferred · budget",
     }[status];
-    await page.getByText(expected, { exact: true }).waitFor();
+    await page
+      .getByRole("region", { name: "Model review", exact: true })
+      .getByText(expected, { exact: true })
+      .waitFor();
     await page.getByRole("button", { name: "Back to investigations" }).click();
     // Remounting must fetch the latest record rather than asserting stale cache.
     await page.waitForTimeout(1100);
@@ -296,6 +363,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "null score",
       "separate history stages",
       "actual API stage grouping",
+      "configured and recorded provider/model metadata",
+      "manual demo approval basis",
+      "incomplete evidence and limitations",
+      "execution halt and review reason",
       "enforcement endpoint and polling",
       "enforcement counters and expiry",
       "enforcement empty versus error",

@@ -174,6 +174,11 @@ function UsagePanel() {
           </p>
         </>
       )}
+      {usage?.execution_halted === true && (
+        <p role="alert" className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+          Model execution halted{usage.halt_reason ? `: ${usage.halt_reason}` : "."}
+        </p>
+      )}
       <p className="mt-3 text-xs leading-relaxed text-zinc-600">
         Public access is read-only. Model reviews and enforcement require an authorised operator.
       </p>
@@ -259,6 +264,16 @@ function LocalFinding({
         <p className="mt-3 text-zinc-600">No supporting reasons supplied.</p>
       )}
       <EvidenceLinks ids={assessment.evidence_ids} onEvidence={onEvidence} />
+      {Array.isArray(assessment.limitations) && assessment.limitations.length > 0 && (
+        <div className="mt-3">
+          <h4 className="text-xs font-semibold">Local assessment limitations</h4>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-relaxed text-zinc-600">
+            {assessment.limitations.map((value, index) => (
+              <li key={index}>{value}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="mt-3 text-xs leading-relaxed text-zinc-600">
         A detector score is not verified human identity or proof of malicious intent.
       </p>
@@ -272,6 +287,24 @@ function AssessmentRecord({ assessment, onEvidence }: { assessment: Assessment; 
     <li className="border-t border-zinc-200 py-4 first:border-0 first:pt-0">
       <p className="text-xs text-zinc-600">{dateTime(assessment.created_at)}</p>
       <p className="mt-1 break-all font-mono text-xs text-zinc-600">{assessment.id}</p>
+      {assessment.metadata && (
+        <RecordFields
+          data={Object.fromEntries(
+            Object.entries(assessment.metadata).filter(([key]) =>
+              [
+                "provider",
+                "model",
+                "returned_model",
+                "role",
+                "prompt_version",
+                "schema_version",
+                "validation",
+                "advisory_only",
+              ].includes(key),
+            ),
+          )}
+        />
+      )}
       {payload && typeof payload === "object" ? (
         <>
           <RecordFields data={payload} />
@@ -299,10 +332,17 @@ function AssessmentHistory({
     retry: false,
     refetchInterval: 5_000,
   });
+  const capabilityQuery = useQuery({
+    queryKey: ["capabilities"],
+    queryFn: investigationApi.capabilities,
+    retry: false,
+    refetchInterval: 30_000,
+  });
+  const providerCapabilities = capabilityQuery.data?.providers ?? capabilityQuery.data;
   const stages = [
     ["local", "Local detector", "Baseline findings"],
-    ["decision_model", "Microsoft Decision-1", "Optional decision assessment"],
-    ["reviewer", "Featherless reviewer", "Optional advisory recommendation"],
+    ["decision_model", "Bounded decision", "Optional bounded assessment"],
+    ["reviewer", "Final advisory reviewer", "Optional advisory recommendation"],
   ];
   const other = query.data?.filter((item) => !stages.some(([kind]) => assessmentStage(item) === kind)) ?? [];
   return (
@@ -323,10 +363,29 @@ function AssessmentHistory({
         <div className="grid divide-y divide-zinc-200 rounded-lg border border-zinc-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           {stages.map(([kind, title, subtitle]) => {
             const records = query.data.filter((item) => assessmentStage(item) === kind);
+            const provider =
+              kind === "decision_model"
+                ? providerCapabilities?.decision_model
+                : kind === "reviewer"
+                  ? providerCapabilities?.reviewer
+                  : undefined;
             return (
               <div key={kind} className="min-w-0 p-4">
                 <h4 className="text-sm font-semibold">{title}</h4>
                 <p className="mt-1 text-xs text-zinc-600">{subtitle}</p>
+                {provider && (
+                  <div className="mt-3 space-y-1 text-xs text-zinc-600">
+                    <p>Current configuration</p>
+                    <RecordFields data={{ provider: provider.provider, model: provider.model, role: provider.role }} />
+                    <Badge tone={provider.available === true ? "info" : "neutral"}>
+                      {provider.available === true
+                        ? "Available"
+                        : provider.available === false
+                          ? "Unavailable"
+                          : "Status not reported"}
+                    </Badge>
+                  </div>
+                )}
                 <div className="mt-4">
                   {records.length > 0 ? (
                     <ul>
@@ -420,6 +479,9 @@ function EnforcementPanel({ id }: { id: string }) {
                     <Badge tone={status.tone}>{status.label}</Badge>
                   </div>
                   <p className="break-all font-mono text-xs text-zinc-600">{policy.id}</p>
+                  {policy.approval_basis === "manual_demo_override" && (
+                    <p className="text-sm font-medium">Manually approved demo policy</p>
+                  )}
                   <p className="text-sm">Controlled demo actor: {policy.actor_id ?? "Not reported"}</p>
                   <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm tabular-nums">
                     <p>Affected requests: {count(policy.affected_requests)}</p>
@@ -517,6 +579,24 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
             )}
           </div>
           <section aria-labelledby="finding-title">
+            {investigation.complete === false && (
+              <p
+                role="status"
+                className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              >
+                Evidence snapshot is incomplete. Findings must be interpreted with the missing information below.
+              </p>
+            )}
+            {Array.isArray(investigation.missing_information) && investigation.missing_information.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold">Missing information</h3>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-600">
+                  {investigation.missing_information.map((value, index) => (
+                    <li key={index}>{value}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <h3 id="finding-title" className="mb-3 font-semibold">
               Local assessment
             </h3>
@@ -530,6 +610,9 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
               <Badge tone={review.tone}>{review.label}</Badge>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-zinc-600">{review.description}</p>
+            {investigation.review?.reason && (
+              <p className="mt-2 text-sm text-zinc-600">Review reason: {investigation.review.reason}</p>
+            )}
             {investigation.review?.job_id && (
               <p className="mt-2 break-all font-mono text-xs text-zinc-600">Job {investigation.review.job_id}</p>
             )}

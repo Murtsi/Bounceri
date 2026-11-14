@@ -10,7 +10,7 @@ Operators investigating suspicious online activity, and public demo visitors ins
 
 ## Product purpose
 
-Bounceri is an online investigation platform. Clean the traffic is its first module. Cases connect an immutable evidence snapshot to the local detector and separate optional Decision-1 and Featherless assessments. Other modules are explicitly unimplemented.
+Bounceri is an online investigation platform. Clean the traffic is its first module. Cases connect an immutable evidence snapshot to the local detector and separate optional bounded-decision and final advisory assessments. Providers and models are shown from configuration and historical assessment metadata. Other modules are explicitly unimplemented.
 
 ## Design principles
 

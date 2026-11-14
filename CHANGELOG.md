@@ -91,6 +91,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Investigation details show actual model provenance, evidence gaps, review failure reasons, manual approval basis and durable spending halts without changing the existing dashboard default.
 - [A] Investigation history reads the API's actual stage field; controlled enforcement status polls its dedicated endpoint and shows real effects, expiry and revocation.
 - [A] Provider billing-ceiling breaches halt all further paid dispatch, including reserved queued jobs, across restarts; public campaign references redact account-bearing IDs; enforcement authenticates before bounded body parsing and records manual demo approval honestly.
 - [A] Fresh restart/rotation log batches are bounded before detection; quiet cycles expire retained data and cached source metadata.
