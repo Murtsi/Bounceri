@@ -1,0 +1,60 @@
+{
+  "available": true,
+  "dataset": {
+    "id": "native-7",
+    "n_known": 24,
+    "n_runs": 2,
+    "n_sessions": 28,
+    "n_unknown": 4,
+    "split": "reserved_known_templates"
+  },
+  "detector": {
+    "freeze_commit": "b92b333b41857695bcace285fe6ae1b9bcf95488",
+    "model_version": "rules-v2",
+    "source_code_sha256": {
+      "src/bouncer/session/rules.py": "96d2478035ef7d15882a1d3524d5154c9b4c6644c0888224c6a46700098ef50c",
+      "src/bouncer/session/score.py": "21a87b40e3b975960474951378ba39aba1baa5d3a44a08e2fd905d813400772a"
+    }
+  },
+  "limitations": [
+    "Synthetic generator reference intent, not independently verified human identity or real-world maliciousness.",
+    "The reserved partition uses known public templates; it is not a genuinely hidden attack.",
+    "The rule fix was frozen before this once-only reserved evaluation; viewed candidate validation is development data.",
+    "Precision is conditional on the 24 known-reference sessions; 4 unknown-intent sessions are excluded from that denominator.",
+    "All 28 sessions contribute to uncertainty. More abstention accounts for the two corrected development false positives.",
+    "Zero false positives among 14 simulated human sessions does not demonstrate real-human FPR below 1%.",
+    "95% Wilson intervals are descriptive and do not account for dependence within the two generated runs.",
+    "Familiar scanner and same-target authentication fixtures do not establish novel-attack generalization.",
+    "No DNS verification, coefficient training, paid model calls or automatic model promotion occurred.",
+    "S8 models/metrics.json remains an unmeasured stub with null outcomes."
+  ],
+  "metrics": {
+    "bad_bot_precision": {
+      "ci95_lower": 0.7224671969739422,
+      "ci95_upper": 0.9999999999999999,
+      "denominator": 10,
+      "numerator": 10,
+      "value": 1.0
+    },
+    "human_false_positive_rate": {
+      "ci95_lower": 2.220446049250313e-16,
+      "ci95_upper": 0.21531080540298045,
+      "denominator": 14,
+      "numerator": 0,
+      "value": 0.0
+    },
+    "uncertain_share": {
+      "ci95_lower": 0.4583030637323058,
+      "ci95_upper": 0.7929417058564169,
+      "denominator": 28,
+      "numerator": 18,
+      "value": 0.6428571428571429
+    }
+  },
+  "schema_version": 1,
+  "synthetic": true,
+  "unavailable": [
+    "independent_real_humans",
+    "genuinely_hidden_attack"
+  ]
+}

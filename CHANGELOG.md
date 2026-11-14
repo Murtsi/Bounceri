@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.
 - [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.
 - [A] Reproducible Hostinger Docker deployment with private source capsule, PostgreSQL, bounded HTTP simulation, ingest/detection, dashboard/API and asynchronous review worker; operator smoke test verifies actual 429/403, benign isolation, expiry and revoke without paid inference.
@@ -61,6 +62,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Dashboardin ammattitason UI: kaikki näkymät (yleiskuva, sessiot, kampanjat, mittarit) shadcn/ui-komponenteilla, dataviz-skillin validoima paletti (ihminen → hyvä botti → haitallinen → epävarma, CVD ΔE ≥ 9,2) vaaleaan ja tummaan tilaan, vaalea/tumma-kytkin (oletus käyttöjärjestelmän mukaan), liikennekaavio ja segmentoitu jakaumapalkki taulukkonäkymineen, toimenpidemerkit tilaväreillä + kuvakkeilla, sessiosuodatin määrineen, ja Bouncer-logoanimaatio ("ouncer" pomppaa B:stä) otsikkoon ja latausnäyttöön (pois päältä, jos käyttäjä on pyytänyt vähemmän liikettä) (päätös 057)
 
 ### Changed
+- [C] Owner approved at most 20 additional synthetic-case review experiments after live validation; alternate local findings and controls, retain explicit experimental status, and preserve the $5 shared ledger and per-request ceilings.
 - [X] Investigations-näkymä siirretty uuteen sivupalkkiin omaksi kohdakseen (main-yhdistäminen)
 - [X] Dashboardille sovelluksen runko: lasinen sivupalkki (logo, navigaatio kuvakkeineen ja määrineen, live-tila, synteettisen datan merkintä) ja mobiilissa kelluva navigaatio alhaalla; yleiskuvaan neljän tunnusluvun rivi minikaavioineen (Requests, Sessions, Bad bots, Live attacks), live-syöte uusimmista sessioista ja kuvakkeet korttien otsikoihin kaikissa näkymissä
 - [X] Käyttöliittymä ja API:n näkyvät tekstit englanniksi: dashboard, toimenpiteet (Monitor / Rate-limit / Challenge / Block), hälytysotsikot, B:n sääntöjen ja mallin syyt sekä tunnetut heikkoudet. Otsikon iskulause "Know who's really at the door" (really korostettuna). Testit ja `tools/sim/check.py` päivitetty englanninkielisiin syihin

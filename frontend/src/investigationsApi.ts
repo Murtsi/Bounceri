@@ -6,7 +6,7 @@ export interface Capability {
 
 export interface Capabilities {
   modules?: Record<string, Capability> | (Capability & { id?: string; module?: string; key?: string })[];
-  providers?: { decision_model?: ProviderCapability; reviewer?: ProviderCapability };
+  providers?: { mode?: string; decision_model?: ProviderCapability; reviewer?: ProviderCapability };
   decision_model?: ProviderCapability;
   reviewer?: ProviderCapability;
 }
@@ -93,11 +93,43 @@ export interface Usage {
   halt_reason?: string;
 }
 
+export interface EvaluationMetric {
+  numerator?: number;
+  denominator?: number;
+  value?: number | null;
+  ci95_lower?: number | null;
+  ci95_upper?: number | null;
+}
+
+export interface EvaluationResponse {
+  schema_version?: number;
+  available: boolean;
+  reason?: string;
+  synthetic?: boolean;
+  dataset?: { id?: string; split?: string; n_sessions?: number; n_runs?: number; n_known?: number; n_unknown?: number };
+  detector?: { model_version?: string; freeze_commit?: string; source_code_sha256?: Record<string, string> };
+  metrics?: {
+    bad_bot_precision?: EvaluationMetric;
+    human_false_positive_rate?: EvaluationMetric;
+    uncertain_share?: EvaluationMetric;
+  };
+  limitations?: string[];
+  unavailable?: string[];
+}
+
+class ApiReadError extends Error {
+  status: number;
+  constructor(status: number) {
+    super(`Service returned HTTP ${status}.`);
+    this.status = status;
+  }
+}
+
 async function get(path: string): Promise<unknown> {
   const response = await fetch(path, {
     headers: { Accept: "application/json" },
   });
-  if (!response.ok) throw new Error(`Service returned HTTP ${response.status}.`);
+  if (!response.ok) throw new ApiReadError(response.status);
   try {
     return await response.json();
   } catch {
@@ -128,4 +160,13 @@ export const investigationApi = {
   assessments: (id: string) => list<Assessment>(`/api/investigations/${encodeURIComponent(id)}/assessments`),
   enforcements: (id: string) => list<EnforcementPolicy>(`/api/investigations/${encodeURIComponent(id)}/enforcements`),
   usage: async () => record<Usage>(await get("/api/usage")),
+  evaluation: async (): Promise<EvaluationResponse> => {
+    try {
+      return record<EvaluationResponse>(await get("/api/evaluation"));
+    } catch (error) {
+      if (error instanceof ApiReadError && error.status === 404)
+        return { available: false, reason: "Evaluation has not been published." };
+      throw error;
+    }
+  },
 };

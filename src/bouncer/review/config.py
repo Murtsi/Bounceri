@@ -196,6 +196,7 @@ def capabilities(settings: ReviewSettings | None = None) -> dict:
     decision["role"] = "bounded_decision"
     reviewer["role"] = "final_advisory_reviewer"
     return {
+        "mode": "experimental",
         "enabled": settings.enabled and decision["available"] and reviewer["available"],
         "decision_model": decision,
         "reviewer": reviewer,

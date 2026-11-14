@@ -1,5 +1,34 @@
 export type Tone = "neutral" | "info" | "warning" | "danger" | "success";
 
+export function formatEvaluationMetric(metric?: {
+  numerator?: number;
+  denominator?: number;
+  value?: number | null;
+  ci95_lower?: number | null;
+  ci95_upper?: number | null;
+}) {
+  const count = (value: unknown): value is number =>
+    typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+  const rate = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+  const validCounts = count(metric?.numerator) && count(metric?.denominator) && metric.numerator <= metric.denominator;
+  return {
+    count: validCounts ? `${metric.numerator} / ${metric.denominator}` : "Not reported",
+    percent:
+      validCounts && metric.denominator! > 0 && rate(metric.value)
+        ? `${(metric.value * 100).toFixed(2)}%`
+        : "Not reported",
+    interval:
+      validCounts &&
+      metric.denominator! > 0 &&
+      rate(metric.ci95_lower) &&
+      rate(metric.ci95_upper) &&
+      metric.ci95_lower <= metric.ci95_upper
+        ? `${(metric.ci95_lower * 100).toFixed(2)}%–${(metric.ci95_upper * 100).toFixed(2)}%`
+        : "Not reported",
+  };
+}
+
 export function assessmentStage(assessment: { stage?: string; kind?: string }) {
   return assessment.stage ?? assessment.kind;
 }

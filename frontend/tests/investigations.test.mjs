@@ -1,12 +1,29 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  formatEvaluationMetric,
   assessmentStage,
   capabilityState,
   formatScore,
   reviewState,
   sourceState,
 } from "../src/investigationPresentation.ts";
+
+test("evaluation shows published counts and intervals without inventing missing or invalid rates", () => {
+  assert.deepEqual(
+    formatEvaluationMetric({ numerator: 0, denominator: 14, value: 0, ci95_lower: 0, ci95_upper: 0.21531 }),
+    { count: "0 / 14", percent: "0.00%", interval: "0.00%–21.53%" },
+  );
+  assert.deepEqual(formatEvaluationMetric({ numerator: 0, denominator: 0, value: 0 }), {
+    count: "0 / 0",
+    percent: "Not reported",
+    interval: "Not reported",
+  });
+  assert.deepEqual(
+    formatEvaluationMetric({ numerator: 15, denominator: 14, value: 1.1, ci95_lower: 0.9, ci95_upper: 0.2 }),
+    { count: "Not reported", percent: "Not reported", interval: "Not reported" },
+  );
+});
 
 test("actual API assessment stage takes precedence with a legacy kind fallback", () => {
   assert.equal(assessmentStage({ stage: "decision_model" }), "decision_model");

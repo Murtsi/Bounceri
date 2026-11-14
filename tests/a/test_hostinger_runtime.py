@@ -38,3 +38,16 @@ def test_selected_case_keeps_one_entire_session_without_other_actor_truth():
     assert result["verdicts"] == {"b": {"label": "uncertain"}}
     assert "labels" not in result
     assert snapshot["sessions"] == sessions
+
+
+def test_review_selection_includes_findings_and_controls_without_reference_labels():
+    snapshot = {
+        "synthetic": True,
+        "sessions": [{"id": "human"}, {"id": "scanner"}],
+        "verdicts": {
+            "human": {"label": "uncertain"},
+            "scanner": {"label": "bad_bot", "rule_id": "vuln_paths"},
+        },
+    }
+    assert selected_session_snapshot(snapshot, 0)["sessions"][0]["id"] == "scanner"
+    assert selected_session_snapshot(snapshot, 1)["sessions"][0]["id"] == "human"

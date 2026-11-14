@@ -45,10 +45,18 @@ def bounded_records(
 def selected_session_snapshot(snapshot: dict, index: int) -> dict:
     """A scoped case contains an entire retained session, never a truncated large packet.
 
-    This selection is round-robin, independent of simulator truth labels. The full
-    traffic snapshot remains separately available; one case cannot label all actors.
+    Alternate local findings with controls, round-robin within those buckets,
+    independently of simulator truth. This is a selected review sample, not a
+    population accuracy estimate. The full snapshot remains separately available.
     """
-    session = snapshot["sessions"][index % len(snapshot["sessions"])]
+    verdicts = snapshot.get("verdicts", {})
+    findings = [
+        s for s in snapshot["sessions"] if verdicts.get(s["id"], {}).get("label") == "bad_bot"
+    ]
+    controls = [s for s in snapshot["sessions"] if s not in findings]
+    findings.sort(key=lambda s: verdicts.get(s["id"], {}).get("rule_id") != "vuln_paths")
+    bucket = (findings if index % 2 == 0 else controls) or findings or controls
+    session = bucket[(index // 2) % len(bucket)]
     return {
         "synthetic": snapshot["synthetic"],
         "sessions": [session],

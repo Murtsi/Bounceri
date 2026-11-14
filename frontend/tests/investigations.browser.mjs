@@ -53,6 +53,64 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     review: { status: "not_requested" },
   };
   let mode = "empty";
+  let evaluationMode = "published";
+  const publishedEvaluation = {
+    available: true,
+    dataset: {
+      id: "native-7",
+      n_known: 24,
+      n_runs: 2,
+      n_sessions: 28,
+      n_unknown: 4,
+      split: "reserved_known_templates",
+    },
+    detector: {
+      freeze_commit: "b92b333b41857695bcace285fe6ae1b9bcf95488",
+      model_version: "rules-v2",
+      source_code_sha256: {
+        "src/bouncer/session/rules.py": "96d2478035ef7d15882a1d3524d5154c9b4c6644c0888224c6a46700098ef50c",
+        "src/bouncer/session/score.py": "21a87b40e3b975960474951378ba39aba1baa5d3a44a08e2fd905d813400772a",
+      },
+    },
+    limitations: [
+      "Synthetic generator reference intent, not independently verified human identity or real-world maliciousness.",
+      "The reserved partition uses known public templates; it is not a genuinely hidden attack.",
+      "The rule fix was frozen before this once-only reserved evaluation; viewed candidate validation is development data.",
+      "Precision is conditional on the 24 known-reference sessions; 4 unknown-intent sessions are excluded from that denominator.",
+      "All 28 sessions contribute to uncertainty. More abstention accounts for the two corrected development false positives.",
+      "Zero false positives among 14 simulated human sessions does not demonstrate real-human FPR below 1%.",
+      "95% Wilson intervals are descriptive and do not account for dependence within the two generated runs.",
+      "Familiar scanner and same-target authentication fixtures do not establish novel-attack generalization.",
+      "No DNS verification, coefficient training, paid model calls or automatic model promotion occurred.",
+      "S8 models/metrics.json remains an unmeasured stub with null outcomes.",
+    ],
+    metrics: {
+      bad_bot_precision: {
+        ci95_lower: 0.7224671969739422,
+        ci95_upper: 0.9999999999999999,
+        denominator: 10,
+        numerator: 10,
+        value: 1.0,
+      },
+      human_false_positive_rate: {
+        ci95_lower: 2.220446049250313e-16,
+        ci95_upper: 0.21531080540298045,
+        denominator: 14,
+        numerator: 0,
+        value: 0.0,
+      },
+      uncertain_share: {
+        ci95_lower: 0.4583030637323058,
+        ci95_upper: 0.7929417058564169,
+        denominator: 28,
+        numerator: 18,
+        value: 0.6428571428571429,
+      },
+    },
+    schema_version: 1,
+    synthetic: true,
+    unavailable: ["independent_real_humans", "genuinely_hidden_attack"],
+  };
   let reviewStatus = "unavailable";
   let enforcementStatus = "active";
   let affectedRequests = 3;
@@ -74,12 +132,17 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     campaign_id: "campaign-1",
   };
   const records = () => ({
+    "/api/evaluation":
+      evaluationMode === "unavailable"
+        ? { available: false, synthetic: true, reason: "Fixture evaluation withheld" }
+        : publishedEvaluation,
     "/api/capabilities": {
       modules: {
         clean_traffic: { enabled: true, implemented: true },
         spot_the_swarm: { enabled: true, implemented: true },
       },
       providers: {
+        mode: "experimental",
         decision_model: {
           provider: "featherless",
           model: "fixture/bounded-model",
@@ -210,6 +273,8 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     const data = records();
+    if (path === "/api/evaluation" && evaluationMode === "404")
+      return route.fulfill({ status: 404, contentType: "application/json", body: "{}" });
     const unavailable =
       mode === "error" ||
       (mode === "history-error" && path.endsWith("/assessments")) ||
@@ -254,6 +319,60 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     await page.getByText("Model execution halted: fixture_budget_halt", { exact: true }).isVisible(),
     "Execution halt missing",
   );
+  const evaluation = page.getByRole("region", { name: "Detector evaluation", exact: true });
+  await evaluation.getByText("Synthetic benchmark", { exact: true }).waitFor();
+  check(
+    await evaluation.getByText("Reserved known-template runs", { exact: true }).isVisible(),
+    "Evaluation split hidden",
+  );
+  check(
+    await evaluation.getByText("28 sessions · 2 runs · 24 known · 4 unknown", { exact: true }).isVisible(),
+    "Evaluation support counts missing",
+  );
+  check(await evaluation.getByText("10 / 10", { exact: true }).isVisible(), "Published precision support missing");
+  check(
+    await evaluation.getByText("0 / 14", { exact: true }).isVisible(),
+    "Published human false positive support missing",
+  );
+  check(await evaluation.getByText("18 / 28", { exact: true }).isVisible(), "Published uncertain denominator missing");
+  check(
+    await evaluation.getByText("0.00% · 95% interval: 0.00%–21.53%", { exact: true }).isVisible(),
+    "Small-sample human interval hidden",
+  );
+  check(
+    await evaluation
+      .getByText("Unavailable: independent real humans; genuinely hidden attack.", { exact: true })
+      .isVisible(),
+    "Missing independent evaluation concealed",
+  );
+  check(
+    await evaluation
+      .getByText(
+        "Zero false positives among 14 simulated human sessions does not demonstrate real-human FPR below 1%.",
+        { exact: true },
+      )
+      .isVisible(),
+    "Synthetic limitation hidden",
+  );
+  await evaluation.getByText("Dataset and detector provenance", { exact: true }).click();
+  check(await evaluation.getByText("rules-v2", { exact: true }).isVisible(), "Evaluation detector version missing");
+  check(
+    await evaluation.getByText(publishedEvaluation.detector.freeze_commit, { exact: true }).isVisible(),
+    "Detector freeze commit missing",
+  );
+  evaluationMode = "404";
+  await evaluation.getByRole("button", { name: "Refresh evaluation", exact: true }).click();
+  await evaluation.getByText("Evaluation has not been published.", { exact: false }).waitFor();
+  check(
+    (await evaluation.getByText("0 / 14", { exact: true }).count()) === 0,
+    "404 evaluation retained a measured result",
+  );
+  evaluationMode = "unavailable";
+  await evaluation.getByRole("button", { name: "Refresh evaluation", exact: true }).click();
+  await evaluation.getByText("Fixture evaluation withheld", { exact: false }).waitFor();
+  evaluationMode = "published";
+  await evaluation.getByRole("button", { name: "Refresh evaluation", exact: true }).click();
+  await evaluation.getByText("Synthetic benchmark", { exact: true }).waitFor();
   check(
     await page.evaluate(() => document.documentElement.classList.contains("dark")),
     "PR25 dark-only default changed",
@@ -307,7 +426,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     (await page.getByText("No investigations published yet", { exact: true }).count()) === 0,
     "Outage rendered as empty success",
   );
-  check((await page.getByRole("alert").count()) === 3, "Capabilities, usage and list errors must stay visible");
+  check(
+    (await page.getByRole("alert").count()) === 4,
+    "Capabilities, usage, evaluation and list errors must stay visible",
+  );
 
   mode = "populated";
   await reload();
@@ -356,6 +478,13 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   check(await page.getByText("Detector score: Not reported", { exact: true }).isVisible(), "Null score fabricated");
   check(await page.getByRole("heading", { name: "Bounded decision" }).isVisible(), "Decision stage missing");
   check(await page.getByRole("heading", { name: "Final advisory reviewer" }).isVisible(), "Reviewer stage missing");
+  check(
+    (await page
+      .getByRole("region", { name: "Assessment history", exact: true })
+      .getByText("Experimental", { exact: true })
+      .count()) === 2,
+    "Experimental provider mode hidden",
+  );
   check(
     await page.getByText("fixture/bounded-model", { exact: true }).isVisible(),
     "Configured decision model missing",
@@ -489,6 +618,9 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "outage distinction",
       "future modules disabled",
       "source filter",
+      "API-backed synthetic benchmark support counts",
+      "evaluation confidence intervals and provenance",
+      "unpublished evaluation distinct from service error",
       "bounded AI eligibility visible in list and detail",
       "AI eligibility distinct from source completeness",
       "null score",
