@@ -79,7 +79,7 @@ function Tip({ p, label }: { p: Point; label: string }) {
   );
 }
 
-const GAP = "gap-[clamp(3px,1.2vw,12px)]";
+const GAP = "gap-[3px]";
 
 /**
  * Pyynnöt aikaväleittäin: ohuet pinotut pylväät himmeän "raidan" päällä
@@ -95,8 +95,9 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
   const max = Math.max(1, ...rows.map((r) => r.n));
   const peak = rows.find((r) => r.n === max);
   const unit = secs ? `${stepS} s` : `${stepS / 60} min`;
-  // Aika-akselille vain alku, keskikohta ja loppu: vähemmän tekstiä, ei törmäyksiä.
-  const ticks = new Set([0, Math.floor((rows.length - 1) / 2), rows.length - 1]);
+  // Aika-akselille noin 4 merkintää tasaisin välein: vähemmän tekstiä, ei törmäyksiä.
+  const every = Math.max(1, Math.ceil(rows.length / 4));
+  const ticks = new Set(rows.map((_, i) => i).filter((i) => (rows.length - 1 - i) % every === 0));
 
   return (
     <figure className="flex flex-col gap-4">
@@ -160,14 +161,14 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
                 {/* Raita: koko korkeus, himmeä — näyttää myös tyhjät välit. */}
                 <div
                   className={cn(
-                    "flex h-full w-full max-w-6 flex-col justify-end overflow-hidden rounded-full transition-colors",
-                    hover === i ? "bg-white/[0.09]" : "bg-white/[0.045]",
+                    "flex h-full w-full flex-col justify-end overflow-hidden rounded-t-[4px] transition-colors",
+                    hover === i ? "bg-white/[0.08]" : "bg-white/[0.03]",
                   )}
                 >
                   {n > 0 && (
                     // Yläpää pyöreä, pohja suora (dataviz: pyöristys vain datan päähän).
                     <div
-                      className="flex flex-col-reverse gap-[2px] overflow-hidden rounded-t-full"
+                      className="flex flex-col-reverse gap-[2px] overflow-hidden rounded-t-[4px]"
                       style={{ height: `${(n / max) * 100}%`, minHeight: 6 }}
                     >
                       {SERIES.filter((l) => p[l] > 0).map((l) => {
@@ -189,7 +190,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
           </div>
           <div className={cn("mt-2 flex text-[11px] tabular-nums text-[color:var(--ink-muted)]", GAP)}>
             {rows.map(({ p, label }, i) => (
-              <span key={p.t} className="flex-1 whitespace-nowrap text-center">
+              <span key={p.t} className="relative flex-1 overflow-visible whitespace-nowrap text-center">
                 {ticks.has(i) ? label : ""}
               </span>
             ))}
