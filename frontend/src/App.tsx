@@ -8,16 +8,18 @@ import { activityStatus } from "@/lib/activity";
 import { cn } from "@/lib/utils";
 
 const Investigations = lazy(() => import("@/Investigations"));
+const Landing = lazy(() => import("@/views/Landing"));
 const Campaigns = lazy(() => import("@/views/Campaigns"));
 const Metrics = lazy(() => import("@/views/Metrics"));
 const Overview = lazy(() => import("@/views/Overview"));
 const Sessions = lazy(() => import("@/views/Sessions"));
 
-type Tab = "overview" | "sessions" | "campaigns" | "metrics" | "investigations";
+/** "home" = etusivu (landing, ei sivupalkkia); muut ovat dashboardin näkymiä. */
+type Tab = "home" | "overview" | "sessions" | "campaigns" | "metrics" | "investigations";
 type SessionLabel = "bad_bot" | "good_bot" | "human" | "uncertain";
 type RouteState = { tab: Tab; campaignId: string | null; label: SessionLabel | "all"; sessionId: string | null };
 
-const TABS = new Set<Tab>(["overview", "sessions", "campaigns", "metrics", "investigations"]);
+const TABS = new Set<Tab>(["home", "overview", "sessions", "campaigns", "metrics", "investigations"]);
 const LABELS = new Set<SessionLabel>(["bad_bot", "good_bot", "human", "uncertain"]);
 
 function readRoute(): RouteState {
@@ -25,7 +27,8 @@ function readRoute(): RouteState {
   const rawTab = params.get("tab") as Tab | null;
   const rawLabel = params.get("label") as SessionLabel | null;
   return {
-    tab: rawTab && TABS.has(rawTab) ? rawTab : "overview",
+    // Ilman tab-parametria avautuu etusivu; dashboard on ?tab=overview (päätös 066).
+    tab: rawTab && TABS.has(rawTab) ? rawTab : "home",
     campaignId: params.get("campaign"),
     label: rawLabel && LABELS.has(rawLabel) ? rawLabel : "all",
     sessionId: params.get("session"),
@@ -34,7 +37,7 @@ function readRoute(): RouteState {
 
 function routeUrl(route: RouteState) {
   const params = new URLSearchParams();
-  if (route.tab !== "overview") params.set("tab", route.tab);
+  if (route.tab !== "home") params.set("tab", route.tab);
   if (route.campaignId) params.set("campaign", route.campaignId);
   if (route.label !== "all") params.set("label", route.label);
   if (route.sessionId) params.set("session", route.sessionId);
@@ -42,7 +45,7 @@ function routeUrl(route: RouteState) {
   return `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
 }
 
-const NAV: { id: Tab; label: string; Icon: LucideIcon }[] = [
+const NAV: { id: Exclude<Tab, "home">; label: string; Icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "sessions", label: "Sessions", Icon: Rows3 },
   { id: "campaigns", label: "Campaigns", Icon: Network },
@@ -51,6 +54,7 @@ const NAV: { id: Tab; label: string; Icon: LucideIcon }[] = [
 ];
 
 const TITLE: Record<Tab, string> = {
+  home: "Bounceri",
   overview: "Overview",
   sessions: "Sessions",
   campaigns: "Campaigns",
@@ -163,6 +167,18 @@ export default function App() {
     navigate({ tab: "sessions", campaignId, label: "all", sessionId: null });
   const showSession = (sessionId: string) => navigate({ ...route, tab: "sessions", sessionId });
 
+  if (tab === "home")
+    return (
+      <>
+        {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
+        {live && (
+          <Suspense fallback={null}>
+            <Landing open={(t) => go(t)} />
+          </Suspense>
+        )}
+      </>
+    );
+
   return (
     <div className="min-h-screen">
       {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
@@ -170,7 +186,9 @@ export default function App() {
       {/* Sivupalkki (≥ lg): logo, navigaatio, tila alhaalla. */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[232px] flex-col border-r border-white/[0.07] bg-[#07100b]/80 px-4 py-6 lg:flex">
         <div className="px-3 pb-8">
-          <BouncerLogo mode="static" className="text-2xl" />
+          <button type="button" onClick={() => go("home")} aria-label="Bounceri home" className="rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+            <BouncerLogo mode="static" className="text-2xl" />
+          </button>
           <p className="mt-1 text-xs text-muted-foreground">
             Know who&rsquo;s <em className="font-semibold not-italic text-primary">really</em> at the door
           </p>
