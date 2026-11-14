@@ -80,6 +80,8 @@ Keep credentials in the ignored `.env` file. Never commit raw visitor logs, data
 
 See the [project status](Challenges/Hostinger-Decode-the-Noise/README.md), [architecture](Challenges/Hostinger-Decode-the-Noise/ARCHITECTURE.md), and [decision log](docs/DECISIONS.md). Some planning documents are in Finnish.
 
+The [selected runtime direction](docs/RUNTIME-PLAN.md) uses Microsoft-Decision-1 followed by a Featherless reviewer, with Clean the traffic first. The S7 provider groundwork is implemented; the final-review orchestrator and its budget enforcement are still pending.
+
 ## Contributing and security
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before changing the project. Team ownership and contract changes follow the rules there. Record changes in [CHANGELOG.md](CHANGELOG.md).

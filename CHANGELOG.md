@@ -38,8 +38,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Proof of concept `notebooks/b/poc.py`: A:n parseri → C:n IP-tiedot ja kampanjat → B:n säännöt ja malli → C:n selitys ilman LLM:ää, A:n näytteellä ja C:n tunnusten kokeilun fixturella (synteettinen data, ei tietokantaa). B:n ja C:n integraatiotesti `tests/b/test_integration_c.py` (DNS mockattuna) (päätökset 042–043)
 - [A] Kirjautumistunnus lokista: demosivun `X-Login-User`-vastausotsake `POST /login` -pyynnöstä tallentuu kenttään `Request.username`, jolloin C:n tunnusten kokeilun tunnistus toimii oikeasta Caddy-lokista (A-3/A-5, päätös 047)
 - [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
-- [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 048–051)
-- [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 048)
+- [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 057–051)
+- [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 057)
 - [A] MVP vaihe 1: demosivu `bouncer.site` (FastAPI; sivut, CSS/JS/kuva, `POST /login` → 401 + `X-Login-User`, piilotettu ansalinkki, `robots.txt` kieltää ansat) ja Caddy Docker Composella (`deploy/`: tuotanto- ja paikallinen Caddyfile). Parseri käyttää Caddyn laskemaa `client_ip`:tä (A-3, päätökset 049–050, 052)
 - [A] MVP vaihe 2: simulaattorit `tools/sim/run.py` (ihmistä matkiva selaus, scraper, skanneri, tunnusten kokeilu kuudesta IP:stä, väärennetty Googlebot), allekirjoitetut merkinnät, `--dry-run`. Tarkistettu oikeaa Caddyä vasten: skanneri ja väärennetty Googlebot → `bad_bot`, ihmiset eivät koskaan `bad_bot`; tunnusten kokeilu löytyy kampanjana mutta B:n päätös puuttuu vielä (vaihe 3) (A-4/A-8)
 - [B] Tunnettu heikkous: C:n käyttäytymisklusterointi niputti MVP:ssä simuloidut ihmiset kampanjaksi
@@ -52,6 +52,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Suositeltu toimenpide jokaiselle päätökselle (`bouncer.session.actions`): kirjautumishyökkäys → rajoita, varma hyökkäys → estä, mallin botti → haaste, epävarma → seuraa; worker tallentaa `rule_id`:n ja `action`:in (päätös 055)
 
 ### Changed
+- [X] Featherless replaces Gemini as the selected reviewer provider; S7 requires an explicit model, separates provider/model cache entries and avoids automatic retries or paid-provider fallback. Final Decision-1 orchestration remains planned, and no live key or inference request is included (decision 057).
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
 - [A] BREAKING: S2 — `Request`-sopimukseen uusi valinnainen kenttä `username` (oletus `None`); vanha koodi toimii ennallaan (päätös 047, needs-ack)
 - [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)
