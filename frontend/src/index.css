@@ -100,57 +100,57 @@
 }
 
 /* --- Bouncer-logo: B:n alakaari paisuu ja "ouncer" pomppaa siitä ulos ----------- */
-/* Alakaari: paisuu (ilmaa sisään), ponnauttaa kirjaimet ulos, palautuu joustaen. */
+/* Alakaari: paisuu (ilmaa sisään), ponnauttaa sanan ulos, palautuu joustaen. */
 @keyframes bowl-swell {
   0% { transform: scale(1, 1); }
-  22% { transform: scale(1.32, 1.22); }
-  30% { transform: scale(0.86, 0.92); }
-  40% { transform: scale(1.08, 1.04); }
-  50%, 100% { transform: scale(1, 1); }
+  18% { transform: scale(1.35, 1.25); }
+  26% { transform: scale(0.85, 0.9); }
+  36% { transform: scale(1.07, 1.04); }
+  46%, 100% { transform: scale(1, 1); }
 }
-/* Kirjain syntyy alakaaren kohdalta (pieni, näkymätön), lentää kaarena paikalleen ja pomppaa. */
-@keyframes letter-bounce {
-  0% { transform: translate(var(--from), -0.18em) scale(0.15); opacity: 0; }
-  10% { opacity: 1; }
-  40% { transform: translate(calc(var(--from) * 0.35), -0.6em) scale(1); }
-  58% { transform: translate(0, 0) scale(1.1, 0.88); }
-  70% { transform: translate(0, -0.16em) scale(0.98, 1.03); }
-  80% { transform: translate(0, 0) scale(1.03, 0.97); }
+/* Sana syntyy pienenä alakaaren kohdalta, ponnahtaa ylös ja pomppii kuin pallo paikalleen. */
+@keyframes tail-bounce {
+  0% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
+  6% { opacity: 1; }
+  22% { transform: translate(-0.12em, -0.45em) scale(0.8); }
+  40% { transform: translate(0, 0) scale(1.07, 0.86); }
+  55% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
+  68% { transform: translate(0, 0) scale(1.03, 0.95); }
+  78% { transform: translate(0, -0.07em) scale(1); }
   88%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
 .bouncer-bowl { transform-box: fill-box; transform-origin: 0% 50%; }
-.bouncer-letter { display: inline-block; transform-origin: 50% 100%; opacity: 0; }
-.bouncer-play .bouncer-bowl { animation: bowl-swell 1100ms cubic-bezier(0.3, 0.7, 0.4, 1) both; }
-.bouncer-play .bouncer-letter {
-  animation: letter-bounce 820ms cubic-bezier(0.3, 0.7, 0.4, 1) both;
-  /* Ensimmäinen kirjain lähtee, kun kaari ponnahtaa (≈ 30 % paisunnasta). */
-  animation-delay: calc(300ms + var(--i) * 75ms);
-}
-/* Silmukka (latausnäyttö): sama liike tiivistettynä + kirjaimet häipyvät takaisin ennen uutta kierrosta. */
+/* Origo vasemmalla alhaalla = B:n alakaaren kohta. */
+.bouncer-tail { display: inline-block; transform-origin: 0% 80%; opacity: 0; }
+.bouncer-play .bouncer-bowl { animation: bowl-swell 1300ms cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+.bouncer-play .bouncer-tail { animation: tail-bounce 1100ms cubic-bezier(0.3, 0.7, 0.4, 1) 300ms both; }
+
+/* Silmukka (latausnäyttö): ulos, pomput, lepo, sana imeytyy takaisin kaareen. */
 @keyframes bowl-swell-loop {
   0% { transform: scale(1, 1); }
-  12% { transform: scale(1.32, 1.22); }
-  17% { transform: scale(0.86, 0.92); }
-  22% { transform: scale(1.08, 1.04); }
-  28%, 100% { transform: scale(1, 1); }
+  10% { transform: scale(1.35, 1.25); }
+  14% { transform: scale(0.85, 0.9); }
+  19% { transform: scale(1.07, 1.04); }
+  24%, 80% { transform: scale(1, 1); }
+  88% { transform: scale(1.18, 1.12); }
+  95%, 100% { transform: scale(1, 1); }
 }
-@keyframes letter-bounce-loop {
-  0% { transform: translate(var(--from), -0.18em) scale(0.15); opacity: 0; }
-  4% { opacity: 1; }
-  16% { transform: translate(calc(var(--from) * 0.35), -0.6em) scale(1); }
-  24% { transform: translate(0, 0) scale(1.1, 0.88); }
-  29% { transform: translate(0, -0.16em) scale(0.98, 1.03); }
-  34%, 72% { transform: translate(0, 0) scale(1); opacity: 1; }
-  82%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0; }
+@keyframes tail-bounce-loop {
+  0%, 11% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
+  13% { opacity: 1; }
+  21% { transform: translate(-0.12em, -0.45em) scale(0.8); }
+  30% { transform: translate(0, 0) scale(1.07, 0.86); }
+  37% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
+  44% { transform: translate(0, 0) scale(1.03, 0.95); }
+  50% { transform: translate(0, -0.07em) scale(1); }
+  55%, 76% { transform: translate(0, 0) scale(1); opacity: 1; }
+  88%, 100% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
 }
-.bouncer-loop .bouncer-bowl { animation: bowl-swell-loop 2200ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
-.bouncer-loop .bouncer-letter {
-  animation: letter-bounce-loop 2200ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
-  animation-delay: calc(330ms + var(--i) * 70ms);
-}
-.bouncer-static .bouncer-letter { opacity: 1; }
+.bouncer-loop .bouncer-bowl { animation: bowl-swell-loop 2400ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
+.bouncer-loop .bouncer-tail { animation: tail-bounce-loop 2400ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
+.bouncer-static .bouncer-tail { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .bouncer-bowl, .bouncer-letter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .bouncer-bowl, .bouncer-tail { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* --- Lasi ja tekstuuri ---------------------------------------------------------- */

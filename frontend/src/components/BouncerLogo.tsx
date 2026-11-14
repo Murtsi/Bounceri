@@ -1,12 +1,9 @@
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
-
-const TAIL = "ouncer".split("");
 
 type Mode = "play" | "loop" | "static";
 
 /**
- * "Bouncer": B:n alakaari paisuu ja "ouncer" pomppaa siitä ulos kirjain kerrallaan.
+ * "Bouncer": B:n alakaari paisuu ja koko loppusana "ouncer" pomppaa siitä ulos kuin pallo.
  * play = kerran (otsikko), loop = toistuu (latausnäyttö), static = ei liikettä.
  * prefers-reduced-motion poistaa animaation (index.css).
  */
@@ -27,7 +24,7 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
       <svg
         aria-hidden="true"
         viewBox="0 0 62 72"
-        className="bouncer-b mr-[0.04em] h-[0.72em] w-[0.62em] shrink-0 overflow-visible"
+        className="bouncer-b relative z-10 mr-[0.04em] h-[0.72em] w-[0.62em] shrink-0 overflow-visible"
         fill="none"
         stroke="currentColor"
         strokeWidth="14"
@@ -38,17 +35,10 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
           <path d="M7 35H37A15 15 0 0 1 37 65H7" />
         </g>
       </svg>
-      {TAIL.map((ch, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="bouncer-letter"
-          // Lähtöpiste = B:n alakaari: sitä kauempana, mitä pidemmällä kirjain on.
-          style={{ "--i": i, "--from": `${-(i * 0.58 + 0.42)}em` } as CSSProperties}
-        >
-          {ch}
-        </span>
-      ))}
+      {/* "ouncer" yhtenä sanana: syntyy B:n alakaaresta ja pomppii paikalleen. */}
+      <span aria-hidden="true" className="bouncer-tail">
+        ouncer
+      </span>
     </span>
   );
 }
