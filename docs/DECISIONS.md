@@ -123,3 +123,20 @@ Revisit if: Postgres-writer on valmis → store jää vain offline-fallbackiksi.
 - Local PostgreSQL and Adminer host ports bind to `127.0.0.1`. The public example credentials are suitable only for local development; exposing these tools requires a separate deployment decision.
 - Keep raw visitor traffic, database exports and credentials outside Git and Docker build contexts. Commit synthetic fixtures for reproducibility.
 - Preserve Git history: the release audit found a historical Stripe publishable browser key in a deleted event-page snapshot, not a private API credential. No history rewrite is required for that finding. This audit is not a guarantee that every form of sensitive data has been detected.
+
+## Kaista A — MVP-korjaukset (2026-11-14, Niko)
+
+### 046 — `X-Sim-Run` allekirjoitetaan (S10) · needs-ack: A, C
+Date: 2026-11-14
+Context: `X-Sim-Run` on B:n opetuksen ja arvioinnin oikea vastaus. Ilman tunnistusta kuka tahansa kävijä voi lähettää `X-Sim-Run: x:human` ja saada bottinsa labeloitua ihmiseksi (myrkytetty malli, väärä FPR). Lisäksi parseri kaatui virheelliseen tai ristiriitaiseen merkintään, joten yksi pahantahtoinen pyyntö pysäytti koko lukemisen.
+Decision: Simulaattori lähettää `X-Sim-Sig: hex(HMAC-SHA256(SIM_RUN_SECRET, <X-Sim-Run-arvo>))` (`bouncer.ingest.simrun.sign`). Kun `SIM_RUN_SECRET` on asetettu, vain oikein allekirjoitetut merkinnät hyväksytään. Virheellinen tai ristiriitainen merkintä → sessio jää ilman labelia ja lasketaan `IngestStats`-laskuriin; lukeminen jatkuu. Molemmat otsakkeet poistetaan tallennettavista otsakkeista. Repoon commitoidut fixturet ovat luotettuja eikä niiltä vaadita allekirjoitusta.
+Consequences: Tuotannossa `SIM_RUN_SECRET` on pakollinen (`.env.example`); A:n simulaattorit (A-8, A-9) käyttävät `simrun.sign()`. Ilman avainta (paikallinen kehitys) merkintöjä ei tarkisteta.
+Revisit if: simulaattorit ajetaan ympäristössä, jossa avainta ei voi jakaa → IP-sallintalista lisäksi.
+
+### 047 — Kirjautumistunnus demosivun vastausotsakkeesta (S2) · needs-ack: A, C
+Date: 2026-11-14
+Context: C:n tunnusten kokeilun tunnistus tarvitsee käyttäjätunnuksen, mutta Caddy ei lokita lomakkeen runkoa, eikä oikea hyökkääjä lähetä tunnusta otsakkeessa. Testiaineisto käytti `X-Login-User`-pyyntöotsaketta, jota oikeassa liikenteessä ei ole.
+Decision: Demosivu (A-3) asettaa `POST /login` -vastaukseen otsakkeen `X-Login-User: <syötetty tunnus>`; Caddy lokittaa sen `resp_headers`-kenttään. Parseri tallentaa sen uuteen kenttään `Request.username` (vain `POST /login`, oletus `None`). C:n `session_view` lukee `username`-kentän jo ensimmäisenä, joten C:hen ei tarvita muutosta. Salasanaa, lomakkeen runkoa tai autentikointiotsakkeita ei koskaan lokiteta.
+Consequences: Tunnusten kokeilu tunnistuu oikeasta lokimuodosta. Tunnus on henkilötieto: demo käyttää tiimin ja simulaattorien tunnuksia; oikeiden kävijöiden tunnuksia ei säilytetä pidempään kuin demo vaatii.
+Revisit if: tunnukset halutaan pseudonymisoida (HMAC) ennen lokitusta.
+

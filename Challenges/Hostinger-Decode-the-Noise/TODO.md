@@ -23,12 +23,12 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 |---|---|---|---|---|---|
 | A-1 | T+0 → 1 | Repo scaffold + S2 `str` IDs + sample fixture/parser + `traps.txt` — **merged**; 50-row fixture + login-event schema still open | P0 | M | **DONE** (str IDs); 50-row S1 later |
 | A-2 | T+1 → 4 | VPS: Docker, Caddy, TLS, domain, JSON-loki otsakkeineen — **BLOCKED: endpoint/DNS/TLS/deploy-pääsy vahvistamatta** | P0 | M | `curl https://<domain>` works and live access logs are written |
-| A-3 | T+4 → 6 | Demosivusto: sivut + CSS/JS/kuvat + `POST /login` + ansapolut | P0 | M | Ansaosumat näkyvät lokissa |
+| A-3 | T+4 → 6 | Demosivusto: sivut + CSS/JS/kuvat + `POST /login` + ansapolut; **`POST /login` asettaa vastaukseen `X-Login-User: <tunnus>`** (047) | P0 | M | Ansaosumat näkyvät lokissa |
 | A-4 | T+6 → 7 | Pikasimulaattorit (curl-skanneri + scraper) + oikea lokinäyte `samples/`:iin — fixture on synteettinen, A-4 ei valmis | P0 | S | B ja C saavat oikeaa merkittyä dataa |
 | A-5 | T+7 → 11 | Ingest: tail → `requests` → sessiointi → `sessions`; `X-Sim-Run` → `labels` | P0 | L | **PARTIAL** sample→JSON-store seed; live tail/Postgres-writer still open |
 | A-6 | T+11 → 12 | `load_sessions()`/`load_labels()` + worker kutsuu B/C | P0 | M | **PARTIAL** JSON-store loaders + SQL 001; Postgres wire-up next |
 | A-7 | T+12 → 14 | `make deploy`: yksi komento päivittää VPS:n | P0 | M | |
-| A-8 | T+14 → 18 | Täydet hyökkäyssimulaattorit: scraper, skanneri, hidas skanneri, **hajautettu tunnusten kokeilu** | P0 | L | Ks. *monta IP:tä* alla |
+| A-8 | T+14 → 18 | Täydet hyökkäyssimulaattorit: scraper, skanneri, hidas skanneri, **hajautettu tunnusten kokeilu**; merkinnät allekirjoitetaan `simrun.sign()` (046) | P0 | L | Ks. *monta IP:tä* alla |
 | A-9 | T+18 → 20 | Playwright-"ihminen" + QR-sivu "selaa 30 s" | P0 | M | **Integraatio T+20**: ihmisdataa kertyy |
 | A-10 | T+20 → 21 | **Piilotettu hyökkäys** (eri tekniikka kuin muut), yksityisesti | P0 | M | Ajetaan T+21 → 34 taustalla |
 | A-11 | T+21 → 24 | Ohut API: sessiot, sessio, kampanjat, metrics, `/healthz`, `explain`-välimuisti | P0 | M | |

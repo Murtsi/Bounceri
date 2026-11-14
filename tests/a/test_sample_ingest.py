@@ -9,6 +9,7 @@ import pytest
 from dataclasses import fields
 
 from bouncer.contracts import Campaign, IpIntel, Request, Session, SessionLabel, Verdict
+from bouncer.ingest.simrun import IngestStats
 from bouncer.ingest.sample import (
     load_sample_labels,
     load_sample_sessions,
@@ -85,13 +86,15 @@ def test_sim_run_parser_handles_missing_campaign_and_rejects_malformed_marker() 
         parse_sim_run("run-only", "7")
 
 
-def test_conflicting_simulator_truth_in_a_session_is_rejected() -> None:
+def test_conflicting_simulator_truth_gets_no_label_and_is_counted() -> None:
     records = _records()[:2]
     records[0]["request"]["headers"]["X-Sim-Run"] = ["run-a:scanner:campaign-a"]  # type: ignore[index]
     records[1]["request"]["headers"]["X-Sim-Run"] = ["run-b:scraper:campaign-b"]  # type: ignore[index]
 
-    with pytest.raises(ValueError, match="Conflicting X-Sim-Run"):
-        parse_access_records(records)
+    stats = IngestStats()
+    sessions, labels = parse_access_records(records, secret=None, stats=stats)
+    assert sessions and labels == []  # ei arvattua totuutta, mutta lukeminen jatkuu
+    assert stats.conflicting_sessions == [sessions[0].id]
 
 
 def test_sessionization_splits_after_five_minutes() -> None:

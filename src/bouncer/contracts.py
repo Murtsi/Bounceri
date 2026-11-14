@@ -28,6 +28,9 @@ class Request:
     bytes: int = 0
     headers: dict[str, str] = field(default_factory=dict)
     content_type: str | None = None
+    # Kirjautumisyrityksen käyttäjätunnus (vain POST /login), demosivun
+    # `X-Login-User`-vastausotsakkeesta. Salasanaa ei koskaan (päätös 047).
+    username: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
