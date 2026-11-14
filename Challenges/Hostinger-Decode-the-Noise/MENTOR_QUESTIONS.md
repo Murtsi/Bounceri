@@ -5,7 +5,7 @@ Status: **kysyttävä kick-offissa / Hostinger-pisteellä**. Ruksi kun vastattu;
 ## Pakolliset
 
 - [ ] **Saaako Postgres/TimescaleDB olla muualla kuin Hostinger-VPS:llä** (esim. Aiven, Neon, Tiger Cloud), jos app + Caddy pyörivät Hostingerilla?
-- [ ] **Onko Gemini saatavilla Hostinger AI Routerissa?** Julkinen markkinointi sanoo kyllä (esim. Gemini Flash); vahvista model-id `LLM_MODEL`:lle. Koodin oletus: `gemini-2.0-flash`, base `https://router.hostinger.com/v1`.
+- [ ] **Microsoft-Decision-1 Hostinger Routerissa:** vahvista tarkka model-id, endpoint, pyyntömuoto, käyttörajat ja kreditit. Generatiivinen arvioija on Featherless (päätös 048); Gemini ei ole runtime-suunnitelmassa.
 - [ ] **Kelpaako self-hosted TimescaleDB** (`timescale/timescaledb` Dockerissa VPS:llä) MLH *Best Use of Tiger Data* -sivupalkintoon, vai vaaditaanko Tiger Cloud?
 
 ## Hyödylliset
@@ -19,5 +19,5 @@ Status: **kysyttävä kick-offissa / Hostinger-pisteellä**. Ruksi kun vastattu;
 | Kysymys | Vastaus | Päätös # |
 |---|---|---|
 | DB muualla? | | |
-| Gemini Routerissa? | | |
+| Decision-1 endpoint, model-id ja rajat? | | |
 | Tiger Data self-hosted? | | |

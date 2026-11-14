@@ -40,6 +40,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
 
 ### Changed
+- [X] Featherless replaces Gemini as the selected reviewer provider; S7 requires an explicit model, separates provider/model cache entries and avoids automatic retries or paid-provider fallback. Final Decision-1 orchestration remains planned, and no live key or inference request is included (decision 048).
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
 - [A] BREAKING: S2 — `Request`-sopimukseen uusi valinnainen kenttä `username` (oletus `None`); vanha koodi toimii ennallaan (päätös 047, needs-ack)
 - [B] Ajoskripti ja piilotetun hyökkäyksen komento käyttävät C:n virallista `ip_intel_contract()`-funktiota; sessio, joka kuuluu moneen kampanjaan, saa tunnusten kokeilu -kampanjan (päätös 042)
