@@ -170,3 +170,10 @@ Decision: Add SQLAlchemy investigation tables on PostgreSQL 16 in production, wi
 Consequences: Repeated evidence/configuration requests are idempotent; failed workers do not silently retry paid calls. Missing crawler verification provenance stays unknown, even if an older worker recorded a boolean. Schema initialization runs once before concurrent services start.
 Revisit if: an authenticated multi-tenant product requires migrations, per-account ledgers and separately governed publication.
 
+### 059 — Owner-approved dual Featherless review and controlled manual enforcement
+Date: 2026-11-14
+Context: The owner approved implementation, then selected Featherless for both bounded decision and final review when native Microsoft Decision could not be verified through Hostinger. The owner also required preserving the existing GitHub dashboard.
+Decision: Keep local detection independent. Use two explicitly identified Featherless roles, at most two requests per review, no retries or provider substitution. The bounded role sees original aggregates without local predictions; the final reviewer sees evidence and the preceding assessment. Enforce typed evidence checks and preserve uncertainty. Existing dashboard remains default; investigations are additive. Enforcement is an administrator-approved, HMAC-authenticated, actor-scoped manual test policy with 60-second default/300-second maximum expiry, actual 403/429 counters and immediate revoke. It is labelled manual_demo_override because aggregate evidence does not prove a demo actor's identity.
+Consequences: Never claim Microsoft Decision ran for a Featherless call, that two calls are independent votes, or that test enforcement establishes evasion-resistant Internet blocking. Native Hostinger remains gated. Actual credentials, pricing/access metadata and a bounded validation experiment are required before live AI activation; missing access leaves an honest unavailable state.
+Revisit if: evidence linkage and held-out measurements justify a different review or enforcement policy.
+

@@ -16,7 +16,9 @@ from .config import (
 )
 from .providers import (
     HttpTransport,
+    decision_chat_request,
     decision_request,
+    parse_decision_chat_response,
     parse_decision_response,
     parse_reviewer_response,
     reviewer_request,
@@ -93,7 +95,11 @@ class ReviewRunner:
 
     def _stage(self, job_id, stage, cfg, packet, decision=None):
         body = (
-            decision_request(cfg.model, packet)
+            (
+                decision_chat_request(cfg.model, packet)
+                if cfg.provider == "featherless"
+                else decision_request(cfg.model, packet)
+            )
             if stage == "decision_model"
             else reviewer_request(cfg.model, packet, decision)
         )
@@ -135,7 +141,7 @@ class ReviewRunner:
             return None
         actual, usage, request_id = usage_summary(response, cfg.provider)
         self.store.settle_request(reservation_id, actual, usage, request_id)
-        if stage == "reviewer" and usage.get("completion_tokens", 0) > MAX_OUTPUT_TOKENS:
+        if cfg.provider == "featherless" and usage.get("completion_tokens", 0) > MAX_OUTPUT_TOKENS:
             self.store.finish_job(job_id, "unavailable", "provider_output_limit_exceeded")
             return None
         if actual is not None and actual > cfg.maximum_cost_microusd:
@@ -145,7 +151,11 @@ class ReviewRunner:
             return None
         try:
             result = (
-                parse_decision_response(response, cfg.expected_model)
+                (
+                    parse_decision_chat_response(response, cfg.expected_model)
+                    if cfg.provider == "featherless"
+                    else parse_decision_response(response, cfg.expected_model)
+                )
                 if stage == "decision_model"
                 else parse_reviewer_response(response, packet, cfg.expected_model)
             )

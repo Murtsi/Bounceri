@@ -15,7 +15,10 @@ def main(argv=None, *, store_factory=None, transport=None) -> int:
     parser = argparse.ArgumentParser(description="Bounceri advisory review worker (no retries)")
     parser.add_argument("--once", action="store_true", help="Claim at most one job and exit")
     parser.add_argument("--capabilities", action="store_true", help="Report sanitized capabilities")
-    parser.add_argument("--database-url", default=os.getenv("BOUNCERI_DATABASE_URL", ""))
+    parser.add_argument(
+        "--database-url",
+        default=os.getenv("BOUNCER_DATABASE_URL", os.getenv("BOUNCERI_DATABASE_URL", "")),
+    )
     parser.add_argument("--worker-id", default="review-worker-1")
     parser.add_argument("--poll-seconds", type=float, default=5)
     args = parser.parse_args(argv)
@@ -24,7 +27,7 @@ def main(argv=None, *, store_factory=None, transport=None) -> int:
         print(json.dumps(capabilities(settings), sort_keys=True))
         return 0
     if not args.database_url:
-        parser.error("BOUNCERI_DATABASE_URL or --database-url is required")
+        parser.error("BOUNCER_DATABASE_URL or --database-url is required")
     if not 1 <= args.poll_seconds <= 60:
         parser.error("--poll-seconds must be between 1 and 60")
     if store_factory is None:

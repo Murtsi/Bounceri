@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
-PROMPT_VERSION = "traffic-review-v1"
+PROMPT_VERSION = "traffic-review-v2"
 SCHEMA_VERSION = "traffic-assessment-v1"
 MAX_OUTPUT_TOKENS = 800
 MAX_REQUEST_BYTES = 32_768
@@ -101,7 +101,7 @@ class ProviderConfig:
 
 @dataclass(frozen=True)
 class ReviewSettings:
-    decision: ProviderConfig = field(default_factory=lambda: ProviderConfig("hostinger"))
+    decision: ProviderConfig = field(default_factory=lambda: ProviderConfig("featherless"))
     reviewer: ProviderConfig = field(default_factory=lambda: ProviderConfig("featherless"))
     enabled: bool = False
 
@@ -163,9 +163,24 @@ class ReviewSettings:
                 pricing_version=env.get(prefix + "PRICING_VERSION", ""),
             )
 
+        decision_provider = env.get("BOUNCERI_DECISION_PROVIDER", "featherless").strip().lower()
+        decision_credential = (
+            "FEATHERLESS_API_KEY"
+            if decision_provider == "featherless"
+            else "HOSTINGER_ROUTER_API_KEY"
+            if decision_provider == "hostinger"
+            else ""
+        )
+        decision_endpoint = (
+            "https://api.featherless.ai/v1/chat/completions"
+            if decision_provider == "featherless"
+            else ""
+        )
         return cls(
             enabled=env.get("BOUNCERI_REVIEW_ENABLED", "").lower() == "true",
-            decision=read("BOUNCERI_DECISION_", "hostinger", "HOSTINGER_ROUTER_API_KEY"),
+            decision=read(
+                "BOUNCERI_DECISION_", decision_provider, decision_credential, decision_endpoint
+            ),
             reviewer=read(
                 "BOUNCERI_REVIEWER_",
                 "featherless",
@@ -178,6 +193,8 @@ class ReviewSettings:
 def capabilities(settings: ReviewSettings | None = None) -> dict:
     settings = settings or ReviewSettings.from_env()
     decision, reviewer = settings.decision.capability(), settings.reviewer.capability()
+    decision["role"] = "bounded_decision"
+    reviewer["role"] = "final_advisory_reviewer"
     return {
         "enabled": settings.enabled and decision["available"] and reviewer["available"],
         "decision_model": decision,

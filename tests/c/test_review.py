@@ -590,11 +590,12 @@ def test_explicit_model_policy_cannot_be_bypassed_by_verified_flags():
     assert invalid.capability()["available"] is False
 
 
-def test_transactional_store_cascade_and_idempotency_when_core_is_integrated():
+@pytest.mark.parametrize("decision_provider", ["hostinger", "featherless"])
+def test_transactional_store_cascade_and_idempotency_when_core_is_integrated(decision_provider):
     core = pytest.importorskip("bouncer.investigations")
     from bouncer.review import ReviewRunner
 
-    cfg = settings()
+    cfg = settings() if decision_provider == "hostinger" else dual_settings()
     store = core.InvestigationStore("sqlite:///:memory:")
     requests = [{"path": "/.env", "method": "GET", "status": 404}] * 2
     requests += [{"path": "/login", "method": "POST", "status": 401}] * 4
@@ -613,7 +614,8 @@ def test_transactional_store_cascade_and_idempotency_when_core_is_integrated():
         "authentication_pattern": "repeated_failures",
     }
     result["observations"][0]["evidence_id"] = "e1"
-    transport = Responses(MemoryStore(cfg.config_key), reviewer=result)
+    transport_type = Responses if decision_provider == "hostinger" else DualResponses
+    transport = transport_type(MemoryStore(cfg.config_key), reviewer=result)
     assert ReviewRunner(store, cfg, transport=transport).run_once()
     assert store.get_case(case["id"])["review"]["status"] == "completed"
     assert [r["stage"] for r in store.list_assessments(case["id"])] == [
@@ -627,5 +629,167 @@ def test_transactional_store_cascade_and_idempotency_when_core_is_integrated():
     )
     assert not ReviewRunner(store, cfg, transport=transport).run_once()
     assert store.usage()["requests"] == len(transport.requests) == 2
-    assert store.usage()["reserved_usd"] == 0.02
-    assert store.usage()["spent_usd"] == 0.001235
+    assert store.usage()["reserved_usd"] == (0.02 if decision_provider == "hostinger" else 0)
+    assert store.usage()["spent_usd"] == (
+        0.001235 if decision_provider == "hostinger" else 0.001335
+    )
+
+
+def dual_settings():
+    cfg = settings()
+    return replace(
+        cfg,
+        decision=replace(cfg.reviewer, model="fixture/decision", expected_model="fixture/decision"),
+    )
+
+
+class DualResponses:
+    def __init__(
+        self,
+        store,
+        *,
+        decision_content=None,
+        decision_model="fixture/decision",
+        decision_finish="stop",
+        decision_tokens=40,
+        reviewer=None,
+    ):
+        self.store, self.requests = store, []
+        self.decision_content, self.decision_model = decision_content, decision_model
+        self.decision_finish, self.decision_tokens = decision_finish, decision_tokens
+        self.reviewer = reviewer or recommendation()
+
+    def __call__(self, endpoint, headers, body, timeout):
+        from bouncer.review.providers import QUESTIONS
+
+        self.store.events.append(("send", endpoint))
+        self.requests.append((endpoint, headers, copy.deepcopy(body), timeout))
+        if body["model"] == "fixture/decision":
+            content = self.decision_content or json.dumps(
+                {"answers": {name: {"type": "choice", "choice": "unknown"} for name in QUESTIONS}}
+            )
+            return {
+                "model": self.decision_model,
+                "id": "decision-chat",
+                "choices": [
+                    {
+                        "finish_reason": self.decision_finish,
+                        "message": {
+                            "role": "assistant",
+                            "content": content,
+                            "reasoning_content": "private reasoning",
+                        },
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": self.decision_tokens,
+                    "cost": 0.0001,
+                },
+            }
+        return {
+            "model": "fixture/reviewer",
+            "id": "review-chat",
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {"content": json.dumps(self.reviewer)},
+                }
+            ],
+            "usage": {"prompt_tokens": 200, "completion_tokens": 70, "cost": 0.0012341},
+        }
+
+
+def test_default_selected_provider_is_featherless_without_implicit_model_activation():
+    from bouncer.review import ReviewSettings, capabilities
+
+    cfg = ReviewSettings.from_env({"FEATHERLESS_API_KEY": "fixture-only"})
+    assert cfg.decision.provider == cfg.reviewer.provider == "featherless"
+    assert cfg.decision.api_key == cfg.reviewer.api_key == "fixture-only"
+    assert cfg.decision.model == ""
+    assert capabilities(cfg)["enabled"] is False
+
+
+def test_explicit_native_hostinger_selection_keeps_native_route_fail_closed():
+    from bouncer.review import ReviewSettings
+
+    cfg = ReviewSettings.from_env(
+        {"BOUNCERI_DECISION_PROVIDER": "hostinger", "FEATHERLESS_API_KEY": "not-the-decision-key"}
+    )
+    assert cfg.decision.provider == "hostinger"
+    assert cfg.decision.endpoint == cfg.decision.api_key == ""
+    assert cfg.decision.capability()["available"] is False
+
+
+def test_dual_featherless_roles_are_separate_evidence_only_then_evidence_plus_decision():
+    from bouncer.review import ReviewRunner, capabilities
+
+    cfg = dual_settings()
+    store = MemoryStore(cfg.config_key)
+    transport = DualResponses(store)
+    assert ReviewRunner(store, cfg, transport=transport).run_once()
+    assert store.finished == ("completed", "")
+    assert len(transport.requests) == 2
+    assert capabilities(cfg)["decision_model"]["provider"] == "featherless"
+    first, final = [request[2] for request in transport.requests]
+    assert first["messages"][0]["content"] != final["messages"][0]["content"]
+    first_input = json.loads(first["messages"][1]["content"])
+    final_input = json.loads(final["messages"][1]["content"])
+    assert "prior_decision_assessment" not in first_input
+    assert "local_assessment" not in json.dumps(first_input)
+    assert "local_label" not in json.dumps(first_input)
+    assert "local_score" not in json.dumps(first_input)
+    assert "prior_decision_assessment" in final_input
+    assert "original_evidence_packet" in first_input
+    assert all(request[2]["max_completion_tokens"] == 800 for request in transport.requests)
+    assert all(request[3] == 30 for request in transport.requests)
+    assert store.settlements[0][1] == 100
+    assert store.settlements[1][1] == 1235
+    assert [row["metadata"]["provider"] for row in store.assessments] == ["featherless"] * 2
+    assert [row["metadata"]["model"] for row in store.assessments] == [
+        "fixture/decision",
+        "fixture/reviewer",
+    ]
+    assert "Microsoft" not in json.dumps(store.assessments)
+    assert "private reasoning" not in json.dumps(store.assessments)
+
+
+@pytest.mark.parametrize(
+    "options,reason",
+    [
+        ({"decision_content": "not JSON"}, "invalid_decision_output"),
+        ({"decision_content": '{"answers":{}}'}, "invalid_decision_output"),
+        ({"decision_model": "unapproved/model"}, "model_identity_mismatch"),
+        ({"decision_finish": "length"}, "invalid_decision_output"),
+        ({"decision_tokens": 801}, "provider_output_limit_exceeded"),
+    ],
+)
+def test_bad_featherless_decision_stops_before_final_role_without_retry(options, reason):
+    from bouncer.review import ReviewRunner
+
+    cfg = dual_settings()
+    store = MemoryStore(cfg.config_key)
+    transport = DualResponses(store, **options)
+    ReviewRunner(store, cfg, transport=transport).run_once()
+    assert store.finished == ("unavailable", reason)
+    assert len(transport.requests) == 1
+    assert store.settlements[0][1] == 100
+    assert not store.assessments
+
+
+def test_worker_prefers_shared_database_namespace_with_legacy_compatibility(monkeypatch):
+    from bouncer.review.worker import main
+
+    monkeypatch.setenv("BOUNCER_DATABASE_URL", "sqlite:///:memory:")
+    monkeypatch.setenv("BOUNCERI_DATABASE_URL", "sqlite:///wrong.db")
+    seen = []
+
+    def factory(url):
+        seen.append(url)
+        return MemoryStore("disabled")
+
+    assert main(["--once"], store_factory=factory) == 0
+    assert seen == ["sqlite:///:memory:"]
+    monkeypatch.delenv("BOUNCER_DATABASE_URL")
+    assert main(["--once"], store_factory=factory) == 0
+    assert seen[-1] == "sqlite:///wrong.db"

@@ -57,6 +57,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Suositeltu toimenpide jokaiselle päätökselle (`bouncer.session.actions`): kirjautumishyökkäys → rajoita, varma hyökkäys → estä, mallin botti → haaste, epävarma → seuraa; worker tallentaa `rule_id`:n ja `action`:in (päätös 055)
 
 ### Changed
+- [C] Owner-selected Featherless now supports both a bounded evidence-only decision role and a separate final advisory reviewer; actual provider/model identities are retained and native Microsoft Decision remains an explicit unavailable option until verified (decision 059).
 - [A] BREAKING: Public investigation and legacy traffic APIs expose only explicitly published synthetic demonstrations; monitored visitor data requires an administrator bearer token.
 - [X] Featherless replaces Gemini as the selected reviewer provider; S7 requires an explicit model, separates provider/model cache entries and avoids automatic retries or paid-provider fallback. Final Decision-1 orchestration remains planned, and no live key or inference request is included (decision 057).
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)

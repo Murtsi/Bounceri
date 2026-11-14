@@ -1,7 +1,9 @@
 # Advisory traffic review
 
-`ReviewRunner` claims one persistent job and performs at most one native Decision request and
-one Featherless review request. It never retries, switches models, repairs malformed output,
+`ReviewRunner` claims one persistent job and performs at most one bounded decision request and
+one final review request. Both roles default to Featherless as selected by the owner, with explicit
+model IDs and separate prompts. No model is selected or activated implicitly. The worker never
+retries, switches models, repairs malformed output,
 executes tools, or creates another job. The existing local assessment remains available on failure.
 The store owns transactions, the shared $5 ceiling, execution/request caps, immutable assessments
 and evidence/configuration job deduplication. Unknown request charges remain reserved.
@@ -20,7 +22,15 @@ The implementation bounds model packets to 16 KiB and complete serialized reques
 these are byte bounds, not claims about a tokenizer. Lower model/plan limits require a separately
 verified bound before activation.
 
-Hostinger OpenAI-compatible chat support does **not** establish native Microsoft Decision support.
+The bounded Featherless role receives original aggregate evidence and fixed choice questions.
+It does not see local predictions or any earlier model result. Its strict JSON answers contain
+only `yes`, `no`, or `unknown` for each question. The final reviewer receives the original evidence
+and validated decision assessment; its agreement is not independent corroboration. Assessment
+metadata records the actual provider and exact configured/returned model for each stage. A
+Featherless model is never represented as Microsoft-Decision-1.
+
+Native Hostinger remains an optional separately configured adapter, not a fallback. Hostinger
+OpenAI-compatible chat support does **not** establish native Microsoft Decision support.
 No native Hostinger route is supplied by default. Public Hostinger documentation advertises model
 fallback; absent verified controls, leave this capability unavailable. The adapter requires an
 explicit HTTPS native route on `router.hostinger.com`, a request model and an independently pinned
@@ -28,7 +38,8 @@ response model. It sends bounded `state`/typed `questions`, never a disguised ch
 Native billing responses are not assumed to use Featherless USD units, so their actual charge
 remains unknown and reserved until authoritative reconciliation is available.
 
-Featherless sends nonstreaming chat requests with `max_completion_tokens=800` and a 30-second HTTP
+Both Featherless roles send nonstreaming chat requests with `max_completion_tokens=800` and a
+30-second HTTP
 timeout. There is no assumed `response_format`/JSON-schema enforcement. A bounded JSON prompt and
 strict local schema validate output. Checkable observations must match original evidence, crawler
 verification requires explicit provenance, and coordination claims cannot be established by this
@@ -37,13 +48,17 @@ assessments explicitly retain that limitation. Private reasoning fields are neve
 
 Environment:
 
-- Global: `BOUNCERI_REVIEW_ENABLED=true`; `BOUNCERI_DATABASE_URL` for the worker.
+- Global: `BOUNCERI_REVIEW_ENABLED=true`; `BOUNCER_DATABASE_URL` for the worker, with
+  `BOUNCERI_DATABASE_URL` accepted only as a legacy fallback.
+- `BOUNCERI_DECISION_PROVIDER=featherless` is the default selector. Explicit `hostinger` selects
+  the optional native Decision adapter. Unsupported provider values fail closed.
 - Prefixes: `BOUNCERI_DECISION_` and `BOUNCERI_REVIEWER_`.
 - Each prefix: `ENABLED`, `MODEL`, `EXPECTED_MODEL`, `ENDPOINT`, `CONTRACT_VERIFIED`,
   `IDENTITY_VERIFIED`, `NO_FALLBACK_VERIFIED`, `PRICING_VERIFIED`, `LIMITS_VERIFIED`,
   `MAXIMUM_COST_MICROUSD`, `PRICING_VERSION`.
 - The verification/enabled flags accept `true` explicitly; missing or malformed values disable.
-- Dedicated credentials only: `HOSTINGER_ROUTER_API_KEY`, `FEATHERLESS_API_KEY`.
+- Dedicated credentials only: `FEATHERLESS_API_KEY` for both Featherless roles;
+  `HOSTINGER_ROUTER_API_KEY` only for an explicitly selected Hostinger native decision role.
   Legacy OpenAI credentials, model defaults and provider fallbacks are never consulted.
 
 `discover_featherless(api_key, model)` reads only the documented authenticated `/v1/plan` and exact
