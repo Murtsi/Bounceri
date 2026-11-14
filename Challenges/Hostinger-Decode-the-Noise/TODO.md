@@ -13,7 +13,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | PRE-1 | Hostinger-VPS, domain ja AI Router -avain käsiin | S | Murtsi | Kick-off / Hostingerin piste |
 | PRE-2 | Käydään `TEAM.md` läpi yhdessä | S | kaikki | 30 min — roolit päätetty (014) |
 | PRE-3 | Python 3.12 + Docker toimii jokaisella | S | kaikki | |
-| PRE-4 | Hostingerilta: saako DB olla muualla? Onko Gemini AI Routerissa? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | Kysymykset valmiina `MENTOR_QUESTIONS.md` — vastaukset kick-offissa |
+| PRE-4 | Hostingerilta: saako DB olla muualla? Microsoft-Decision-1:n endpoint/mallitunniste ja rajat? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? | S | Joonas | `MENTOR_QUESTIONS.md`; arvioija on Featherless (061) |
 
 ---
 

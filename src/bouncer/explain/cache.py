@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -40,7 +41,8 @@ def explanation_cache_key(
         "model_version": _get(verdict, "model_version", default=None),
         "campaign_id": _get(campaign, "id", default=None),
         "campaign_reasons": list(_get(campaign, "reasons", default=()) or ()),
-        "llm_model": model,
+        "llm_model": model if model is not None else os.getenv("LLM_MODEL", "").strip(),
+        "llm_provider": os.getenv("LLM_PROVIDER", "featherless").strip().lower(),
     }
     raw = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()

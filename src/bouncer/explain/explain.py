@@ -1,6 +1,6 @@
 """S7 — `explain(verdict, session, campaign) -> str` (C-7).
 
-LLM (Hostinger AI Router) vain syiden pohjalta. Jos avain puuttuu / kutsu
+LLM (Featherless oletuksena) vain syiden pohjalta. Jos avain puuttuu / kutsu
 epäonnistuu / malli hallusinoi → varateksti reasons-kentistä.
 """
 
@@ -129,26 +129,34 @@ def explanation_is_grounded(text: str, reasons: list[str], camp_reasons: list[st
 
 
 def _llm_explain(prompt: str) -> str | None:
-    api_key = (
-        os.getenv("HOSTINGER_AI_API_KEY")
-        or os.getenv("HOSTINGER_ROUTER_API_KEY")
-        or os.getenv("OPENAI_API_KEY")
-    )
+    provider = os.getenv("LLM_PROVIDER", "featherless").strip().lower()
+    model = os.getenv("LLM_MODEL", "").strip()
+    if not model:
+        return None
+    if provider == "featherless":
+        api_key = os.getenv("FEATHERLESS_API_KEY")
+        base_url = "https://api.featherless.ai/v1"
+    elif provider == "hostinger":
+        api_key = (
+            os.getenv("HOSTINGER_AI_API_KEY")
+            or os.getenv("HOSTINGER_ROUTER_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+        )
+        base_url = os.getenv(
+            "HOSTINGER_AI_BASE_URL",
+            os.getenv("OPENAI_BASE_URL", "https://router.hostinger.com/v1"),
+        )
+    else:
+        return None
     if not api_key:
         return None
-    # Docs: https://router.hostinger.com/v1 (OpenAI-compatible)
-    base_url = os.getenv(
-        "HOSTINGER_AI_BASE_URL",
-        os.getenv("OPENAI_BASE_URL", "https://router.hostinger.com/v1"),
-    )
-    model = os.getenv("LLM_MODEL", "gemini-2.0-flash")
     try:
         from openai import OpenAI  # type: ignore
     except ImportError:
         return None
 
     try:
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        client = OpenAI(api_key=api_key, base_url=base_url, timeout=20.0, max_retries=0)
         response = client.chat.completions.create(
             model=model,
             temperature=0.2,

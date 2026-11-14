@@ -160,3 +160,10 @@ Revisit if: tunnukset halutaan pseudonymisoida (HMAC) ennen lokitusta.
 
 `make lint` löytää 23 vanhaa huomautusta A:n ja C:n koodista (mm. `timezone.utc` → `UTC`); ei korjattu tässä, jotta muiden kesken olevaan työhön ei tule konflikteja.
 
+### 061 — Featherless replaces Gemini for the selected reviewer (numeroitu uudelleen, oli 048: numero oli jo MVP:n käytössä)
+Date: 2026-11-14
+Context: The owner selected the Decision-1 plus final-review architecture and explicitly removed Gemini because no Gemini API key is available.
+Decision: Use Featherless for the planned generative reviewer. Existing S7 defaults to `LLM_PROVIDER=featherless`, requires an explicit `LLM_MODEL` and `FEATHERLESS_API_KEY`, and keeps its local fallback. Hostinger is an explicit legacy explanation option and the intended Decision-1 route, subject to endpoint/model verification. No default Gemini model or automatic cross-provider fallback is used.
+Consequences: Cache keys distinguish configured provider/model; SDK retries are disabled and responses are capped. Actual model access, pricing and the total $5 usage ledger remain preconditions for enabling the future orchestration path. This change does not implement final model-based verdicts or persist an API key.
+Revisit if: held-out evaluation shows another available reviewer has better quality/cost, with explicit owner approval before changing provider.
+
