@@ -284,24 +284,17 @@
 
 /* --- Syvyys dashboardissa: perspektiivilattia ja kallistuva paneeli -------------- */
 .overview-stack { position:relative; isolation:isolate; }
-/* Lattia: horisontti noin kolmannes alas, ruudukko kääntyy siitä katsojaa kohti (rotateX
-   saranoituna horisonttiin), viivat suppenevat horisonttiin. Horisontissa hento valo,
-   yläpuolella revontulimainen hehku ja hienojakoinen kohina (ei raitoja liukuvärissä). */
-.depth-floor { position:absolute; z-index:-1; top:-96px; left:0; right:0; height:600px; overflow:hidden; pointer-events:none; perspective:340px; perspective-origin:50% 22%; -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 42%,transparent 62%); mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 42%,transparent 62%); }
+/* Yleiskuvan tausta: revontulimainen liukuväri ja hienojakoinen kohina (ei raitoja liukuvärissä). */
+.depth-floor { position:absolute; z-index:-1; top:-96px; left:0; right:0; height:600px; overflow:hidden; pointer-events:none; -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 42%,transparent 62%); mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 42%,transparent 62%); }
 .depth-floor::before { content:""; position:absolute; inset:0; background:radial-gradient(ellipse 45% 26% at 50% 22%,rgba(197,239,93,.16),transparent 70%),radial-gradient(ellipse 30% 22% at 22% 22%,rgba(38,160,136,.12),transparent 70%),radial-gradient(ellipse 28% 20% at 80% 20%,rgba(79,146,224,.08),transparent 70%); filter:blur(8px); }
 .depth-floor::after { content:""; position:absolute; inset:0; opacity:.06; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.depth-horizon { position:absolute; left:8%; right:8%; top:22%; height:1px; background:linear-gradient(90deg,transparent,rgba(228,255,154,.55),transparent); box-shadow:0 0 18px 2px rgba(197,239,93,.25); }
-.depth-floor-plane { position:absolute; left:-120%; right:-120%; top:22%; height:260%; transform-origin:50% 0; transform:rotateX(80deg); background-image:linear-gradient(rgba(197,239,93,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(197,239,93,.09) 1px,transparent 1px); background-size:44px 44px; -webkit-mask-image:linear-gradient(to bottom,transparent,#000 6%); mask-image:linear-gradient(to bottom,transparent,#000 6%); animation:depth-drift 7s linear infinite; }
-.depth-floor.is-paused .depth-floor-plane { animation-play-state:paused; }
-@keyframes depth-drift { to { background-position:0 44px; } }
 .depth-stage { perspective:1400px; }
 .depth-panel { position:relative; border:1px solid rgba(197,239,93,.16); border-radius:18px; padding:22px 24px 14px; background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015) 55%),rgba(12,22,16,.36); -webkit-backdrop-filter:blur(10px) saturate(130%); backdrop-filter:blur(10px) saturate(130%); box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 1px 2px rgba(0,0,0,.4),0 24px 48px -28px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25); transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transform-style:preserve-3d; transition:transform 600ms cubic-bezier(.16,1,.3,1); }
 .depth-panel::before { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(228,255,154,.07),transparent 60%); opacity:0; transition:opacity 300ms; }
 .depth-panel:hover::before { opacity:1; }
 .depth-panel::after { content:""; position:absolute; left:24px; right:24px; top:-1px; height:1px; pointer-events:none; background:linear-gradient(90deg,transparent,rgba(228,255,154,.55),transparent); }
 @media (prefers-reduced-motion:reduce) {
-  .depth-floor-plane { animation:none; }
-  .depth-panel { transition:none; transform:none; }
+    .depth-panel { transition:none; transform:none; }
 }
 
 /* --- Mobiilirivit --------------------------------------------------------------- */

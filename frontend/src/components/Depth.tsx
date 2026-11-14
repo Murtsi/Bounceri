@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const reduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -35,23 +35,7 @@ export function DepthPanel({ children, className }: { children: ReactNode; class
   );
 }
 
-/**
- * Perspektiivissä etenevä lattiaruudukko yleiskuvan taustalla: liike kohti katsojaa
- * kuin saapuva liikenne. Pelkkä tunnelma, ei dataa. Pysähtyy, kun ei näkyvissä.
- */
+/** Yleiskuvan taustan liukuväri ja kohina. Pelkkä tunnelma, ei dataa eikä liikettä. */
 export function DepthFloor() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([e]) => el.classList.toggle("is-paused", !e.isIntersecting));
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <div ref={ref} className="depth-floor" aria-hidden="true">
-      <div className="depth-floor-plane" />
-      <div className="depth-horizon" />
-    </div>
-  );
+  return <div className="depth-floor" aria-hidden="true" />;
 }
