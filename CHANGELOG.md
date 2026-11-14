@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- [A] Malformed or scoped client addresses are rejected per record before PostgreSQL writes, and equivalent IPv6 spellings share canonical addresses without changing opaque session IDs on replay.
 - [A] Checkpointed ingestion recovers retained numeric/gzip rotations and partial lines, detects changed source prefixes, preserves committed session ownership for late/bridging events, and keeps signed-label conflicts invalid across eviction/restart; observed missing segments are reported.
 - [A] Investigation history uses bounded pages and three SQL reads rather than three queries per case; server-side origin filtering preserves private visibility, and Previous/Next controls retain access to older cases.
 - [X] Core audit regressions: malformed log records no longer stop later valid requests, origin-form double slashes retain their path, fixture investigations accept serialized sessions, and private session identity survives request retention and worker restart.

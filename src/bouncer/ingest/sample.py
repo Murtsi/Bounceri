@@ -10,6 +10,7 @@ import json
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime, timedelta
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -23,6 +24,14 @@ SESSION_IDLE = timedelta(minutes=5)
 #: Demosivu kertoo kirjautumisyrityksen tunnuksen tässä vastausotsakkeessa (päätös 047).
 LOGIN_USER_HEADER = "x-login-user"
 _FROM_ENV = object()
+
+
+
+def canonical_ip(value: Any) -> str:
+    address = str(value)
+    if "%" in address:
+        raise ValueError("a plain client IP address is required")
+    return str(ip_address(address))
 
 
 def _header_value(headers: Mapping[str, Any], name: str) -> str:
@@ -107,7 +116,7 @@ def parse_access_record(
         # Caddyn laskema client_ip: sama kuin remote_ip, ellei pyyntö tullut
         # Caddyn luottamalta proxyltä (vain paikallinen demo, päätös 050).
         # X-Forwarded-For-otsakkeeseen ei koskaan luoteta suoraan.
-        ip=str(raw_request.get("client_ip") or raw_request.get("remote_ip") or ""),
+        ip=canonical_ip(raw_request.get("client_ip") or raw_request.get("remote_ip") or ""),
         method=method,
         path=path,
         status=int(record.get("status", 0)),

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from bouncer.contracts import Request, Session, SessionLabel
-from bouncer.ingest.sample import SAMPLE_PATH, load_sample_data
+from bouncer.ingest.sample import SAMPLE_PATH, canonical_ip, load_sample_data
 
 DEFAULT_STORE = Path(__file__).resolve().parents[3] / ".bouncer_store.json"
 
@@ -65,7 +65,7 @@ def _dt(value: Any) -> datetime:
 def _request_from_dict(row: dict[str, Any]) -> Request:
     return Request(
         ts=_dt(row["ts"]),
-        ip=str(row["ip"]),
+        ip=canonical_ip(row["ip"]),
         method=str(row["method"]),
         path=str(row["path"]),
         status=int(row["status"]),
@@ -81,7 +81,7 @@ def _request_from_dict(row: dict[str, Any]) -> Request:
 def _session_from_dict(row: dict[str, Any]) -> Session:
     return Session(
         id=str(row["id"]),
-        ip=str(row["ip"]),
+        ip=canonical_ip(row["ip"]),
         user_agent=str(row["user_agent"]),
         started_at=_dt(row["started_at"]),
         ended_at=_dt(row["ended_at"]),

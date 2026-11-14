@@ -222,3 +222,7 @@ The tail verifies complete consumed-prefix hashes through opened descriptors, re
 Full fresh history is normalized before view retention and only then scored in the bounded view. Committed private event ownership cannot change when late events bridge session windows. Verified marker conflicts are sticky until that identity expires; invalidated truth is removed from historical labels. Default configured historical age is 86400 seconds; age pruning and source acknowledgement share one SQL transaction and never prune visible rows. Archive/backup lifecycle and consent withdrawal remain explicit separate operations work.
 
 Verified 616 backend tests with disposable PostgreSQL, frontend build/7 unit/36 browser checks, and an isolated packaged SQL stack with21 sessions/235 synthetic requests, advancing checkpoints, no primary JSON file and0 paid calls. The test stack's containers/network/volumes were removed. This records local implementation evidence, not a live Hostinger deployment or detector-quality result.
+
+### 069 — Canonical client IPs at the native boundary
+
+2026-11-14. Normalize plain IPv4/IPv6 addresses in the native parser and typed storage readers. Reject malformed/scoped addresses per record rather than allowing an invalid INET value to repeatedly abort a source transaction. Preserve opaque existing session IDs while normalizing their client identity. This closes reproduced PostgreSQL ingestion failures for malformed input, scoped IPv6 and expanded/compressed spellings; it does not infer that one IP identifies one person.
