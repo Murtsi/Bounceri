@@ -540,6 +540,28 @@ function EnforcementPanel({ id }: { id: string }) {
   );
 }
 
+function ReviewEligibilityNotice({
+  eligibility,
+  compact = false,
+}: {
+  eligibility?: Investigation["review_eligibility"];
+  compact?: boolean;
+}) {
+  if (eligibility?.eligible !== false) return null;
+  if (compact)
+    return <p className="mt-2 text-xs font-medium text-amber-900 dark:text-amber-200">Bounded AI review ineligible</p>;
+  return (
+    <div
+      role="status"
+      className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+    >
+      <p className="font-semibold">Bounded AI review ineligible</p>
+      <p className="mt-1">Evidence remains inspectable. This snapshot cannot be submitted for bounded AI review.</p>
+      {eligibility.reason && <p className="mt-1">{eligibility.reason}</p>}
+    </div>
+  );
+}
+
 function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: () => void; goTraffic: () => void }) {
   const query = useQuery({
     queryKey: ["investigation", id],
@@ -619,6 +641,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
               <Badge tone={review.tone}>{review.label}</Badge>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{review.description}</p>
+            <ReviewEligibilityNotice eligibility={investigation.review_eligibility} />
             {investigation.review?.reason && (
               <p className="mt-2 text-sm text-muted-foreground">Review reason: {investigation.review.reason}</p>
             )}
@@ -721,6 +744,7 @@ function CaseRow({ investigation, onPick }: { investigation: Investigation; onPi
           </div>
           <p className="mt-2 break-all font-mono text-xs text-muted-foreground">{investigation.id}</p>
           <p className="mt-1 text-xs text-muted-foreground">{dateTime(investigation.created_at)}</p>
+          <ReviewEligibilityNotice eligibility={investigation.review_eligibility} compact />
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-4">
           <div className="text-sm">

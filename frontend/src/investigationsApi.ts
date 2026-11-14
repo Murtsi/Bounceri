@@ -48,6 +48,7 @@ export interface Investigation {
   evidence_version?: string | number;
   evidence_hash?: string;
   complete?: boolean;
+  review_eligibility?: { eligible?: boolean; reason?: string | null };
   missing_information?: string[];
   evidence?: { id: string; kind?: string; data?: Record<string, unknown> }[];
   local_assessment?: LocalAssessment | null;

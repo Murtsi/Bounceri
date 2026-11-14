@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Reproducible Hostinger Docker deployment with private source capsule, PostgreSQL, bounded HTTP simulation, ingest/detection, dashboard/API and asynchronous review worker; operator smoke test verifies actual 429/403, benign isolation, expiry and revoke without paid inference.
 - [A] Add an opt-in investigation workspace with source provenance, evidence snapshots, separate assessment history and capability/budget status; preserve the existing dashboard default and navigation.
 - [A] Administrator-approved synthetic demo actor rate-limit/temporary-block policies, HMAC actor authentication, durable expiry/revoke/history and actual HTTP 403/429 counters; normal site/admin routes remain accessible.
 - [C] Asynchronous two-stage review transport, strict evidence validation and capability gates; no paid retries, automatic model substitution or enforcement authority.
@@ -58,6 +59,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Dashboardin ammattitason UI: kaikki näkymät (yleiskuva, sessiot, kampanjat, mittarit) shadcn/ui-komponenteilla, dataviz-skillin validoima paletti (ihminen → hyvä botti → haitallinen → epävarma, CVD ΔE ≥ 9,2) vaaleaan ja tummaan tilaan, vaalea/tumma-kytkin (oletus käyttöjärjestelmän mukaan), liikennekaavio ja segmentoitu jakaumapalkki taulukkonäkymineen, toimenpidemerkit tilaväreillä + kuvakkeilla, sessiosuodatin määrineen, ja Bouncer-logoanimaatio ("ouncer" pomppaa B:stä) otsikkoon ja latausnäyttöön (pois päältä, jos käyttäjä on pyytänyt vähemmän liikettä) (päätös 057)
 
 ### Changed
+- [A] Overnight simulation uses independent signed rounds, bounded retained evidence, full traffic snapshots plus scoped session investigations, and an opt-in 20-execution review experiment under the shared cap; deployment and evaluation instructions document measured versus unmeasured claims.
 - [C] Owner-selected Featherless now supports both a bounded evidence-only decision role and a separate final advisory reviewer; actual provider/model identities are retained and native Microsoft Decision remains an explicit unavailable option until verified (decision 059).
 - [A] BREAKING: Public investigation and legacy traffic APIs expose only explicitly published synthetic demonstrations; monitored visitor data requires an administrator bearer token.
 - [X] Featherless replaces Gemini as the selected reviewer provider; S7 requires an explicit model, separates provider/model cache entries and avoids automatic retries or paid-provider fallback. Final Decision-1 orchestration remains planned, and no live key or inference request is included (decision 057).
@@ -92,6 +94,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [X] Scaffoldin käyttämättömät pohjat: `docs/IDEA.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/TEAM.md`, juuren `TODO.md` (korvattu `Challenges/Hostinger-Decode-the-Noise/`-tiedostoilla), `src/README.md`, `tests/README.md`, issue-pohjat ja tyhjä `Challenges/Challenges.MD`. Lisäksi valitsematta jääneen Valio Aimo -haasteen suunnitelma ja `j26.html`. Kaikki löytyvät git-historiasta.
 
 ### Fixed
+- [A] Synthetic traffic refuses redirects so signed labels cannot escape the owned target; deployment excludes private JSON/TXT exports, correctly routes custom demo subdomains and recreates all processes for each checksummed release.
+- [A] Investigation UI distinguishes bounded-AI eligibility from source completeness and provider availability, retaining evidence inspection for oversized snapshots.
 - [C] Both model decision routes validate attack/coordination prerequisites; malformed or unrepresentable billing values remain reserved and visibly stop review without retry.
 - [A] Validate complete immutable model packets before queueing paid review; oversized/incomplete cases remain inspectable and return explicit review_ineligible without reserving funds or counting execution.
 - [A] Investigation details show actual model provenance, evidence gaps, review failure reasons, manual approval basis and durable spending halts without changing the existing dashboard default.

@@ -98,6 +98,8 @@ secrets.*
 *.tfstate.*
 .worktrees/
 graphify-out/
+compose.private.json
+review-settings.private.json
 
 # MVP: workerin store (docker volume)
 /data/store.json

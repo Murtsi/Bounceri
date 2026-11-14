@@ -150,12 +150,19 @@ def build_request(
     return urllib.request.Request(base + step.path, data=data, headers=headers, method=step.method)
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # A simulator label/signature must never follow a redirect to another service.
+        return None
+
+
 def _play(base: str, actor: Actor, run_id: str, secret: str, t0: float, results: list) -> None:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
     for step in actor.steps:
         time.sleep(max(0.0, t0 + step.at - time.monotonic()))
         req = build_request(base, actor, step, run_id, secret)
         try:
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with opener.open(req, timeout=10) as r:
                 status = r.status
         except urllib.error.HTTPError as e:
             status = e.code

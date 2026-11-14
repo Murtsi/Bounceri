@@ -18,6 +18,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     evidence_version: 1,
     evidence_hash: "a".repeat(64),
     complete: false,
+    review_eligibility: { eligible: false, reason: "Fixture evidence exceeds bounded AI packet limits." },
     missing_information: ["Fixture missing source provenance"],
     evidence: [
       {
@@ -47,6 +48,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     ...synthetic,
     id: "real-case",
     source: { kind: "monitored_traffic", synthetic: false },
+    complete: true,
     local_assessment: { ...synthetic.local_assessment, label: "human" },
     review: { status: "not_requested" },
   };
@@ -94,6 +96,9 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       ...synthetic,
       review: { status: reviewStatus, reason: "fixture_review_reason" },
     },
+    "/api/investigations/real-case": real,
+    "/api/investigations/real-case/assessments": [],
+    "/api/investigations/real-case/enforcements": [],
     "/api/investigations/fixture-case/assessments": [
       {
         id: "local-revision",
@@ -246,6 +251,13 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   mode = "populated";
   await reload();
   await page.getByRole("button", { name: /fixture-case/ }).waitFor();
+  check(
+    await page
+      .getByRole("button", { name: /fixture-case/ })
+      .getByText("Bounded AI review ineligible", { exact: true })
+      .isVisible(),
+    "List hides AI review ineligibility",
+  );
   check(await page.getByText("Origin unavailable", { exact: true }).isVisible(), "Unknown origin was concealed");
   await page.getByRole("combobox", { name: "Source" }).selectOption("real");
   check((await page.getByRole("button", { name: /real-case/ }).count()) === 1, "Real source filter missing real case");
@@ -253,6 +265,17 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     (await page.getByRole("button", { name: /fixture-case|unknown-origin/ }).count()) === 0,
     "Source filter misclassified evidence",
   );
+  await page.getByRole("button", { name: /real-case/ }).click();
+  await page.getByText("Bounded AI review ineligible", { exact: true }).waitFor();
+  check(
+    await page.getByText("Fixture evidence exceeds bounded AI packet limits.", { exact: true }).isVisible(),
+    "Review eligibility reason missing",
+  );
+  check(
+    (await page.getByText("Evidence snapshot is incomplete.", { exact: false }).count()) === 0,
+    "AI ineligibility was confused with source completeness",
+  );
+  await page.getByRole("button", { name: "Back to investigations", exact: true }).click();
   await page.getByRole("combobox", { name: "Source" }).selectOption("synthetic");
   await page.getByRole("button", { name: /fixture-case/ }).click();
   await page.getByRole("heading", { name: "Evidence snapshot" }).waitFor();
@@ -405,6 +428,8 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "outage distinction",
       "future modules disabled",
       "source filter",
+      "bounded AI eligibility visible in list and detail",
+      "AI eligibility distinct from source completeness",
       "null score",
       "separate history stages",
       "actual API stage grouping",
