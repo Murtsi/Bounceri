@@ -1,6 +1,6 @@
 """Ohut API (A-11, MVP vaihe 4): lukee workerin JSON-storea, ei laske mitään itse.
 
-    uv run uvicorn bouncer.api.app:app --port 8000
+    uv run uvicorn bouncer.api.app:app --port 8001
 
 Dashboardin liikenne EI kulje tarkkaillun Caddyn kautta (muuten se päätyisi
 analysoitavaan lokiin). Jos `frontend/dist` on olemassa, sama palvelu tarjoilee
