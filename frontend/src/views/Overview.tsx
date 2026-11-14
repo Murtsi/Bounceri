@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import type { CSSProperties } from "react";
 import { ChevronRight } from "lucide-react";
 import { api, type Alert } from "@/api";
 import { ActionBadge } from "@/components/badges";
 import { SplashScreen } from "@/components/BouncerLogo";
+import { OverviewSkeleton } from "@/components/Skeletons";
+import { useCountUp } from "@/lib/useCountUp";
 import { pct, SegmentedBar, TrafficChart } from "@/components/charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +22,7 @@ const ADVICE: Record<string, string> = {
 
 function AlertCard({ a, onShow }: { a: Alert; onShow: () => void }) {
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="rise gap-0 overflow-hidden py-0">
       <div className="flex flex-wrap">
         <div className="flex min-w-0 flex-[999_1_460px] flex-col gap-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -69,10 +72,15 @@ function AlertCard({ a, onShow }: { a: Alert; onShow: () => void }) {
   );
 }
 
+function HeroPct({ value }: { value: number }) {
+  const v = useCountUp(value);
+  return <p className="text-5xl font-semibold tabular-nums tracking-tight">{v} %</p>;
+}
+
 export default function Overview({ onPick, goSessions }: { onPick: (id: string) => void; goSessions: () => void }) {
   const { data: o, error } = useQuery({ queryKey: ["overview"], queryFn: api.overview });
   if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
-  if (!o) return <SplashScreen />;
+  if (!o) return <OverviewSkeleton />;
   if (o.n_sessions === 0)
     return <SplashScreen message="Odotetaan liikennettä… käynnistä simulaattorit: uv run python tools/sim/run.py" />;
   const h = o.honesty;
@@ -84,7 +92,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
       ))}
 
       <div className="flex flex-wrap gap-4">
-        <Card className="min-w-0 flex-[999_1_560px]">
+        <Card className="rise min-w-0 flex-[999_1_560px]" style={{ "--d": "80ms" } as CSSProperties}>
           <CardHeader>
             <CardTitle>Kuka sivulla kävi</CardTitle>
             <CardDescription>Liikenne aikaväleittäin</CardDescription>
@@ -93,7 +101,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
             <TrafficChart points={o.timeline.points} stepS={o.timeline.step_s} />
           </CardContent>
         </Card>
-        <Card className="min-w-0 flex-[1_1_300px]">
+        <Card className="rise min-w-0 flex-[1_1_300px]" style={{ "--d": "140ms" } as CSSProperties}>
           <CardHeader>
             <CardTitle>Sessiot</CardTitle>
             <CardDescription>{o.n_sessions} sessiota analysoitu</CardDescription>
@@ -101,7 +109,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
           <CardContent className="flex flex-col gap-5">
             {/* Näkymän ainoa hero-luku (dataviz: yksi per näkymä). */}
             <div>
-              <p className="text-5xl font-semibold tracking-tight">{pct(bad, o.n_sessions)} %</p>
+              <HeroPct value={pct(bad, o.n_sessions)} />
               <p className="text-sm text-muted-foreground">sessioista haitallisia botteja ({bad})</p>
             </div>
             <SegmentedBar counts={o.distribution} total={o.n_sessions} />
@@ -113,7 +121,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
       </div>
 
       <div className="flex flex-wrap gap-4">
-        <Card className="min-w-0 flex-[999_1_560px]">
+        <Card className="rise min-w-0 flex-[999_1_560px]" style={{ "--d": "200ms" } as CSSProperties}>
           <CardHeader>
             <CardTitle>Haitalliset toimijat nyt</CardTitle>
             <CardDescription>Bouncer suosittelee, se ei estä itse: Seuraa → Rajoita → Haaste → Estä</CardDescription>
@@ -142,7 +150,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
             )}
           </CardContent>
         </Card>
-        <Card className="min-w-0 flex-[1_1_300px]">
+        <Card className="rise min-w-0 flex-[1_1_300px]" style={{ "--d": "260ms" } as CSSProperties}>
           <CardHeader>
             <CardTitle>Kuinka usein olemme väärässä</CardTitle>
             <CardDescription>{h.synthetic ? "Simuloitu ajo — ei todistusarvoa" : "Labeloitu liikenne"}</CardDescription>

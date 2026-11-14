@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { FlaskConical } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/api";
-import { BouncerLogo } from "@/components/BouncerLogo";
+import { BouncerLogo, SplashOverlay } from "@/components/BouncerLogo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Overview from "@/views/Overview";
 import Campaigns from "@/views/Campaigns";
@@ -22,12 +22,33 @@ function time(iso: string) {
   return new Date(iso).toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
+/** Avausruutu näkyy vähintään yhden logo-pompun ajan, sitten häivytys (380 ms). */
+function useSplash(loaded: boolean): "show" | "leaving" | "gone" {
+  const [minDone, setMinDone] = useState(false);
+  const [state, setState] = useState<"show" | "leaving" | "gone">("show");
+  useEffect(() => {
+    const t = setTimeout(() => setMinDone(true), 1100);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (loaded && minDone && state === "show") setState("leaving");
+  }, [loaded, minDone, state]);
+  useEffect(() => {
+    if (state !== "leaving") return;
+    const t = setTimeout(() => setState("gone"), 400);
+    return () => clearTimeout(t);
+  }, [state]);
+  return state;
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("overview");
   const [picked, setPicked] = useState<string | null>(null);
-  const { data: s } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
+  const { data: s, isFetched } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
+  const splash = useSplash(isFetched);
   return (
     <div className="min-h-screen">
+      {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
       <header className="sticky top-0 z-10 border-b border-white/5 bg-[#08110c]/40 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
           <BouncerLogo mode="play" className="text-2xl" />

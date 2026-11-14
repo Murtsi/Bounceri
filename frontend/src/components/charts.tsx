@@ -3,6 +3,7 @@ import { ChartColumn, Table2 } from "lucide-react";
 import { LABEL_TEXT, type Label } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useCountUp } from "@/lib/useCountUp";
 import { cn } from "@/lib/utils";
 
 /** Pinoamisjärjestys = validoitu viereisyysjärjestys (dataviz). Alhaalta ylös. */
@@ -95,6 +96,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
   const max = Math.max(1, ...rows.map((r) => r.n));
   const peak = rows.find((r) => r.n === max);
   const unit = secs ? `${stepS} s` : `${stepS / 60} min`;
+  const shown = useCountUp(sum);
   // Aika-akselille noin 4 merkintää tasaisin välein: vähemmän tekstiä, ei törmäyksiä.
   const every = Math.max(1, Math.ceil(rows.length / 4));
   const ticks = new Set(rows.map((_, i) => i).filter((i) => (rows.length - 1 - i) % every === 0));
@@ -103,7 +105,7 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
     <figure className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight">{sum.toLocaleString("fi-FI")}</p>
+          <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("fi-FI")}</p>
           <figcaption className="text-xs text-muted-foreground">
             pyyntöä · {unit} välein{peak && peak.n > 0 ? ` · huippu ${peak.n} klo ${peak.label}` : ""}
           </figcaption>
@@ -168,8 +170,8 @@ export function TrafficChart({ points, stepS }: { points: Point[]; stepS: number
                   {n > 0 && (
                     // Yläpää pyöreä, pohja suora (dataviz: pyöristys vain datan päähän).
                     <div
-                      className="flex flex-col-reverse gap-[2px] overflow-hidden rounded-t-[4px]"
-                      style={{ height: `${(n / max) * 100}%`, minHeight: 6 }}
+                      className="bar-grow flex flex-col-reverse gap-[2px] overflow-hidden rounded-t-[4px] transition-[height] duration-500"
+                      style={{ height: `${(n / max) * 100}%`, minHeight: 6, "--i": i } as CSSProperties}
                     >
                       {SERIES.filter((l) => p[l] > 0).map((l) => {
                         const f = fill(l);
@@ -208,7 +210,7 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
   const label = parts.map((l) => `${LABEL_TEXT[l]} ${counts[l]} (${pct(counts[l], total)} %)`).join(", ");
   return (
     <div className="flex flex-col gap-3">
-      <div role="img" aria-label={label} className="flex h-7 gap-0.5 overflow-hidden rounded-full">
+      <div role="img" aria-label={label} className="fill-x flex h-7 gap-0.5 overflow-hidden rounded-full">
         {parts.map((l) => {
           const p = pct(counts[l], total);
           const f = fill(l);
@@ -216,7 +218,7 @@ export function SegmentedBar({ counts, total }: { counts: Record<Label, number>;
             <div
               key={l}
               className={cn(
-                "flex items-center px-3 text-xs font-semibold text-white",
+                "flex items-center px-3 text-xs font-semibold text-[#0f1a0c] transition-[width] duration-500",
                 f.className,
               )}
               style={{ width: `${(counts[l] / total) * 100}%`, ...f.style }}
