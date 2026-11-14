@@ -23,6 +23,7 @@ export interface SessionRow {
   score: number | null;
   reason: string;
   campaign_id: string | null;
+  action: Action | null;
   sim_class: string | null;
 }
 
@@ -57,6 +58,50 @@ export interface MetricsResponse {
   ingest: Record<string, unknown>;
 }
 
+export type Action = "none" | "monitor" | "rate_limit" | "challenge" | "block";
+
+export interface Alert {
+  id: string;
+  kind: string;
+  title: string;
+  n_ips: number;
+  size: number;
+  username: string | null;
+  started_at: string;
+  last_seen: string;
+  duration_s: number;
+  reasons: string[];
+  action: Action;
+  action_text: string;
+}
+
+export interface Actor {
+  kind: "campaign" | "ip";
+  id: string;
+  title: string;
+  detail: string;
+  action: Action;
+  action_text: string;
+  last_seen: string;
+}
+
+export interface Overview {
+  now: string | null;
+  updated_at: string | null;
+  n_sessions: number;
+  distribution: Record<Label, number>;
+  timeline: { step_s: number; points: ({ t: string } & Record<Label, number>)[] };
+  alerts: Alert[];
+  actors: Actor[];
+  honesty: {
+    synthetic: boolean;
+    n_humans: number;
+    false_alarms: number;
+    fpr: number | null;
+    fpr_ci95_upper: number | null;
+  };
+}
+
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(path);
   if (!r.ok) throw new Error(`${path}: ${r.status}`);
@@ -64,11 +109,20 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
+  overview: () => get<Overview>("/api/overview"),
   summary: () => get<Summary>("/api/summary"),
   sessions: () => get<SessionRow[]>("/api/sessions"),
   session: (id: string) => get<SessionDetail>(`/api/sessions/${encodeURIComponent(id)}`),
   campaigns: () => get<Campaign[]>("/api/campaigns"),
   metrics: () => get<MetricsResponse>("/api/metrics"),
+};
+
+export const ACTION_TEXT: Record<Action, string> = {
+  none: "Ei toimenpidettä",
+  monitor: "Seuraa",
+  rate_limit: "Rajoita",
+  challenge: "Haaste",
+  block: "Estä",
 };
 
 export const LABEL_TEXT: Record<Label, string> = {
