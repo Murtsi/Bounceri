@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { Network } from "lucide-react";
 import type { CSSProperties } from "react";
 import { type Label } from "@/api";
 import { api } from "@/api";
 import { LabelBadge } from "@/components/badges";
 import { ListSkeleton } from "@/components/Skeletons";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeading } from "@/components/CardIcon";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function Campaigns() {
   const { data, error } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
@@ -25,11 +27,16 @@ export default function Campaigns() {
         <li key={c.id}>
           <Card className="rise h-full" style={{ "--d": `${i * 70}ms` } as CSSProperties}>
             <CardHeader>
-              <CardDescription className="font-mono text-xs">{c.id}</CardDescription>
-              <CardTitle>{(c as { title?: string }).title ?? c.kind}</CardTitle>
-              <CardDescription>
-                <span className="tabular-nums">{c.size}</span> sessions · {c.kind}
-              </CardDescription>
+              <CardHeading
+                Icon={Network}
+                title={(c as { title?: string }).title ?? c.kind}
+                description={
+                  <>
+                    <span className="tabular-nums">{c.size}</span> sessions · {c.kind} ·{" "}
+                    <span className="font-mono text-xs">{c.id}</span>
+                  </>
+                }
+              />
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <ul className="flex flex-wrap gap-1.5">

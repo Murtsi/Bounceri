@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { Rows3, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, LABEL_TEXT, type Label } from "@/api";
 import { ActionBadge, LabelBadge } from "@/components/badges";
 import { ListSkeleton } from "@/components/Skeletons";
+import { CardHeading } from "@/components/CardIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,8 +123,7 @@ export default function Sessions({ picked, onPick }: { picked: string | null; on
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
       <Card className="rise min-w-0 flex-1 gap-3">
         <CardHeader>
-          <CardTitle>Sessions</CardTitle>
-          <CardDescription>Newest first · click a session to see why</CardDescription>
+          <CardHeading Icon={Rows3} title="All sessions" description="Newest first · click a session to see why" />
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div role="group" aria-label="Filter by class" className="flex flex-wrap gap-1.5">

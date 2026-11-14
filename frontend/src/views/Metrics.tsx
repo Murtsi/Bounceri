@@ -1,16 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { TriangleAlert } from "lucide-react";
+import { CircleHelp, Cpu, EyeOff, type LucideIcon, TriangleAlert, UserX } from "lucide-react";
 import { api } from "@/api";
 import { ListSkeleton } from "@/components/Skeletons";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeading, CardIcon } from "@/components/CardIcon";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 
 const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)}%` : "—");
 
-function Tile({ title, value, note }: { title: string; value: string; note?: string }) {
+function Tile({ Icon, title, value, note }: { Icon: LucideIcon; title: string; value: string; note?: string }) {
   return (
     <Card className="rise gap-2">
       <CardHeader>
-        <CardDescription>{title}</CardDescription>
+        <div className="flex items-center gap-3">
+          <CardIcon Icon={Icon} />
+          <CardDescription>{title}</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <p className="text-3xl font-semibold tabular-nums tracking-tight">{value}</p>
@@ -31,7 +35,7 @@ export default function Metrics() {
       {(m.stub || m.synthetic_data) && (
         <div
           role="status"
-          className="flex items-start gap-3 rounded-xl border bg-card px-4 py-3 text-sm"
+          className="glass flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
           <p>
@@ -43,17 +47,17 @@ export default function Metrics() {
       )}
       <div className="grid gap-4 md:grid-cols-3">
         <Tile
+          Icon={UserX}
           title="False alarms on humans (FPR)"
           value={hide ? "—" : fmt(m.metrics.human_fpr)}
           note={`95% upper bound ${hide ? "—" : fmt(m.metrics["human_fpr_ci95_upper"])} · target under 1%`}
         />
-        <Tile title="Uncertain share" value={hide ? "—" : fmt(m.metrics["uncertain_share"])} />
-        <Tile title="Model" value={String(m.metrics["model_version"] ?? "—")} />
+        <Tile Icon={CircleHelp} title="Uncertain share" value={hide ? "—" : fmt(m.metrics["uncertain_share"])} />
+        <Tile Icon={Cpu} title="Model" value={String(m.metrics["model_version"] ?? "—")} />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>What we don&rsquo;t catch</CardTitle>
-          <CardDescription>Known weaknesses — written down, never hidden</CardDescription>
+          <CardHeading Icon={EyeOff} title="What we don’t catch" description="Known weaknesses — written down, never hidden" />
         </CardHeader>
         <CardContent>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed">

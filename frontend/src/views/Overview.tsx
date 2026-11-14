@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { CSSProperties } from "react";
-import { ChevronRight } from "lucide-react";
+import { Activity, Bot, ChartColumn, ChevronRight, Crosshair, PieChart, Scale, ShieldAlert, Users } from "lucide-react";
 import { api, type Alert } from "@/api";
 import { ActionBadge } from "@/components/badges";
 import { SplashScreen } from "@/components/BouncerLogo";
@@ -9,7 +9,10 @@ import { useCountUp } from "@/lib/useCountUp";
 import { pct, SegmentedBar, TrafficChart } from "@/components/charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeading } from "@/components/CardIcon";
+import { Kpi } from "@/components/Kpi";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { LiveFeed } from "@/views/LiveFeed";
 
 function clock(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -85,26 +88,39 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
     return <SplashScreen message="Waiting for traffic… start the simulators: uv run python tools/sim/run.py" />;
   const h = o.honesty;
   const bad = o.distribution.bad_bot;
+  const pts = o.timeline.points;
+  const totals = pts.map((p) => p.human + p.good_bot + p.bad_bot + p.uncertain);
+  const requests = totals.reduce((x, y) => x + y, 0);
+  const badReq = pts.map((p) => p.bad_bot);
+  const blocked = o.actors.filter((x) => x.action === "block").length;
+  const d = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
   return (
     <div className="flex flex-col gap-4">
+      {/* Tunnusluvut: neljä vastausta yhdellä silmäyksellä. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <Kpi Icon={Activity} label="Requests" value={requests} note={`last ${pts.length} × ${o.timeline.step_s} s`} spark={totals} color="var(--ink-muted)" />
+        <Kpi Icon={Users} label="Sessions" value={o.n_sessions} note={`${o.distribution.human} human · ${o.distribution.good_bot} good bot`} delay={60} />
+        <Kpi Icon={Bot} label="Bad bots" value={bad} note={`${pct(bad, o.n_sessions)}% of sessions`} spark={badReq} color="var(--series-bad)" delay={120} />
+        <Kpi Icon={ShieldAlert} label="Live attacks" value={o.alerts.length} note={`${blocked} actors to block`} delay={180} accent={o.alerts.length > 0} />
+      </div>
+
       {o.alerts.map((a) => (
         <AlertCard key={a.id} a={a} onShow={goSessions} />
       ))}
 
-      <div className="flex flex-wrap gap-4">
-        <Card className="rise min-w-0 flex-[999_1_560px]" style={{ "--d": "80ms" } as CSSProperties}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="rise min-w-0 lg:col-span-2" style={d(80)}>
           <CardHeader>
-            <CardTitle>Who came knocking</CardTitle>
-            <CardDescription>Traffic over time</CardDescription>
+            <CardHeading Icon={ChartColumn} title="Who came knocking" description="Traffic over time, by verdict" />
           </CardHeader>
           <CardContent>
             <TrafficChart points={o.timeline.points} stepS={o.timeline.step_s} />
           </CardContent>
         </Card>
-        <Card className="rise min-w-0 flex-[1_1_300px]" style={{ "--d": "140ms" } as CSSProperties}>
+
+        <Card className="rise min-w-0" style={d(140)}>
           <CardHeader>
-            <CardTitle>Sessions</CardTitle>
-            <CardDescription>{o.n_sessions} sessions analysed</CardDescription>
+            <CardHeading Icon={PieChart} title="Traffic mix" description={`${o.n_sessions} sessions analysed`} />
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             {/* Näkymän ainoa hero-luku (dataviz: yksi per näkymä). */}
@@ -118,13 +134,14 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
             </p>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="flex flex-wrap gap-4">
-        <Card className="rise min-w-0 flex-[999_1_560px]" style={{ "--d": "200ms" } as CSSProperties}>
+        <Card className="rise min-w-0 lg:col-span-2" style={d(200)}>
           <CardHeader>
-            <CardTitle>Bad actors right now</CardTitle>
-            <CardDescription>Bouncer recommends, it doesn&rsquo;t block on its own: Monitor → Rate-limit → Challenge → Block</CardDescription>
+            <CardHeading
+              Icon={Crosshair}
+              title="Bad actors right now"
+              description="Bouncer recommends, it doesn’t block on its own: Monitor → Rate-limit → Challenge → Block"
+            />
           </CardHeader>
           <CardContent>
             {o.actors.length === 0 ? (
@@ -135,7 +152,7 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
                   <li key={a.id}>
                     <button
                       onClick={() => (a.kind === "ip" ? onPick(a.id) : goSessions())}
-                      className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-lg px-2 py-3 text-left outline-none hover:bg-muted/60 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                      className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl px-2 py-3 text-left outline-none hover:bg-white/[0.05] focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                       <span className="flex min-w-0 flex-[999_1_280px] flex-col gap-0.5">
                         <span className="font-medium">{a.title}</span>
@@ -150,34 +167,39 @@ export default function Overview({ onPick, goSessions }: { onPick: (id: string) 
             )}
           </CardContent>
         </Card>
-        <Card className="rise min-w-0 flex-[1_1_300px]" style={{ "--d": "260ms" } as CSSProperties}>
+
+        <Card className="rise min-w-0" style={d(260)}>
           <CardHeader>
-            <CardTitle>How often we&rsquo;re wrong</CardTitle>
-            <CardDescription>{h.synthetic ? "Simulated run — proves nothing" : "Labelled traffic"}</CardDescription>
+            <CardHeading
+              Icon={Scale}
+              title="How often we’re wrong"
+              description={h.synthetic ? "Simulated run — proves nothing" : "Labelled traffic"}
+            />
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {h.n_humans === 0 ? (
               <p className="text-sm">No labelled humans yet.</p>
             ) : (
-              <div className="rounded-lg bg-muted/60 p-4">
+              <div className="rounded-2xl bg-white/[0.04] p-4">
                 <p className="text-2xl font-semibold">
                   {h.false_alarms} / {h.n_humans} humans
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   flagged as bots. The sample is small: the true rate could be as high as{" "}
-                  <span className="font-medium text-foreground">
-                    {Math.round((h.fpr_ci95_upper ?? 0) * 100)}%
-                  </span>{" "}
+                  <span className="font-medium text-foreground">{Math.round((h.fpr_ci95_upper ?? 0) * 100)}%</span>{" "}
                   (95% upper bound).
                 </p>
               </div>
             )}
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Target: under 1% false alarms on humans. Claiming that needs about 300 human sessions of real
-              traffic.
+              Target: under 1% false alarms on humans. Claiming that needs about 300 human sessions of real traffic.
             </p>
           </CardContent>
         </Card>
+
+        <div className="rise min-w-0 lg:col-span-3" style={d(320)}>
+          <LiveFeed onPick={onPick} />
+        </div>
       </div>
     </div>
   );
