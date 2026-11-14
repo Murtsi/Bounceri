@@ -16,6 +16,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [B] Deterministic fit/calibration/test partitioning keeps complete declared actor/run/campaign components together across sources and full time intervals; unknown identities and boundary-straddling components are quarantined with private exact-reference manifests. Frozen orchestration and production-publication gates remain in progress.
 - [A] BREAKING: Additive migration 007 stores private pseudonymous study subjects, consented collection windows and append-only session reviews separately from simulator labels; dedicated-source withdrawal atomically erases collection payloads while preserving financial audit and minimal revocation tombstones.
 - [B] Private operator enrollment, bounded inspection and review commands require the inspected native session digest and annotation revision; changed content, revoked consent and newer rejected reviews cannot enter the current human-reference subset. Automation and intent remain separate observations, with no inferred bot truth or published quality claims.
 - [A] BREAKING: Source-scoped runtime health and explicit investigation origin bindings use additive migrations 005–006; probes separate liveness, ingest lag, traffic age and optional review availability without provider calls.
