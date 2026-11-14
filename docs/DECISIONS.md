@@ -236,3 +236,7 @@ The worker captures each observation before cache eviction and retains the activ
 Packet validation rejects unknown nested keys, incoherent DNS status, invalid feature/count types, duplicate/missing/aggregate member references and inconsistent campaign counts. Decision input strips local rule IDs along with local labels/scores. Prompt version v4 reflects the new context, but coordination remains unknown and candidate relationships do not establish a common operator. Deterministic probe/trap evidence is still required for maliciousness/restrictive suggestions; all model output remains advisory.
 
 Synthetic generator v2 adds transparent bounded-monitor/shared-NAT login controls. The previously viewed benchmark stays frozen; no new real-world accuracy or hidden-attack claim is made. Owner steering confirms permitted public data mixed with consented human activity as the intended later evaluation sources.
+
+### 071 — Untrusted authentication bytes must not hide observations
+
+2026-11-15. Compare administrator and controlled-actor credentials as bytes, and reject non-ASCII simulator signatures safely. Previously a non-ASCII string made compare_digest raise TypeError: admin/probe requests returned 500 and valid traffic carrying the malformed simulator signature was dropped by the tolerant parser. Invalid signatures now remove only untrusted labels, preserve traffic and increment unsigned markers. These are boundary fixes, not an expansion of actor authority or automatic enforcement.

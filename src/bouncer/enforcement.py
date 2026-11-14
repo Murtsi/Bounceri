@@ -72,7 +72,11 @@ def verify_token(actor_id: str, token: str, secret: str | None = None) -> bool:
     if actor_id not in ACTORS:
         return False
     expected = issue_token(actor_id, secret)
-    return hmac.compare_digest(expected, token)
+    try:
+        supplied = token.encode("ascii")
+    except UnicodeError:
+        return False
+    return hmac.compare_digest(expected.encode("ascii"), supplied)
 
 
 class EnforcementRuntime:

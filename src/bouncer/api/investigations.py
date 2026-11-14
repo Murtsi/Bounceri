@@ -31,7 +31,9 @@ MAX_IMPORT_BYTES = 10 * 1024 * 1024
 def is_admin(request: Request) -> bool:
     token = os.getenv("BOUNCER_ADMIN_TOKEN", "")
     supplied = request.headers.get("authorization", "")
-    return bool(token) and hmac.compare_digest(supplied, "Bearer " + token)
+    return bool(token) and hmac.compare_digest(
+        supplied.encode("utf-8"), ("Bearer " + token).encode("utf-8")
+    )
 
 
 def require_admin(request: Request) -> None:

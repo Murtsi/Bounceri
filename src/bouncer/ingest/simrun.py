@@ -36,7 +36,14 @@ def sign(marker: str, secret: str) -> str:
 
 
 def verify(marker: str, signature: str, secret: str) -> bool:
-    return bool(signature) and hmac.compare_digest(sign(marker, secret), signature.strip().lower())
+    if not signature:
+        return False
+    try:
+        expected = sign(marker, secret).encode("ascii")
+        supplied = signature.strip().lower().encode("ascii")
+    except UnicodeError:
+        return False
+    return hmac.compare_digest(expected, supplied)
 
 
 @dataclass(slots=True)
