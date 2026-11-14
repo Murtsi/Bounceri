@@ -1,15 +1,11 @@
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
-const TAIL = "ouncer".split("");
-
-type Mode = "play" | "loop" | "static" | "hold";
+type Mode = "play" | "static";
 
 /**
  * "Bouncer": B:n alakaari painuu sisään kuin jousi ja ponnauttaa loppusanan "ouncer" ulos,
  * joka pomppii paikalleen kuin pallo.
- * play = kerran (otsikko), loop = toistuu (latausnäyttö), static = ei liikettä,
- * hold = vain B näkyy (odottaa avausruudun poistumista, sitten play).
+ * play = liike kerran, sana jää näkyviin; static = valmis logo ilman liikettä.
  * prefers-reduced-motion poistaa animaation (index.css).
  */
 export function BouncerLogo({ mode = "play", className }: { mode?: Mode; className?: string }) {
@@ -20,9 +16,7 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
       className={cn(
         "inline-flex select-none items-baseline font-bold tracking-tight",
         mode === "play" && "bouncer-play",
-        mode === "loop" && "bouncer-loop",
         mode === "static" && "bouncer-static",
-        mode === "hold" && "bouncer-hold",
         className,
       )}
     >
@@ -44,22 +38,17 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
       </svg>
       {/* "ouncer" yhtenä sanana: syntyy B:n alakaaresta ja pomppii paikalleen. */}
       <span aria-hidden="true" className="bouncer-tail">
-        {TAIL.map((ch, i) => (
-          // Jokainen kirjain värähtää laskeutuessa, porrastetusti vasemmalta oikealle.
-          <span key={i} className="bouncer-letter" style={{ "--i": i } as CSSProperties}>
-            {ch}
-          </span>
-        ))}
+        ouncer
       </span>
     </span>
   );
 }
 
-/** Pomppiva logo + liukuva lime-viiva. */
+/** Logo ponnahtaa kerran + liukuva lime-viiva kertoo, että ladataan. */
 function Loader({ message }: { message: string }) {
   return (
     <>
-      <BouncerLogo mode="loop" className="text-6xl" />
+      <BouncerLogo mode="play" className="text-6xl" />
       <div className="h-0.5 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
         <div className="sweep h-full w-2/5 rounded-full bg-primary" />
       </div>

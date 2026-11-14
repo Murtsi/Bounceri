@@ -22,12 +22,12 @@ function time(iso: string) {
   return new Date(iso).toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-/** Latauslogon yksi kierros (index.css: bowl-spring-loop / tail-bounce-loop). */
-const LOOP_MS = 2600;
+/** Logon ponnahdus kestää ≈ 1,55 s (index.css: viive 490 ms + 1050 ms). */
+const LAUNCH_MS = 1600;
 
 /**
- * Avausruutu poistuu vasta, kun data on tullut JA latauslogon kierros on lopussa
- * (sana on palannut B:n kaareen) — animaatio ei katkea kesken. Vähennetty liike → heti.
+ * Avausruutu poistuu vasta, kun data on tullut JA logon ponnahdus on valmis —
+ * animaatio ei katkea kesken. Vähennetty liike → heti datan tultua.
  */
 function useSplash(loaded: boolean): "show" | "leaving" | "gone" {
   const [state, setState] = useState<"show" | "leaving" | "gone">("show");
@@ -35,8 +35,7 @@ function useSplash(loaded: boolean): "show" | "leaving" | "gone" {
   useEffect(() => {
     if (!loaded || state !== "show") return;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const elapsed = performance.now() - start;
-    const wait = reduced ? 0 : Math.ceil(Math.max(elapsed, 1) / LOOP_MS) * LOOP_MS - elapsed;
+    const wait = reduced ? 0 : Math.max(0, LAUNCH_MS - (performance.now() - start));
     const t = setTimeout(() => setState("leaving"), wait);
     return () => clearTimeout(t);
   }, [loaded, state, start]);
@@ -61,8 +60,8 @@ export default function App() {
       {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
       <header className="sticky top-0 z-10 border-b border-white/5 bg-[#08110c]/40 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          {/* Otsikon logo laukeaa vasta, kun avausruutu väistyy: sana ponnahtaa B:stä näkyvästi. */}
-          <BouncerLogo key={live ? "play" : "hold"} mode={live ? "play" : "hold"} className="text-2xl" />
+{/* Ponnahdus nähtiin avausruudulla; otsikossa logo on valmiina. */}
+          <BouncerLogo mode="static" className="text-2xl" />
           <span className="hidden text-sm text-muted-foreground sm:inline">Kuka sivulla oikeasti käy</span>
           <div className="ml-auto flex items-center gap-3 py-1.5">
             <span className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground min-[400px]:inline">

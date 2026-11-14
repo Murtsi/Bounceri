@@ -101,7 +101,7 @@
 
 /* --- Bouncer-logo: B:n alakaari painuu sisään ja ponnauttaa "ouncer"-sanan ulos ---- */
 /* Fysiikkamainen pomppu: jokaisella välillä oma käyrä (nousu hidastuu, lasku kiihtyy),
-   pompun korkeus vaimenee, alastulossa lyhyt litistys. Kirjaimet värähtävät laskeutuessa. */
+   pompun korkeus vaimenee, alastulossa lyhyt litistys. Liike tapahtuu kerran; sana jää näkyviin. */
 
 /* Alakaari = jousi: painuu sisään (kohti vartta), pidättää, laukeaa yli ja asettuu. */
 @keyframes bowl-spring {
@@ -126,72 +126,15 @@
   86% { transform: translate(0, -0.05em); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
   93%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
-/* Värähdys: kirjain heilahtaa juurensa ympäri vaimenevasti. */
-@keyframes letter-wobble {
-  0% { transform: rotate(0); }
-  14% { transform: rotate(-8deg) translateY(-0.03em); }
-  30% { transform: rotate(6deg); }
-  46% { transform: rotate(-3.5deg); }
-  62% { transform: rotate(2deg); }
-  78% { transform: rotate(-0.8deg); }
-  100% { transform: rotate(0); }
-}
 .bouncer-bowl { transform-box: fill-box; transform-origin: 0% 50%; }
 .bouncer-tail { display: inline-block; transform-origin: 0% 80%; opacity: 0; }
-.bouncer-letter { display: inline-block; transform-origin: 50% 100%; }
 .bouncer-play .bouncer-bowl { animation: bowl-spring 1300ms both; }
 /* Sana lähtee jousen lauetessa (≈ 36–44 % = 470–570 ms). */
 .bouncer-play .bouncer-tail { animation: tail-bounce 1050ms 490ms both; }
-/* Värähdys alkaa ensimmäisestä alastulosta (500 + 0,48 × 1050 ≈ 1000 ms). */
-.bouncer-play .bouncer-letter {
-  animation: letter-wobble 650ms ease-out both;
-  animation-delay: calc(1000ms + var(--i) * 45ms);
-}
 
-/* Silmukka (latausnäyttö, 2600 ms): sama liike + sana palaa kaareen. */
-@keyframes bowl-spring-loop {
-  0% { transform: scale(1, 1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  14% { transform: scale(0.56, 0.94); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  18% { transform: scale(0.52, 0.93); animation-timing-function: cubic-bezier(0.16, 0.9, 0.3, 1.25); }
-  24% { transform: scale(1.12, 1.03); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  29% { transform: scale(0.96, 0.99); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  34% { transform: scale(1.02, 1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  39%, 82% { transform: scale(1, 1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  90% { transform: scale(1.1, 1.04); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  97%, 100% { transform: scale(1, 1); }
-}
-@keyframes tail-bounce-loop {
-  0%, 19% { transform: translate(-0.36em, 0.02em) scale(0.06); opacity: 0; animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
-  22% { opacity: 1; }
-  31% { transform: translate(-0.08em, -0.55em) scale(0.96); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
-  39% { transform: translate(0, 0) scale(1.06, 0.9); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  41% { transform: translate(0, 0) scale(1, 1); animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
-  46% { transform: translate(0, -0.18em) scale(1, 1); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
-  51% { transform: translate(0, 0) scale(1.03, 0.96); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  53% { transform: translate(0, 0) scale(1, 1); animation-timing-function: cubic-bezier(0.22, 0.8, 0.36, 1); }
-  56% { transform: translate(0, -0.05em); animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.4); }
-  59%, 78% { transform: translate(0, 0) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
-  90%, 100% { transform: translate(-0.36em, 0.02em) scale(0.06); opacity: 0; }
-}
-@keyframes letter-wobble-loop {
-  0%, 39% { transform: rotate(0); }
-  42% { transform: rotate(-8deg) translateY(-0.03em); }
-  45% { transform: rotate(6deg); }
-  49% { transform: rotate(-3.5deg); }
-  53% { transform: rotate(2deg); }
-  57% { transform: rotate(-0.8deg); }
-  61%, 100% { transform: rotate(0); }
-}
-.bouncer-loop .bouncer-bowl { animation: bowl-spring-loop 2600ms infinite; }
-.bouncer-loop .bouncer-tail { animation: tail-bounce-loop 2600ms infinite; }
-.bouncer-loop .bouncer-letter {
-  animation: letter-wobble-loop 2600ms ease-out infinite;
-  animation-delay: calc(var(--i) * 45ms);
-}
 .bouncer-static .bouncer-tail { opacity: 1; }
-.bouncer-hold .bouncer-tail { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .bouncer-bowl, .bouncer-tail, .bouncer-letter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .bouncer-bowl, .bouncer-tail { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* --- Lasi ja tekstuuri ---------------------------------------------------------- */
