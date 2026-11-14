@@ -7,6 +7,8 @@ Your website has visitors. Bounceri helps you spot trouble.
 
 Bounceri is a Junction 2026 prototype for **Hostinger — Decode the Noise**. It analyses web traffic at session level and returns a verdict with the evidence behind it. When the scoring rules cannot decide, they return `uncertain`.
 
+Live dashboard: **[bounceri.tech](https://bounceri.tech)**. The traffic demo is explicitly synthetic; its Docker simulator, detector, database and dashboard run on Hostinger.
+
 ## Current state
 
 The repository contains session features and detection rules, temporal evaluation, IP intelligence, campaign detection, persistent investigations and a two-role Featherless review pipeline. Local detection works without an API key. Model review requires explicit verified settings and a shared spending reservation; it records advisory assessments separately from evidence.

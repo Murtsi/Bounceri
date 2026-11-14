@@ -18,7 +18,7 @@ external evidence for the native contract, exact model identity, enforceable no-
 behavior, access, current prices, billing units and model/plan limits. `LIMITS_VERIFIED` means the
 entire bounded request, schema and prompts fit the actual context and the full billable output
 (including reasoning tokens) fits the 800-token ceiling and conservative request charge.
-The implementation bounds model packets to 16 KiB and complete serialized requests to 32 KiB;
+The implementation bounds model packets to 12 KiB and complete serialized requests to 24 KiB;
 these are byte bounds, not claims about a tokenizer. Lower model/plan limits require a separately
 verified bound before activation.
 
@@ -46,8 +46,8 @@ Native billing responses are not assumed to use Featherless USD units, so their 
 remains unknown and reserved until authoritative reconciliation is available.
 
 Both Featherless roles send nonstreaming chat requests with `max_completion_tokens=800` and a
-30-second HTTP
-timeout. There is no assumed `response_format`/JSON-schema enforcement. A bounded JSON prompt and
+30-second absolute deadline covering connection, headers and the complete response body.
+There is no assumed `response_format`/JSON-schema enforcement. A bounded JSON prompt and
 strict local schema validate output. Checkable observations must match original evidence, crawler
 verification requires explicit provenance, and coordination claims cannot be established by this
 phase-one aggregate packet. Finite schema/evidence checks do not prove arbitrary prose entailment;

@@ -57,6 +57,22 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   let enforcementStatus = "active";
   let affectedRequests = 3;
   let enforcementMode = "populated";
+  let populatedSessions = false;
+  const publicReason = "Local cross-session relationship; attribution remains uncertain.";
+  const publicSession = {
+    id: "public-session",
+    ip: "client-c055e25963",
+    user_agent: "Redacted demo client",
+    started_at: "2026-11-14T18:13:53Z",
+    ended_at: "2026-11-14T18:16:33Z",
+    n_requests: 2,
+    label: "bad_bot",
+    score: 1,
+    reason: "Local detector label: bad_bot.",
+    action: "rate_limit",
+    sim_class: null,
+    campaign_id: "campaign-1",
+  };
   const records = () => ({
     "/api/capabilities": {
       modules: {
@@ -156,7 +172,25 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       ingest: {},
     },
     "/api/overview": { n_sessions: 0 },
-    "/api/sessions": [],
+    "/api/sessions": populatedSessions ? [publicSession] : [],
+    "/api/sessions/public-session": {
+      ...publicSession,
+      verdict: {
+        label: "bad_bot",
+        score: 1,
+        model_version: "local-detector",
+        reasons: ["Local detector label: bad_bot."],
+        verified_bot: null,
+      },
+      campaign: {
+        id: "campaign-1",
+        kind: "credential_stuffing",
+        size: 24,
+        session_ids: ["public-session"],
+        reasons: [publicReason],
+      },
+      requests: [{ ts: "2026-11-14T18:13:53Z", method: "POST", path: "/login", status: 401, username: null }],
+    },
     "/api/campaigns": [],
     "/api/metrics": {
       stub: true,
@@ -233,6 +267,27 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.getByText("models/metrics.json on stub:", { exact: false }).waitFor();
   await page.getByRole("tab", { name: "Yleiskuva", exact: true }).click();
   await page.getByText("Odotetaan liikennettä…", { exact: false }).waitFor();
+  populatedSessions = true;
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.getByRole("tab", { name: "Sessiot", exact: true }).click();
+  await page.getByRole("button", { name: "Avaa sessio public-session", exact: true }).click();
+  await page.getByRole("complementary", { name: "Sessio public-session", exact: true }).waitFor();
+  await page.waitForTimeout(650);
+  check(
+    await page
+      .getByRole("complementary", { name: "Sessio public-session", exact: true })
+      .getByText(publicReason, { exact: true })
+      .isVisible(),
+    "Actual public campaign reason missing",
+  );
+  check(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    "375px session detail overflows with actual public campaign reason",
+  );
+  const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
+  check(favicon === "/favicon.svg", "Bouncer favicon link missing");
+  const icon = await page.request.get(new URL(favicon, baseURL).href);
+  check(icon.status() === 200 && (await icon.text()).includes("<svg"), "Bouncer favicon unavailable");
   await page.getByRole("tab", { name: "Investigations", exact: true }).click();
   await page.getByText("No investigations published yet", { exact: true }).waitFor();
 
@@ -442,6 +497,8 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "seven review states",
       "history outage",
       "legacy navigation",
+      "375px session detail with actual public campaign reason",
+      "Bouncer SVG favicon",
       "GET only",
       "no browser errors",
     ],

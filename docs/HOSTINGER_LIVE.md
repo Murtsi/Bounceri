@@ -11,7 +11,8 @@ source provenance remain explicitly unavailable future modules.
 
 ## Runtime and public URLs
 
-- Dashboard/API: `https://bounceri.srv2159025.hstgr.cloud`
+- Dashboard/API: `https://bounceri.tech` and `https://www.bounceri.tech`
+- VPS preview: `https://bounceri.srv2159025.hstgr.cloud`
 - Owned demo service: `https://demo-bounceri.srv2159025.hstgr.cloud`
 - Existing Traefik terminates HTTPS. Existing Hermes and its configuration stay separate.
 
@@ -40,7 +41,7 @@ corepack pnpm run build
 Pop-Location
 uv run pytest -q
 uv export --frozen --no-dev --no-emit-project --no-hashes --output-file deploy/requirements-runtime.txt
-uv run python -m tools.hostinger.package --output C:/private/bounceri-deploy
+uv run python -m tools.hostinger.package --output C:/private/bounceri-deploy --alias bounceri.tech --alias www.bounceri.tech
 ```
 
 The output directory contains `.env.hostinger` (generated operator/database/actor
@@ -145,6 +146,8 @@ Valid evidence references still do not prove arbitrary prose is semantically tru
 5. Admin `POST /api/investigations/{id}/reviews` requests an eligible case review.
    `BOUNCERI_AUTO_REVIEW=true` optionally queues round-robin synthetic session cases;
    the default experiment cap is 20 executions, still subject to the shared ledger.
+   This is a cumulative execution ceiling including preflight jobs; to authorize
+   20 additional experiment jobs, set it to current executions + 20 (never above 100).
    Missing credentials/configuration leaves local detection and the public demo
    running with a visible unavailable review state and zero model requests.
 

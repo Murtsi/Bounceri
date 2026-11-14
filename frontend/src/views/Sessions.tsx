@@ -71,7 +71,7 @@ function SessionCard({ id, onClose }: { id: string; onClose: () => void }) {
               <ul className="mt-1.5 flex flex-wrap gap-1.5">
                 {d.campaign.reasons.map((r) => (
                   <li key={r}>
-                    <Badge variant="outline" className="font-normal">
+                    <Badge variant="outline" className="max-w-full whitespace-normal break-words font-normal">
                       {r}
                     </Badge>
                   </li>

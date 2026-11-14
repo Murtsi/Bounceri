@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from decimal import ROUND_CEILING, Decimal, DecimalException
 
@@ -24,7 +25,7 @@ QUESTIONS = {
 
 
 class HttpTransport:
-    def __init__(self, *, transport: httpx.BaseTransport | None = None):
+    def __init__(self, *, transport: httpx.AsyncBaseTransport | None = None):
         self.transport = transport
 
     def __call__(self, endpoint: str, headers: dict, body: dict, timeout: int) -> dict:
@@ -37,11 +38,15 @@ class HttpTransport:
         return self._request("GET", endpoint, headers, timeout)
 
     def _request(self, method, endpoint, headers, timeout, encoded=None):
+        return asyncio.run(self._request_with_deadline(method, endpoint, headers, timeout, encoded))
+
+    async def _request_with_deadline(self, method, endpoint, headers, timeout, encoded):
         # trust_env=False also prevents implicit proxy credentials/routing from changing the
-        # reviewed route. httpx.HTTPTransport has retries=0 unless explicitly configured.
-        transport = self.transport or httpx.HTTPTransport(retries=0)
-        with (
-            httpx.Client(
+        # reviewed route. A socket inactivity timeout alone does not bound total duration.
+        transport = self.transport or httpx.AsyncHTTPTransport(retries=0)
+        async with (
+            asyncio.timeout(timeout),
+            httpx.AsyncClient(
                 transport=transport, timeout=timeout, follow_redirects=False, trust_env=False
             ) as client,
             client.stream(method, endpoint, headers=headers, content=encoded) as response,
@@ -49,7 +54,7 @@ class HttpTransport:
             if response.status_code != 200:
                 raise ValueError("provider_http_error")
             chunks = bytearray()
-            for chunk in response.iter_bytes():
+            async for chunk in response.aiter_bytes():
                 chunks.extend(chunk)
                 if len(chunks) > MAX_RESPONSE_BYTES:
                     raise ValueError("provider_response_too_large")
@@ -223,6 +228,21 @@ def reviewer_request(model: str, packet: dict, decision: dict) -> dict:
                     "Use coordination unknown because relationship evidence is absent. "
                     "Report checkable counts only in observations, with exact evidence IDs "
                     "and field values. Rationale is brief interpretation without new facts. "
+                    "Cross-field rules are mandatory: label bad_bot requires BOTH "
+                    "automation=automated AND maliciousness=supported, plus a supporting "
+                    "evidence item with a trusted positive probe/trap count. If any part is "
+                    "unknown, use label=uncertain rather than contradicting your other fields. "
+                    "A single failed login is NOT repeated_failures: that value requires "
+                    "failed_logins >= 2 in a supporting item; use authentication_pattern=unknown "
+                    "for one failure. distributed_failed_authentication requires "
+                    "failed_logins >= 2 "
+                    "AND distinct_client_count >= 2 in the SAME supporting item. "
+                    "Every observations[].evidence_id MUST also be listed in either "
+                    "supporting_evidence_ids or contradicting_evidence_ids. Never put an ID in "
+                    "both lists. Omit an observation if you cannot give an exact scalar count "
+                    "or boolean from that evidence item. Do not put maps/arrays "
+                    "in observation.value. "
+                    "Use at most four observations and a short rationale to fit the output budget. "
                     "Preserve benign alternatives, contradictions, missing evidence, "
                     "and disagreement. "
                     "Do not provide or request private chain-of-thought. Schema: "
