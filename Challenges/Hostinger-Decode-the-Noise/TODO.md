@@ -25,7 +25,7 @@ Ajat suhteessa hackin alkuun (T+0). Virallinen palautusaika: `DEADLINE = ?`
 | A-2 | T+1 → 4 | VPS: Docker, Caddy, TLS, domain, JSON-loki otsakkeineen — **BLOCKED: endpoint/DNS/TLS/deploy-pääsy vahvistamatta** | P0 | M | `curl https://<domain>` works and live access logs are written |
 | A-3 | T+4 → 6 | Demosivusto: sivut + CSS/JS/kuvat + `POST /login` + ansapolut; **`POST /login` asettaa vastaukseen `X-Login-User: <tunnus>`** (047) | P0 | M | Ansaosumat näkyvät lokissa |
 | A-4 | T+6 → 7 | Pikasimulaattorit (curl-skanneri + scraper) + oikea lokinäyte `samples/`:iin — fixture on synteettinen, A-4 ei valmis | P0 | S | B ja C saavat oikeaa merkittyä dataa |
-| A-5 | T+7 → 11 | Ingest: tail → `requests` → sessiointi → `sessions`; `X-Sim-Run` → `labels` | P0 | L | **PARTIAL** sample→JSON-store seed; live tail/Postgres-writer still open |
+| A-5 | T+7 → 11 | Ingest: tail → `requests` → sessiointi → `sessions`; `X-Sim-Run` → `labels` | P0 | L | **MVP** `bouncer.ingest.worker`: Caddy-loki → JSON-store + päätökset; Postgres-writer myöhemmin |
 | A-6 | T+11 → 12 | `load_sessions()`/`load_labels()` + worker kutsuu B/C | P0 | M | **PARTIAL** JSON-store loaders + SQL 001; Postgres wire-up next |
 | A-7 | T+12 → 14 | `make deploy`: yksi komento päivittää VPS:n | P0 | M | |
 | A-8 | T+14 → 18 | Täydet hyökkäyssimulaattorit: scraper, skanneri, hidas skanneri, **hajautettu tunnusten kokeilu**; merkinnät allekirjoitetaan `simrun.sign()` (046) | P0 | L | Ks. *monta IP:tä* alla |

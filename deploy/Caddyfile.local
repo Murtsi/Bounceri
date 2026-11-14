@@ -1,0 +1,17 @@
+# VAIN paikallinen demo (päätös 050): Caddy luottaa yksityisistä verkoista tulevaan
+# X-Forwarded-For-otsakkeeseen, jotta simulaattori voi esittää monta IP:tä yhdeltä
+# koneelta. Lokin client_ip = otsakkeen IP. ÄLÄ käytä tätä VPS:llä.
+{
+	admin off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:8080 {
+	log {
+		output file /var/log/caddy/access.log
+		format json
+	}
+	reverse_proxy site:8000
+}

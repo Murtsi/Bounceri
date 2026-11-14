@@ -48,6 +48,10 @@ def _normalised_headers(headers: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _timestamp(value: Any) -> datetime:
+    # Caddy kirjoittaa oletuksena Unix-ajan liukulukuna (esim. 1794671640.38);
+    # käsin kirjoitetut fixturet käyttävät ISO-merkkijonoa. Hyväksytään molemmat.
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return datetime.fromtimestamp(float(value), tz=UTC)
     if not isinstance(value, str):
         raise ValueError("Caddy record is missing its timestamp")
     try:
@@ -99,7 +103,10 @@ def parse_access_record(
         username = _header_value(response_headers, LOGIN_USER_HEADER).strip() or None
     request = Request(
         ts=_timestamp(record.get("ts")),
-        ip=str(raw_request.get("remote_ip") or ""),
+        # Caddyn laskema client_ip: sama kuin remote_ip, ellei pyyntö tullut
+        # Caddyn luottamalta proxyltä (vain paikallinen demo, päätös 050).
+        # X-Forwarded-For-otsakkeeseen ei koskaan luoteta suoraan.
+        ip=str(raw_request.get("client_ip") or raw_request.get("remote_ip") or ""),
         method=method,
         path=path,
         status=int(record.get("status", 0)),

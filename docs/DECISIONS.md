@@ -140,3 +140,16 @@ Decision: Demosivu (A-3) asettaa `POST /login` -vastaukseen otsakkeen `X-Login-U
 Consequences: Tunnusten kokeilu tunnistuu oikeasta lokimuodosta. Tunnus on henkilötieto: demo käyttää tiimin ja simulaattorien tunnuksia; oikeiden kävijöiden tunnuksia ei säilytetä pidempään kuin demo vaatii.
 Revisit if: tunnukset halutaan pseudonymisoida (HMAC) ennen lokitusta.
 
+## MVP (2026-11-14, Niko) — `docs/MVP.md`
+
+| # | Date | Decision | Why | Alternative rejected |
+|---|---|---|---|---|
+| 048 | 2026-11-14 | **Yhteinen `pyproject.toml` (uv, `package = false`)**: riippuvuudet `fastapi`, `uvicorn`; dev: `pytest`, `httpx`, `ruff`; pytest lukee `src/` suoraan; `uv.lock` commitoidaan. Makefilen `test`/`lint`/`fmt` käyttävät sitä | Demosivu ja API tarvitsevat FastAPI:n; yksi toistettava ympäristö koko tiimille | `uv run --with …` jokaiseen komentoon (ei lukittu, unohtuu) |
+| 049 | 2026-11-14 | **MVP ajetaan Docker Composella oikean Caddyn kanssa myös paikallisesti** (`deploy/`) | Sama kokoonpano siirtyy VPS:lle; todistaa oikean Caddy-lokimuodon | Demosivu kirjoittaa itse Caddy-muotoisen lokin (ei todista muotoa) |
+| 050 | 2026-11-14 | **Paikallinen XFF-tila:** vain paikallisessa demossa Caddy luottaa `X-Forwarded-For`-otsakkeeseen (`trusted_proxies`), jotta monen IP:n hyökkäys syntyy yhdeltä koneelta; parseri käyttää Caddyn laskemaa `client_ip`:tä (sama kuin `remote_ip` ilman luotettua proxyä). Tuotannossa pois päältä | Tunnusten kokeilu monesta IP:stä on demon kohokohta; ilman tätä kaikki paikallinen liikenne näyttää yhdeltä IP:ltä | Kampanja vain VPS:llä (MVP ei näyttäisi kohokohtaa) |
+| 051 | 2026-11-14 | **MVP:n dashboard Reactilla heti** (päätös 005) API:n yli | Tiimin valinta; sama käyttöliittymä jatkuu MVP:n jälkeen | Yksinkertainen HTML ensin |
+| 052 | 2026-11-14 | **Demosivu polussa `src/bouncer/site/`** (TEAM.md: `src/site/`), projekti asennetaan pakettina (hatchling, src-rakenne) | Paketti nimeltä `site` törmäisi Pythonin vakiomoduuliin `site`; pakettina asennettuna `bouncer.*` toimii kaikkialla (uvicorn, Docker, skriptit) ilman `PYTHONPATH`-kikkoja | `src/site/` + `PYTHONPATH=src` jokaiseen komentoon |
+| 053 | 2026-11-14 | **Varma sääntö: C:n kirjautumishyökkäyskampanja (`credential_stuffing`, `distributed_login_spray`, ≥ 3 sessiota) → `bad_bot`**; syynä kampanjan oma kuvaus. `behavior_cluster` ei laukaise sääntöä | Tunnusten kokeilu -sessio on usein yksi pyyntö, josta B ei näe mitään yksinään; C:n havainto sessioiden yli on vahva. MVP:ssä behavior_cluster niputti simuloidut ihmiset, joten se ei ole varma | Malli oppii kampanjan painon (vaatii kampanjoita opetusdatassa), kaikki kampanjatyypit (väärät positiiviset ihmisille) |
+
+`make lint` löytää 23 vanhaa huomautusta A:n ja C:n koodista (mm. `timezone.utc` → `UTC`); ei korjattu tässä, jotta muiden kesken olevaan työhön ei tule konflikteja.
+

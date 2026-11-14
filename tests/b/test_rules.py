@@ -130,3 +130,38 @@ def test_verdict_shape(make):
 def test_score_default_traps_file_missing_is_safe():
     # deploy/traps.txt ei ole vielä olemassa (A, S11) → oletuspolku toimii silti.
     assert score(human_session(), None, None).label == "uncertain"
+
+
+# --- kirjautumishyökkäys C:n kampanjasta (päätös 053) -----------------------------
+
+from bouncer.contracts import Campaign  # noqa: E402
+
+
+def _login_session():
+    return session([req(0, "/login", method="POST", ua=CURL_UA, status=401)], ua=CURL_UA)
+
+
+@pytest.mark.parametrize("kind", ["credential_stuffing", "distributed_login_spray"])
+def test_login_attack_campaign_is_bad_bot(kind):
+    camp = Campaign(
+        "stuffing:admin", kind, ("1", "2", "3", "4"), ("username 'admin' failed from 4 IPs",)
+    )
+    v = score(_login_session(), None, camp, traps=NO_TRAPS)
+    assert v.label == "bad_bot" and v.score == 1.0
+    assert v.reasons[0].startswith(f"Kuuluu kirjautumishyökkäykseen ({kind}, 4 sessiota)")
+    assert "failed from 4 IPs" in v.reasons[0]
+
+
+def test_behavior_cluster_is_not_a_certain_rule():
+    camp = Campaign("behavior:1", "behavior_cluster", ("1", "2", "3", "4", "5", "6"), ())
+    assert score(human_session(), None, camp, traps=NO_TRAPS).label == "uncertain"
+
+
+def test_small_login_campaign_is_not_trusted():
+    camp = Campaign("stuffing:x", "credential_stuffing", ("1", "2"), ())
+    assert score(_login_session(), None, camp, traps=NO_TRAPS).label == "uncertain"
+
+
+def test_login_attack_rule_needs_network_signals():
+    # Ablaatio ilman C:tä: kampanjaa ei ole → sääntö ei laukea.
+    assert score(_login_session(), None, None, traps=NO_TRAPS).label == "uncertain"

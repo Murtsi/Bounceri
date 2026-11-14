@@ -3,10 +3,10 @@ SHELL := bash
 
 # --- project commands: set these once you pick a stack ------------------------
 DEV_CMD   ?= echo "DEV_CMD not set - add your dev server command to the Makefile" && exit 1
-TEST_CMD  ?= echo "TEST_CMD not set - add your test command to the Makefile" && exit 1
-LINT_CMD  ?= echo "LINT_CMD not set - add your lint command to the Makefile" && exit 1
+TEST_CMD  ?= uv run pytest -q
+LINT_CMD  ?= uv run ruff check src tests notebooks
 BUILD_CMD ?= echo "BUILD_CMD not set - add your build command to the Makefile" && exit 1
-FMT_CMD   ?= echo "FMT_CMD not set - add your formatter command to the Makefile" && exit 1
+FMT_CMD   ?= uv run ruff format src tests notebooks
 
 -include .env
 export

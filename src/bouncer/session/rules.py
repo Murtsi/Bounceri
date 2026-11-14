@@ -15,7 +15,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from bouncer.contracts import IpIntel, Label, Session
+from bouncer.contracts import Campaign, IpIntel, Label, Session
 from bouncer.session import features as f
 
 #: A:n ansalista (S11). Polku per rivi, `#` = kommentti. Puuttuu → ei ansoja.
@@ -23,6 +23,12 @@ TRAPS_PATH = Path(__file__).resolve().parents[3] / "deploy" / "traps.txt"
 
 #: Montako *eri* haavoittuvuuspolkua tarvitaan varmaan päätökseen (päätös 019).
 VULN_PATHS_CERTAIN = 2
+
+#: C:n kampanjatyypit, jotka ovat kirjautumishyökkäyksiä → varma `bad_bot` (päätös 053).
+#: `behavior_cluster` EI kuulu tänne: MVP:ssä se niputti simuloidut ihmiset kampanjaksi.
+LOGIN_ATTACK_CAMPAIGNS = frozenset({"credential_stuffing", "distributed_login_spray"})
+#: Vähintään näin monta sessiota kampanjassa, ennen kuin B luottaa siihen.
+CAMPAIGN_MIN_SESSIONS = 3
 
 #: Hakukonebotit, jotka C:n `ip_intel()` (S4) oikeasti varmistaa DNS:llä. Lista
 #: PITÄÄ pitää samana kuin C:n `network/bots.py`: jos UA on crawler, jota C ei
@@ -122,8 +128,31 @@ def vuln_path_rule(session: Session) -> RuleHit | None:
     )
 
 
+def login_attack_rule(campaign: Campaign | None) -> RuleHit | None:
+    """C löysi kirjautumishyökkäyksen useasta sessiosta; tämä sessio kuuluu siihen.
+
+    Yksittäinen tunnusten kokeilu -sessio on usein yksi pyyntö, joten B ei näe
+    siitä mitään yksinään — päätös perustuu C:n sessioiden yli tekemään havaintoon.
+    """
+    if campaign is None or campaign.kind not in LOGIN_ATTACK_CAMPAIGNS:
+        return None
+    if len(campaign.session_ids) < CAMPAIGN_MIN_SESSIONS:
+        return None
+    detail = f": {campaign.reasons[0]}" if campaign.reasons else ""
+    return RuleHit(
+        "login_attack_campaign",
+        "bad_bot",
+        1.0,
+        f"Kuuluu kirjautumishyökkäykseen ({campaign.kind}, {len(campaign.session_ids)} "
+        f"sessiota){detail}",
+    )
+
+
 def evaluate(
-    session: Session, intel: IpIntel | None, traps: frozenset[str] = frozenset()
+    session: Session,
+    intel: IpIntel | None,
+    traps: frozenset[str] = frozenset(),
+    campaign: Campaign | None = None,
 ) -> list[RuleHit]:
     """Kaikki osuvat varmat säännöt prioriteettijärjestyksessä."""
     # Varmistettu hakukonebotti ensin: IP:n DNS-varmistusta ei voi väärentää, mutta
@@ -134,6 +163,7 @@ def evaluate(
         trap_rule(session, traps),
         fake_crawler_rule(session, intel),
         vuln_path_rule(session),
+        login_attack_rule(campaign),
     )
     return [h for h in candidates if h is not None]
 
