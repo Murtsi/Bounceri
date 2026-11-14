@@ -16,23 +16,22 @@ export function CardIcon({ Icon, className }: { Icon: LucideIcon; className?: st
   );
 }
 
-/** Kortin otsikkorivi: kuvake + otsikko + kuvaus. */
+/**
+ * Kortin otsikko: pelkkä typografia. Kuvakepallo jokaisen otsikon edessä oli
+ * geneerinen kuvio; `Icon` säilyy rajapinnassa, mutta sitä ei piirretä.
+ */
 export function CardHeading({
-  Icon,
   title,
   description,
 }: {
-  Icon: LucideIcon;
+  Icon?: LucideIcon;
   title: React.ReactNode;
   description?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <CardIcon Icon={Icon} />
-      <div className="min-w-0">
-        <h2 className="text-base leading-tight font-semibold">{title}</h2>
-        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
-      </div>
+    <div className="section-head">
+      <h2>{title}</h2>
+      {description && <p>{description}</p>}
     </div>
   );
 }

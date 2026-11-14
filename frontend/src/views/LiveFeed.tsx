@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Radio } from "lucide-react";
 import { api } from "@/api";
 import { ActionBadge, LabelBadge } from "@/components/badges";
-import { CardHeading } from "@/components/CardIcon";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function clock(iso: string) {
@@ -21,11 +18,12 @@ export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; 
     .sort((a, b) => (a.started_at < b.started_at ? 1 : -1))
     .slice(0, limit);
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardHeading Icon={Radio} title="Latest activity" description="Most recently observed sessions" />
-      </CardHeader>
-      <CardContent>
+    <section aria-labelledby="latest-title">
+      <header className="section-head">
+        <h2 id="latest-title">Latest activity</h2>
+        <p>Most recently observed sessions</p>
+      </header>
+      <div>
         {!data ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 5 }, (_, i) => (
@@ -35,20 +33,20 @@ export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; 
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">No traffic yet.</p>
         ) : (
-          <ol className="-mx-2 flex flex-col" aria-live="polite">
+          <ol className="-mx-2 flex flex-col divide-y divide-white/[0.06]" aria-live="polite">
             {rows.map((r) => (
               <li key={r.id} className="rise">
                 <button
                   onClick={() => onPick(r.id)}
-                  className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-0.5 rounded-2xl px-2 py-2.5 text-left outline-none hover:bg-white/[0.05] focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="feed-row grid w-full items-center gap-x-3 gap-y-1 rounded-lg px-2 py-2.5 text-left outline-none hover:bg-white/[0.05] focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <span className="text-xs tabular-nums text-muted-foreground">{clock(r.started_at)}</span>
                   <span className="flex min-w-0 items-center gap-2">
                     <LabelBadge label={r.label} />
                     <span className="truncate font-mono text-xs text-muted-foreground">{r.ip}</span>
                   </span>
-                  <ActionBadge action={r.action} />
-                  <span className="col-start-2 col-end-4 truncate text-xs text-muted-foreground">
+                  <span className="feed-action"><ActionBadge action={r.action} /></span>
+                  <span className="feed-reason truncate text-xs text-muted-foreground">
                     {r.reason}
                   </span>
                 </button>
@@ -56,7 +54,7 @@ export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; 
             ))}
           </ol>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

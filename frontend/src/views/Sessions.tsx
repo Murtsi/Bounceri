@@ -173,7 +173,32 @@ export default function Sessions({
           {rows.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">No sessions match this filter.</p>
           ) : (
-            <Table className="min-w-[720px]">
+            <>
+            {/* Mobiili: yksi rivi = yksi sessio, kaikki tiedot näkyvissä ilman vaakavieritystä. */}
+            <ol className="session-list md:hidden">
+              {rows.map((r) => (
+                <li key={r.id}>
+                  <button
+                    onClick={() => onPick(r.id)}
+                    aria-label={`Open session ${r.id}`}
+                    aria-current={picked === r.id ? "true" : undefined}
+                    className="session-item"
+                  >
+                    <span className="session-item-top">
+                      <LabelBadge label={r.label} />
+                      <span className="session-item-time">{time(r.started_at)}</span>
+                    </span>
+                    <span className="session-item-reason">{r.reason}</span>
+                    <span className="session-item-meta">
+                      <ActionBadge action={r.action} />
+                      <span className="font-mono">{r.ip}</span>
+                      <span>{r.n_requests} req</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <Table className="hidden min-w-[720px] md:table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Time</TableHead>
@@ -216,6 +241,7 @@ export default function Sessions({
                 ))}
               </TableBody>
             </Table>
+            </>
           )}
         </CardContent>
       </Card>

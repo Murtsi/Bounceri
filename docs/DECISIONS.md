@@ -195,3 +195,9 @@ Decision: Load non-active views on demand, cap the latest-activity request at ei
 Consequences: The current overview keeps its traffic data and activity timestamps fresh within five seconds while transferring less data and doing less startup work. The session page retains its existing 500-row API limit.
 Revisit if: operators need a tighter freshness target or production profiling points to another dominant cost.
 
+### 066 — Landing page as the default home (needs-ack)
+Date: 2026-11-15
+Context: For the Junction pitch, judges and first-time visitors open bounceri.tech without context. The dashboard is built for operators and does not explain what Bounceri is, how it works or what has been measured. Decision-maker: Niko; Murtsi's earlier rule kept the owner overview as the default home.
+Decision: `/` without a `tab` parameter opens a landing page (hero with the live gatehouse, problem, four-step pipeline, differentiators, measured synthetic results with their limits, Hostinger runtime, modules, call to action). The dashboard opens at `?tab=overview`; the sidebar logo returns home. All figures come from EVALUATION.md and are shown with their caveats; no market statistics without a source.
+Consequences: Shared links without `tab` now land on the landing page instead of the overview. Old deep links with `tab`, `session`, `campaign` and `label` work as before.
+Revisit if: the owner prefers the overview as home after the pitch, or a separate marketing domain is added.
