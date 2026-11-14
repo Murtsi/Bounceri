@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 type Mode = "play" | "loop" | "static";
 
 /**
- * "Bouncer": B:n alakaari paisuu ja koko loppusana "ouncer" pomppaa siitä ulos kuin pallo.
+ * "Bouncer": B:n alakaari painuu sisään kuin jousi ja ponnauttaa loppusanan "ouncer" ulos,
+ * joka pomppii paikalleen kuin pallo.
  * play = kerran (otsikko), loop = toistuu (latausnäyttö), static = ei liikettä.
  * prefers-reduced-motion poistaa animaation (index.css).
  */
@@ -20,7 +21,7 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
         className,
       )}
     >
-      {/* B piirrettynä: varsi + yläkaari + alakaari erikseen, jotta alakaari voi paisua. */}
+      {/* B piirrettynä: varsi + yläkaari + alakaari erikseen, jotta alakaari voi painua sisään. */}
       <svg
         aria-hidden="true"
         viewBox="0 0 62 72"

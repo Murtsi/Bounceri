@@ -99,55 +99,61 @@
   }
 }
 
-/* --- Bouncer-logo: B:n alakaari paisuu ja "ouncer" pomppaa siitä ulos ----------- */
-/* Alakaari: paisuu (ilmaa sisään), ponnauttaa sanan ulos, palautuu joustaen. */
-@keyframes bowl-swell {
+/* --- Bouncer-logo: B:n alakaari painuu sisään ja ponnauttaa "ouncer"-sanan ulos ---- */
+/* Alakaari toimii jousena: painuu sisään (kohti vartta), pidättää, vapautuu yli ja asettuu. */
+@keyframes bowl-spring {
   0% { transform: scale(1, 1); }
-  18% { transform: scale(1.35, 1.25); }
-  26% { transform: scale(0.85, 0.9); }
-  36% { transform: scale(1.07, 1.04); }
-  46%, 100% { transform: scale(1, 1); }
+  26% { transform: scale(0.5, 0.9); }
+  34% { transform: scale(0.46, 0.88); }
+  42% { transform: scale(1.32, 1.06); }
+  52% { transform: scale(0.9, 0.98); }
+  62% { transform: scale(1.05, 1); }
+  72%, 100% { transform: scale(1, 1); }
 }
-/* Sana syntyy pienenä alakaaren kohdalta, ponnahtaa ylös ja pomppii kuin pallo paikalleen. */
+/* Sana lähtee pienenä kaaren reunasta vapautushetkellä ja pomppii kuin pallo paikalleen. */
 @keyframes tail-bounce {
-  0% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
+  0% { transform: translate(-0.36em, 0) scale(0.06); opacity: 0; }
   6% { opacity: 1; }
-  22% { transform: translate(-0.12em, -0.45em) scale(0.8); }
-  40% { transform: translate(0, 0) scale(1.07, 0.86); }
-  55% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
+  24% { transform: translate(-0.1em, -0.5em) scale(0.85); }
+  42% { transform: translate(0, 0) scale(1.07, 0.86); }
+  56% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
   68% { transform: translate(0, 0) scale(1.03, 0.95); }
   78% { transform: translate(0, -0.07em) scale(1); }
   88%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
+/* Origo vasemmalla = varren kohta: kaari painuu kohti vartta. */
 .bouncer-bowl { transform-box: fill-box; transform-origin: 0% 50%; }
-/* Origo vasemmalla alhaalla = B:n alakaaren kohta. */
+/* Sanan origo vasemmalla alhaalla = alakaaren kohta. */
 .bouncer-tail { display: inline-block; transform-origin: 0% 80%; opacity: 0; }
-.bouncer-play .bouncer-bowl { animation: bowl-swell 1300ms cubic-bezier(0.3, 0.7, 0.4, 1) both; }
-.bouncer-play .bouncer-tail { animation: tail-bounce 1100ms cubic-bezier(0.3, 0.7, 0.4, 1) 300ms both; }
+.bouncer-play .bouncer-bowl { animation: bowl-spring 1300ms cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+/* Sana lähtee, kun jousi vapautuu (≈ 38 % kaaren animaatiosta). */
+.bouncer-play .bouncer-tail { animation: tail-bounce 1100ms cubic-bezier(0.3, 0.7, 0.4, 1) 490ms both; }
 
-/* Silmukka (latausnäyttö): ulos, pomput, lepo, sana imeytyy takaisin kaareen. */
-@keyframes bowl-swell-loop {
+/* Silmukka (latausnäyttö): painuu → ponnauttaa → pomput → lepo → sana palaa kaareen. */
+@keyframes bowl-spring-loop {
   0% { transform: scale(1, 1); }
-  10% { transform: scale(1.35, 1.25); }
-  14% { transform: scale(0.85, 0.9); }
-  19% { transform: scale(1.07, 1.04); }
-  24%, 80% { transform: scale(1, 1); }
-  88% { transform: scale(1.18, 1.12); }
-  95%, 100% { transform: scale(1, 1); }
+  12% { transform: scale(0.5, 0.9); }
+  17% { transform: scale(0.46, 0.88); }
+  21% { transform: scale(1.32, 1.06); }
+  26% { transform: scale(0.9, 0.98); }
+  31% { transform: scale(1.05, 1); }
+  36%, 82% { transform: scale(1, 1); }
+  90% { transform: scale(1.15, 1.06); }
+  96%, 100% { transform: scale(1, 1); }
 }
 @keyframes tail-bounce-loop {
-  0%, 11% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
-  13% { opacity: 1; }
-  21% { transform: translate(-0.12em, -0.45em) scale(0.8); }
-  30% { transform: translate(0, 0) scale(1.07, 0.86); }
-  37% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
-  44% { transform: translate(0, 0) scale(1.03, 0.95); }
-  50% { transform: translate(0, -0.07em) scale(1); }
-  55%, 76% { transform: translate(0, 0) scale(1); opacity: 1; }
-  88%, 100% { transform: translate(-0.4em, -0.04em) scale(0.06); opacity: 0; }
+  0%, 19% { transform: translate(-0.36em, 0) scale(0.06); opacity: 0; }
+  21% { opacity: 1; }
+  28% { transform: translate(-0.1em, -0.5em) scale(0.85); }
+  37% { transform: translate(0, 0) scale(1.07, 0.86); }
+  44% { transform: translate(0, -0.22em) scale(0.98, 1.03); }
+  50% { transform: translate(0, 0) scale(1.03, 0.95); }
+  55% { transform: translate(0, -0.07em) scale(1); }
+  60%, 78% { transform: translate(0, 0) scale(1); opacity: 1; }
+  90%, 100% { transform: translate(-0.36em, 0) scale(0.06); opacity: 0; }
 }
-.bouncer-loop .bouncer-bowl { animation: bowl-swell-loop 2400ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
-.bouncer-loop .bouncer-tail { animation: tail-bounce-loop 2400ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
+.bouncer-loop .bouncer-bowl { animation: bowl-spring-loop 2600ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
+.bouncer-loop .bouncer-tail { animation: tail-bounce-loop 2600ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
 .bouncer-static .bouncer-tail { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .bouncer-bowl, .bouncer-tail { animation: none !important; opacity: 1 !important; transform: none !important; }
