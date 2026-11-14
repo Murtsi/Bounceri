@@ -125,7 +125,7 @@ export default function Sessions({
   campaignFilter: string | null;
   onFiltersChange: (label: Label | "all", campaignId: string | null) => void;
 }) {
-  const { data, error } = useQuery({ queryKey: ["sessions"], queryFn: api.sessions });
+  const { data, error } = useQuery({ queryKey: ["sessions"], queryFn: () => api.sessions() });
   const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns, enabled: !!campaignFilter });
   if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!data) return <ListSkeleton rows={8} />;

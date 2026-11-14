@@ -8,6 +8,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] Seed-replayable variable traffic episodes compose browsing, cached/privacy/NAT controls, benign automation, unknown-intent scraping, varied probes and login campaigns; fresh live entropy replaces the repeating fixed wave.
 - [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.
+- [X] Document the active dashboard visual system in `frontend/DESIGN.md` and its Impeccable component sidecar.
+- [A] Overview replaces the equal KPI-card grid with a compact status line and prioritized clickable findings; the time trend, human-honesty metrics and latest activity remain available below.
+- [A] Preserve the shelved 3D gatehouse experiment in `frontend/src/views/GatehouseConcept.tsx`; it is not rendered or included in the active frontend bundle.
+
+### Changed
+- [A] Dashboard pages now load on demand, the latest-activity feed requests only eight sessions, and dashboard queries refresh every five seconds instead of two to reduce initial work and recurring API load (decision 065).
+- [A] Block labels now say “Recommend block”; uncertain chart values use a plain grey fill, and the overview now keeps the attention queue ahead of the traffic trend on mobile.
 - [X] Impeccable frontend design skill available to Codex and other supported agents from `.agents/skills/impeccable`.
 - [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.
 - [A] Reproducible Hostinger Docker deployment with private source capsule, PostgreSQL, bounded HTTP simulation, ingest/detection, dashboard/API and asynchronous review worker; operator smoke test verifies actual 429/403, benign isolation, expiry and revoke without paid inference.

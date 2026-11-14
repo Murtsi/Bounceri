@@ -1,0 +1,377 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T20:22:28Z",
+  "title": "Design System: Bounceri Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "forest-night": {
+        "role": "neutral",
+        "displayName": "Forest Night",
+        "canonical": "#08110c",
+        "tonalRamp": [
+          "oklch(15% 0.018 150)",
+          "oklch(25% 0.022 150)",
+          "oklch(35% 0.022 150)",
+          "oklch(45% 0.022 150)",
+          "oklch(55% 0.022 150)",
+          "oklch(65% 0.022 150)",
+          "oklch(78% 0.022 150)",
+          "oklch(94% 0.018 150)"
+        ]
+      },
+      "glass-solid": {
+        "role": "neutral",
+        "displayName": "Glass Solid",
+        "canonical": "#1b2620",
+        "tonalRamp": [
+          "oklch(15% 0.018 150)",
+          "oklch(25% 0.026 150)",
+          "oklch(35% 0.026 150)",
+          "oklch(45% 0.026 150)",
+          "oklch(55% 0.026 150)",
+          "oklch(65% 0.026 150)",
+          "oklch(78% 0.026 150)",
+          "oklch(94% 0.018 150)"
+        ]
+      },
+      "glass-translucent": {
+        "role": "neutral",
+        "displayName": "Translucent Glass",
+        "canonical": "rgba(255, 255, 255, 0.055)",
+        "tonalRamp": [
+          "oklch(15% 0.005 145)",
+          "oklch(25% 0.005 145)",
+          "oklch(35% 0.005 145)",
+          "oklch(45% 0.005 145)",
+          "oklch(55% 0.005 145)",
+          "oklch(65% 0.005 145)",
+          "oklch(78% 0.005 145)",
+          "oklch(94% 0.005 145)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Pale Ink",
+        "canonical": "#eef3ea",
+        "tonalRamp": [
+          "oklch(15% 0.018 120)",
+          "oklch(25% 0.018 120)",
+          "oklch(35% 0.018 120)",
+          "oklch(45% 0.018 120)",
+          "oklch(55% 0.018 120)",
+          "oklch(65% 0.018 120)",
+          "oklch(78% 0.018 120)",
+          "oklch(94% 0.018 120)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "rgba(226, 236, 220, 0.68)",
+        "tonalRamp": [
+          "oklch(15% 0.018 115)",
+          "oklch(25% 0.030 115)",
+          "oklch(35% 0.030 115)",
+          "oklch(45% 0.030 115)",
+          "oklch(55% 0.030 115)",
+          "oklch(65% 0.030 115)",
+          "oklch(78% 0.030 115)",
+          "oklch(94% 0.018 115)"
+        ]
+      },
+      "glass-border": {
+        "role": "neutral",
+        "displayName": "Glass Border",
+        "canonical": "rgba(255, 255, 255, 0.09)",
+        "tonalRamp": [
+          "oklch(15% 0.004 145)",
+          "oklch(25% 0.004 145)",
+          "oklch(35% 0.004 145)",
+          "oklch(45% 0.004 145)",
+          "oklch(55% 0.004 145)",
+          "oklch(65% 0.004 145)",
+          "oklch(78% 0.004 145)",
+          "oklch(94% 0.004 145)"
+        ]
+      },
+      "signal-lime": {
+        "role": "primary",
+        "displayName": "Signal Lime",
+        "canonical": "#c5ef5d",
+        "tonalRamp": [
+          "oklch(15% 0.018 126)",
+          "oklch(25% 0.180 126)",
+          "oklch(35% 0.180 126)",
+          "oklch(45% 0.180 126)",
+          "oklch(55% 0.180 126)",
+          "oklch(65% 0.180 126)",
+          "oklch(78% 0.180 126)",
+          "oklch(94% 0.018 126)"
+        ]
+      },
+      "signal-lime-ink": {
+        "role": "neutral",
+        "displayName": "Signal Lime Ink",
+        "canonical": "#0f1a0c",
+        "tonalRamp": [
+          "oklch(15% 0.018 135)",
+          "oklch(25% 0.030 135)",
+          "oklch(35% 0.030 135)",
+          "oklch(45% 0.030 135)",
+          "oklch(55% 0.030 135)",
+          "oklch(65% 0.030 135)",
+          "oklch(78% 0.030 135)",
+          "oklch(94% 0.018 135)"
+        ]
+      },
+      "verdict-human": {
+        "role": "tertiary",
+        "displayName": "Human Blue",
+        "canonical": "#4f92e0",
+        "tonalRamp": [
+          "oklch(15% 0.018 255)",
+          "oklch(25% 0.160 255)",
+          "oklch(35% 0.160 255)",
+          "oklch(45% 0.160 255)",
+          "oklch(55% 0.160 255)",
+          "oklch(65% 0.160 255)",
+          "oklch(78% 0.160 255)",
+          "oklch(94% 0.018 255)"
+        ]
+      },
+      "verdict-good-bot": {
+        "role": "tertiary",
+        "displayName": "Good-Bot Teal",
+        "canonical": "#26a088",
+        "tonalRamp": [
+          "oklch(15% 0.018 170)",
+          "oklch(25% 0.130 170)",
+          "oklch(35% 0.130 170)",
+          "oklch(45% 0.130 170)",
+          "oklch(55% 0.130 170)",
+          "oklch(65% 0.130 170)",
+          "oklch(78% 0.130 170)",
+          "oklch(94% 0.018 170)"
+        ]
+      },
+      "verdict-bad-bot": {
+        "role": "tertiary",
+        "displayName": "Bad-Bot Amber",
+        "canonical": "#bf8418",
+        "tonalRamp": [
+          "oklch(15% 0.018 78)",
+          "oklch(25% 0.150 78)",
+          "oklch(35% 0.150 78)",
+          "oklch(45% 0.150 78)",
+          "oklch(55% 0.150 78)",
+          "oklch(65% 0.150 78)",
+          "oklch(78% 0.150 78)",
+          "oklch(94% 0.018 78)"
+        ]
+      },
+      "verdict-uncertain": {
+        "role": "neutral",
+        "displayName": "Uncertain Grey",
+        "canonical": "#8a958c",
+        "tonalRamp": [
+          "oklch(15% 0.015 145)",
+          "oklch(25% 0.015 145)",
+          "oklch(35% 0.015 145)",
+          "oklch(45% 0.015 145)",
+          "oklch(55% 0.015 145)",
+          "oklch(65% 0.015 145)",
+          "oklch(78% 0.015 145)",
+          "oklch(94% 0.015 145)"
+        ]
+      },
+      "status-good": {
+        "role": "secondary",
+        "displayName": "Status Green",
+        "canonical": "#4cc764",
+        "tonalRamp": [
+          "oklch(15% 0.018 145)",
+          "oklch(25% 0.160 145)",
+          "oklch(35% 0.160 145)",
+          "oklch(45% 0.160 145)",
+          "oklch(55% 0.160 145)",
+          "oklch(65% 0.160 145)",
+          "oklch(78% 0.160 145)",
+          "oklch(94% 0.018 145)"
+        ]
+      },
+      "status-warning": {
+        "role": "secondary",
+        "displayName": "Status Amber",
+        "canonical": "#fab219",
+        "tonalRamp": [
+          "oklch(15% 0.018 82)",
+          "oklch(25% 0.190 82)",
+          "oklch(35% 0.190 82)",
+          "oklch(45% 0.190 82)",
+          "oklch(55% 0.190 82)",
+          "oklch(65% 0.190 82)",
+          "oklch(78% 0.190 82)",
+          "oklch(94% 0.018 82)"
+        ]
+      },
+      "status-serious": {
+        "role": "secondary",
+        "displayName": "Status Coral",
+        "canonical": "#ec835a",
+        "tonalRamp": [
+          "oklch(15% 0.018 42)",
+          "oklch(25% 0.140 42)",
+          "oklch(35% 0.140 42)",
+          "oklch(45% 0.140 42)",
+          "oklch(55% 0.140 42)",
+          "oklch(65% 0.140 42)",
+          "oklch(78% 0.140 42)",
+          "oklch(94% 0.018 42)"
+        ]
+      },
+      "status-critical": {
+        "role": "secondary",
+        "displayName": "Status Gold",
+        "canonical": "#e0a43a",
+        "tonalRamp": [
+          "oklch(15% 0.018 76)",
+          "oklch(25% 0.160 76)",
+          "oklch(35% 0.160 76)",
+          "oklch(45% 0.160 76)",
+          "oklch(55% 0.160 76)",
+          "oklch(65% 0.160 76)",
+          "oklch(78% 0.160 76)",
+          "oklch(94% 0.018 76)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and top-level view headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Readable interface copy and evidence descriptions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Status, control, and secondary metadata labels."
+      },
+      "identifier": {
+        "displayName": "Identifier",
+        "purpose": "Session identifiers and compact time-oriented metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "glass-lift",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 30px -12px rgba(0,0,0,0.45)",
+        "purpose": "Shared glass treatment for separating a surface from the fixed forest background."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "150ms ease-out",
+        "purpose": "Short background and border changes on interactive investigation controls."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "overview-stack",
+        "value": "760px"
+      },
+      {
+        "name": "desktop-sidebar",
+        "value": "1024px"
+      },
+      {
+        "name": "wide-supporting-cards",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Lime-filled, pill-shaped action for the main operation in a view.",
+      "html": "<button class=\"ds-button-primary\">Review evidence</button>",
+      "css": ".ds-button-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:36px; padding:8px 16px; border:0; border-radius:999px; background:var(--primary); color:var(--primary-foreground); font:600 14px/1.25 system-ui,-apple-system,\"Segoe UI\",sans-serif; cursor:pointer; transition:background-color 150ms ease; } .ds-button-primary:hover { background:color-mix(in srgb,var(--primary) 90%,transparent); } .ds-button-primary:focus-visible { outline:3px solid color-mix(in srgb,var(--ring) 50%,transparent); outline-offset:2px; } .ds-button-primary:disabled { opacity:.5; cursor:not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet, text-led action used for secondary controls.",
+      "html": "<button class=\"ds-button-ghost\">Pause</button>",
+      "css": ".ds-button-ghost { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:32px; padding:8px 14px; border:0; border-radius:999px; background:transparent; color:var(--foreground); font:500 14px/1.25 system-ui,-apple-system,\"Segoe UI\",sans-serif; cursor:pointer; transition:background-color 150ms ease,color 150ms ease; } .ds-button-ghost:hover { background:var(--accent); color:var(--accent-foreground); } .ds-button-ghost:focus-visible { outline:3px solid color-mix(in srgb,var(--ring) 50%,transparent); outline-offset:2px; }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Shared evidence container with translucent green glass and a subtle lift.",
+      "html": "<article class=\"ds-card\"><h3>Traffic over time</h3><p>Request volume by local verdict</p></article>",
+      "css": ".ds-card { display:flex; flex-direction:column; gap:20px; padding:24px; border:1px solid var(--border); border-radius:24px; background:var(--card); color:var(--card-foreground); -webkit-backdrop-filter:blur(24px) saturate(140%); backdrop-filter:blur(24px) saturate(140%); box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 30px -12px rgba(0,0,0,.45); } .ds-card h3 { margin:0; font:600 16px/1.25 system-ui,-apple-system,\"Segoe UI\",sans-serif; } .ds-card p { margin:0; color:var(--muted-foreground); font:400 14px/1.5 system-ui,-apple-system,\"Segoe UI\",sans-serif; }"
+    },
+    {
+      "name": "Outline Badge",
+      "kind": "chip",
+      "refersTo": "badge-outline",
+      "description": "Compact labeled verdict or action marker; preserve text alongside any color cue.",
+      "html": "<span class=\"ds-badge-outline\"><i aria-hidden=\"true\"></i>Uncertain</span>",
+      "css": ".ds-badge-outline { display:inline-flex; align-items:center; justify-content:center; gap:6px; width:max-content; padding:2px 10px; border:1px solid var(--border); border-radius:999px; color:var(--foreground); font:500 12px/1.4 system-ui,-apple-system,\"Segoe UI\",sans-serif; white-space:nowrap; } .ds-badge-outline i { width:7px; height:7px; border-radius:50%; background:var(--series-uncertain); }"
+    },
+    {
+      "name": "Active Navigation",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Selected destination in desktop navigation or the compact mobile dock.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-active\" aria-current=\"page\">Overview</button><button class=\"ds-nav-idle\">Sessions</button></nav>",
+      "css": ".ds-nav { display:flex; align-items:center; gap:4px; padding:6px; border:1px solid var(--border); border-radius:999px; background:var(--card); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); } .ds-nav button { height:44px; padding:0 16px; border:0; border-radius:999px; font:500 14px/1.25 system-ui,-apple-system,\"Segoe UI\",sans-serif; cursor:pointer; transition:background-color 150ms ease,color 150ms ease; } .ds-nav-active { background:var(--primary); color:var(--primary-foreground); font-weight:600!important; } .ds-nav-idle { background:transparent; color:var(--muted-foreground); } .ds-nav-idle:hover { background:rgba(255,255,255,.06); color:var(--foreground); } .ds-nav button:focus-visible { outline:3px solid color-mix(in srgb,var(--ring) 50%,transparent); outline-offset:2px; }"
+    },
+    {
+      "name": "Source Select",
+      "kind": "input",
+      "description": "Native source filter in Investigations, with a compact glass treatment.",
+      "html": "<label class=\"ds-select-label\">Source <select class=\"ds-select\"><option>All origins</option><option>Synthetic only</option></select></label>",
+      "css": ".ds-select-label { display:flex; align-items:center; gap:8px; color:var(--muted-foreground); font:400 14px/1.4 system-ui,-apple-system,\"Segoe UI\",sans-serif; } .ds-select { padding:6px 8px; border:1px solid var(--input); border-radius:14px; background:var(--card); color:var(--foreground); font:500 14px/1.4 system-ui,-apple-system,\"Segoe UI\",sans-serif; } .ds-select:hover { background:var(--accent); } .ds-select:focus-visible { outline:2px solid var(--ring); outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "“Evidence at a glance” — focused triage with honest operating context.",
+    "overview": "The interface feels focused, assured, and precise. A deep forest backdrop and layered green glass give the evidence room to breathe, while compact labels, tabular counts, and monospace identifiers keep dense operational details scannable. Signal lime marks selection and primary action; verdict and status colors retain their distinct meanings.\n\nThe dashboard preserves its existing navigation while adding views in the same visual world. The overview puts operating context and a prioritized, clickable attention queue first, followed by traffic trend, known-human honesty metrics and latest activity.",
+    "keyCharacteristics": [
+      "Dark forest-green surfaces with translucent glass layers.",
+      "A restrained lime signal for active and primary states.",
+      "Dense evidence rows with calm hierarchy and soft corners."
+    ],
+    "rules": [
+      {
+        "name": "The Signal Lime Rule",
+        "body": "Keep lime for interaction and selection; do not reuse it as a traffic data series.",
+        "section": "colors"
+      },
+      {
+        "name": "The Verdict Vocabulary Rule",
+        "body": "Preserve distinct chart and status colors, and pair status meaning with text or an icon rather than color alone.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep lime on interaction and selection, and keep data series mapped to their distinct chart colors.",
+      "Do use the system sans for interface copy and monospace for identifiers and compact time metadata.",
+      "Do pair status colors with visible words or icons and preserve the uncertain grey treatment.",
+      "Do use layered green glass for shared surfaces and reserve shadows for actual separation or lift.",
+      "Do preserve the incumbent dashboard shell and view language when adding a new view."
+    ],
+    "donts": [
+      "Don't turn evidence into a generic AI-looking dashboard of interchangeable metric tiles.",
+      "Don't imply that detector recommendations are live enforcement; the dashboard labels them as recommendations.",
+      "Don't use color as the only carrier of verdict or status meaning."
+    ]
+  }
+}

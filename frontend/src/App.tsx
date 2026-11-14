@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileSearch, FlaskConical, Gauge, LayoutDashboard, type LucideIcon, Network, Rows3 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { api } from "@/api";
 import { BouncerLogo, SplashOverlay } from "@/components/BouncerLogo";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
-import Investigations from "@/Investigations";
 import { activityStatus } from "@/lib/activity";
 import { cn } from "@/lib/utils";
-import Campaigns from "@/views/Campaigns";
-import Metrics from "@/views/Metrics";
-import Overview from "@/views/Overview";
-import Sessions from "@/views/Sessions";
+
+const Investigations = lazy(() => import("@/Investigations"));
+const Campaigns = lazy(() => import("@/views/Campaigns"));
+const Metrics = lazy(() => import("@/views/Metrics"));
+const Overview = lazy(() => import("@/views/Overview"));
+const Sessions = lazy(() => import("@/views/Sessions"));
 
 type Tab = "overview" | "sessions" | "campaigns" | "metrics" | "investigations";
 type SessionLabel = "bad_bot" | "good_bot" | "human" | "uncertain";
@@ -58,7 +59,7 @@ const TITLE: Record<Tab, string> = {
 };
 
 /** Logon ponnahdus kestää ≈ 1,55 s (index.css: viive 490 ms + 1050 ms). */
-const LAUNCH_MS = 1600;
+const LAUNCH_MS = 900;
 
 /**
  * Avausruutu poistuu vasta, kun data on tullut JA logon ponnahdus on valmis —
@@ -217,6 +218,7 @@ export default function App() {
               )}
             </div>
           </div>
+          <Suspense fallback={<div role="status" className="min-h-40 text-sm text-muted-foreground">Loading view…</div>}>
           {tab === "overview" && (
             <Overview
               onPick={(id) => {
@@ -244,6 +246,7 @@ export default function App() {
               <Investigations goTraffic={() => go("overview")} />
             </div>
           )}
+          </Suspense>
         </main>
       )}
 

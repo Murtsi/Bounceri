@@ -15,7 +15,7 @@ function clock(iso: string) {
  * koska rivin avain on session ID.
  */
 export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; limit?: number }) {
-  const { data } = useQuery({ queryKey: ["sessions"], queryFn: api.sessions });
+  const { data } = useQuery({ queryKey: ["sessions", "latest", limit], queryFn: () => api.sessions(limit) });
   const rows = (data ?? [])
     .slice()
     .sort((a, b) => (a.started_at < b.started_at ? 1 : -1))

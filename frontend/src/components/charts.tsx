@@ -15,7 +15,7 @@ export const SERIES_VAR: Record<Label, string> = {
   uncertain: "var(--series-uncertain)",
 };
 
-/** Sarjan täyttö: "epävarma" = harmaa + vinoviivoitus (tekstuuri), muut tasaväri. */
+/** Sarjan täyttö: "epävarma" käyttää omaa harmaata sävyä ja selitettyä sarjanimeä. */
 function fill(label: Label): { className: string; style: CSSProperties } {
   return label === "uncertain"
     ? { className: "hatch", style: {} }
