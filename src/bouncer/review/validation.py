@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import math
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,6 +39,197 @@ DATA_FIELDS = (
     }
 )
 ATTACK_SIGNALS = {"probe", "trap", "vulnerability_probe", "trap_hit", "scan", "scanner"}
+SESSION_FIELDS = {"network_provenance", "rule_observations"}
+RULE_IDS = {"trap", "verified_crawler", "fake_crawler", "vuln_paths", "login_attack_campaign"}
+FEATURE_FIELDS = {
+    "duration_s",
+    "requests_per_min",
+    "peak_requests_per_min",
+    "static_share",
+    "html_share",
+    "vuln_path_hits",
+    "header_inconsistency_share",
+    "ua_is_tool",
+    "ua_claims_bot",
+}
+CAMPAIGN_FIELDS = {
+    "campaign_ref",
+    "kind",
+    "member_refs",
+    "n_sessions",
+    "distinct_client_count",
+    "failed_logins",
+    "shared_target_count",
+    "window_seconds",
+    "relationship_provenance",
+}
+
+
+def _enum(value, options) -> bool:
+    return isinstance(value, str) and value in options
+
+
+def _finite_nonnegative(value) -> bool:
+    return type(value) in (int, float) and math.isfinite(value) and value >= 0
+
+
+def _utc_timestamp(value) -> bool:
+    if not isinstance(value, str) or len(value) > 40 or "T" not in value:
+        return False
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).utcoffset() == timedelta(0)
+    except ValueError:
+        return False
+
+
+def _network_valid(value, data) -> bool:
+    fields = {
+        "checked_at",
+        "resolver_outcome",
+        "verified_bot",
+        "asn",
+        "asn_type",
+        "country",
+        "asn_origin",
+        "crawler",
+    }
+    if not isinstance(value, dict) or set(value) != fields:
+        return False
+    outcome, verified = value["resolver_outcome"], value["verified_bot"]
+    checked = value["checked_at"]
+    if not (
+        (checked is None or _utc_timestamp(checked))
+        and _enum(
+            outcome, {"verified", "mismatch", "unavailable", "timeout", "capacity", "invalid"}
+        )
+        and (value["asn"] is None or type(value["asn"]) is int and 1 <= value["asn"] <= 4294967295)
+        and _enum(value["asn_type"], {"datacenter", "residential", "mobile", "unknown"})
+        and (
+            value["country"] is None
+            or isinstance(value["country"], str)
+            and re.fullmatch(r"[A-Z]{2}", value["country"])
+        )
+        and _enum(value["asn_origin"], {"curated-prefix", "dns", "inferred", "unknown"})
+        and (value["crawler"] is None or _enum(value["crawler"], {"googlebot", "bingbot"}))
+    ):
+        return False
+    if outcome in {"verified", "mismatch"}:
+        if (
+            checked is None
+            or outcome == "verified"
+            and value["crawler"] is None
+            or verified is not (outcome == "verified")
+        ):
+            return False
+    elif verified is not None:
+        return False
+    if data.get("verified_bot") is not verified:
+        return False
+    if "verified_crawler" in data and data["verified_crawler"] is not verified:
+        return False
+    origin = data.get("crawler_verification_origin")
+    return origin in ({"dns", "forward_reverse_dns"} if verified is True else {None, "unknown"})
+
+
+def _rules_valid(value, data) -> bool:
+    if not isinstance(value, dict) or set(value) != {
+        "version",
+        "trap_hits",
+        "trap_config_version",
+        "rule_ids",
+        "features",
+    }:
+        return False
+    rules, features = value["rule_ids"], value["features"]
+    if not (
+        value["version"] == "bouncer-rule-observations-v1"
+        and _count(value["trap_hits"])
+        and value["trap_hits"] <= data.get("n_requests", 1_000_000_000)
+        and isinstance(value["trap_config_version"], str)
+        and re.fullmatch(r"[a-f0-9]{64}", value["trap_config_version"])
+        and isinstance(rules, list)
+        and len(rules) <= len(RULE_IDS)
+        and all(_enum(rule, RULE_IDS) for rule in rules)
+        and len(rules) == len(set(rules))
+        and isinstance(features, dict)
+        and not set(features) - FEATURE_FIELDS
+    ):
+        return False
+    for key, feature in features.items():
+        if key in {"ua_is_tool", "ua_claims_bot"}:
+            valid = type(feature) is bool
+        elif key == "vuln_path_hits":
+            valid = _count(feature) and feature <= data.get("n_requests", 1_000_000_000)
+        else:
+            valid = _finite_nonnegative(feature) and (not key.endswith("_share") or feature <= 1)
+        if not valid:
+            return False
+    return True
+
+
+def _validate_campaigns(evidence) -> None:
+    sessions = {item["id"]: item["data"] for item in evidence if item["kind"] == "session_summary"}
+    refs = set()
+    for item in evidence:
+        if item["kind"] != "campaign_summary":
+            continue
+        data = item["data"]
+        members = data.get("member_refs")
+        if not (
+            set(data) == CAMPAIGN_FIELDS
+            and isinstance(data["campaign_ref"], str)
+            and re.fullmatch(r"[a-f0-9]{16}", data["campaign_ref"])
+            and data["campaign_ref"] not in refs
+            and _enum(
+                data["kind"],
+                {
+                    "credential_stuffing",
+                    "distributed_login_spray",
+                    "slow_credential_stuffing",
+                    "behavior_cluster",
+                },
+            )
+            and isinstance(members, list)
+            and 2 <= len(members) <= 200
+            and all(isinstance(ref, str) and ref in sessions for ref in members)
+            and len(members) == len(set(members))
+            and all(
+                _count(data[key])
+                for key in {
+                    "n_sessions",
+                    "distinct_client_count",
+                    "failed_logins",
+                    "shared_target_count",
+                }
+            )
+            and data["n_sessions"] == len(members)
+            and 1 <= data["distinct_client_count"] <= len(members)
+            and (data["window_seconds"] is None or _finite_nonnegative(data["window_seconds"]))
+            and data["relationship_provenance"] == "scoped-requests-v1"
+        ):
+            raise ValueError("invalid_evidence_packet")
+        refs.add(data["campaign_ref"])
+        facts = [sessions[ref] for ref in members]
+        session_refs = [fact.get("session_ref") for fact in facts]
+        if (
+            any(
+                fact.get("n_sessions", 1) != 1 or fact.get("distinct_client_count", 1) != 1
+                for fact in facts
+            )
+            or any(ref is None for ref in session_refs)
+            or len(session_refs) != len(set(session_refs))
+        ):
+            raise ValueError("invalid_evidence_packet")
+        if all("failed_logins" in fact for fact in facts) and data["failed_logins"] != sum(
+            fact["failed_logins"] for fact in facts
+        ):
+            raise ValueError("invalid_evidence_packet")
+        if (
+            all("distinct_account_count" in fact for fact in facts)
+            and data["shared_target_count"]
+            > sum(fact["distinct_account_count"] for fact in facts) // 2
+        ):
+            raise ValueError("invalid_evidence_packet")
 
 
 def strict_json(text: str):
@@ -112,12 +303,23 @@ def validate_packet(packet: dict) -> dict:
         ident = item["id"]
         if not isinstance(ident, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,128}", ident):
             raise ValueError("invalid_evidence_packet")
-        if ident in ids or item["kind"] not in {"session_summary", "traffic_summary"}:
+        if ident in ids or not _enum(
+            item["kind"], {"session_summary", "traffic_summary", "campaign_summary"}
+        ):
             raise ValueError("invalid_evidence_packet")
         ids.add(ident)
         data = item["data"]
-        if not isinstance(data, dict) or set(data) - DATA_FIELDS:
+        fields = (
+            CAMPAIGN_FIELDS
+            if item["kind"] == "campaign_summary"
+            else DATA_FIELDS | SESSION_FIELDS
+            if item["kind"] == "session_summary"
+            else DATA_FIELDS
+        )
+        if not isinstance(data, dict) or set(data) - fields:
             raise ValueError("invalid_evidence_packet")
+        if item["kind"] == "campaign_summary":
+            continue
         for key, value in data.items():
             valid = True
             if key in COUNT_FIELDS:
@@ -162,6 +364,10 @@ def validate_packet(packet: dict) -> dict:
                 valid = isinstance(value, str) and bool(
                     re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value)
                 )
+            elif key == "network_provenance":
+                valid = _network_valid(value, data)
+            elif key == "rule_observations":
+                valid = _rules_valid(value, data)
             if not valid:
                 raise ValueError("invalid_evidence_packet")
         if "n_requests" in data:
@@ -170,6 +376,7 @@ def validate_packet(packet: dict) -> dict:
                     raise ValueError("invalid_evidence_packet")
             if data.get("failed_logins", 0) > data["n_requests"]:
                 raise ValueError("invalid_evidence_packet")
+    _validate_campaigns(evidence)
     local = packet.get("local_assessment")
     if not isinstance(local, dict) or set(local) - {
         "stage",
@@ -234,11 +441,20 @@ class Recommendation(BaseModel):
 def _trusted_attack_observed(facts) -> bool:
     return any(
         (
-            data.get("category_provenance") == "bouncer-path-categories-v1"
-            or data.get("attack_signals")
-            and data.get("path_category_version") == "categories-v1"
+            isinstance(data.get("rule_observations"), dict)
+            and _rules_valid(data["rule_observations"], data)
+            and data["rule_observations"]["trap_hits"] > 0
         )
-        and any(data.get("path_category_counts", {}).get(key, 0) > 0 for key in ("probe", "trap"))
+        or (
+            (
+                data.get("category_provenance") == "bouncer-path-categories-v1"
+                or data.get("attack_signals")
+                and data.get("path_category_version") == "categories-v1"
+            )
+            and any(
+                data.get("path_category_counts", {}).get(key, 0) > 0 for key in ("probe", "trap")
+            )
+        )
         for data in facts
     )
 
@@ -279,7 +495,21 @@ def validate_recommendation(value: dict, packet: dict) -> dict:
         if data is None or observation.evidence_id not in support + contrary:
             raise ValueError("invalid_reviewer_output")
         parts = observation.field.split(".")
-        if parts[0] not in COUNT_FIELDS | MAP_FIELDS | {"verified_bot", "verified_crawler"}:
+        nested_fields = {
+            "rule_observations.trap_hits",
+            "network_provenance.verified_bot",
+        } | {f"rule_observations.features.{key}" for key in FEATURE_FIELDS}
+        if (
+            parts[0]
+            not in COUNT_FIELDS
+            | MAP_FIELDS
+            | {
+                "verified_bot",
+                "verified_crawler",
+                "shared_target_count",
+            }
+            and observation.field not in nested_fields
+        ):
             raise ValueError("invalid_reviewer_output")
         actual = data
         for part in parts:
@@ -320,8 +550,7 @@ def validate_recommendation(value: dict, packet: dict) -> dict:
         for data in facts
     ):
         raise ValueError("invalid_reviewer_output")
-    # Timing/identity aggregates alone cannot establish coordination. This capability has no
-    # relationship evidence in phase one, so the model must explicitly abstain from that claim.
+    # Retained candidate relationships cannot establish common control or coordination.
     if result.coordination == "observed":
         raise ValueError("invalid_reviewer_output")
     if result.suggested_action in {"rate_limit", "temporary_block"} and not attack:

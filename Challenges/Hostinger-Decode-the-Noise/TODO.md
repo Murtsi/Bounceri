@@ -161,3 +161,8 @@ Committed core fixes are independently reviewed. Versioned PostgreSQL schema upg
 ### Durable traffic checkpoint — 14 November 2026
 
 Phase 1.2 is implemented and verified locally: normalized SQL history, atomic source checkpoints/retention, stable late-event/session truth state, retained rotations/gzip recovery, explicit readers, immutable backfill and fresh rollback. Integrated backend616 tests pass with PostgreSQL; packagedDocker SQL runtime ingests21 sessions/235 synthetic requests without a JSON primary or paidcalls. Browser CI now executes the36-check suite. Live deployment/cutover is not claimed. Next work is bounded network evidence and scoped case completeness; imports, remaining operations/study evaluation and all 3 new modules remain pending.
+
+
+### Network/evidence checkpoint — 14 November 2026
+
+Phase 1.3–4 implementation is locally verified: bounded live S4 code, retained resolver/rule/config/feature observations, complete scoped campaign summaries, strict advisory review packets, and native v2 bounded/shared-NAT controls. Backend 739 tests/Ruff and packaged 21-session / 235-request SQL simulation pass, with no paid requests. Real resolver timeout remains unknown; no live deployment or real/hidden detector quality is claimed. Next: private log imports, remaining operations, consented/public evaluation data and the three new modules.

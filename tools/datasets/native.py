@@ -24,13 +24,17 @@ from tools.datasets.registry import checksum
 
 PARTITIONS = ("fit", "calibration", "candidate_validation", "reserved")
 REPO_ROOT = Path(__file__).resolve().parents[2]
-VERSION = "native-synthetic-v1"
+VERSION = "native-synthetic-v2"
 PROFILES = (
     "cached_rapid_browser",
     "assetless_rapid_browser",
     "privacy_headers_missing",
     "legitimate_automation",
     "ordinary_login_retries",
+    "bounded_monitor_burst",
+    "shared_nat_login_retries",
+    "shared_nat_login_retries",
+    "shared_nat_login_retries",
     "shared_nat",
     "shared_nat",
     "shared_nat",
@@ -76,7 +80,8 @@ def _actor(profile: str, index: int, run_index: int, seed: int, rng: random.Rand
     suffix = run_index * 100 + index + seed * 10000
     ua = f"Mozilla/5.0 Chrome/131.0.{suffix}.0 Safari/537.36"
     address = int(ipaddress.IPv6Address("2001:db8::")) + (seed << 64) + (run_index << 16)
-    ip = str(ipaddress.IPv6Address(address + (100 if profile == "shared_nat" else index + 1)))
+    offset = 100 if profile in {"shared_nat", "shared_nat_login_retries"} else index + 1
+    ip = str(ipaddress.IPv6Address(address + offset))
     headers = {
         "Accept": ["text/html"],
         "Accept-Language": ["en"],
@@ -97,6 +102,15 @@ def _actor(profile: str, index: int, run_index: int, seed: int, rng: random.Rand
         ua = "ExampleMonitor/1.0"
         steps = [(i * 5.0, "GET", "/products", 200, None) for i in range(8)]
         traffic_truth, automation = None, "automated"
+    elif profile == "bounded_monitor_burst":
+        ua = "ExampleMonitor/1.0"
+        steps = [(i * 0.2, "GET", "/status", 200, None) for i in range(12)]
+        traffic_truth, automation = None, "automated"
+    elif profile == "shared_nat_login_retries":
+        account = f"shared-admin-{seed}-{run_index}"
+        steps = [(index * 0.1 + at, method, "/login", status, account)
+                 for at, method, status in ((0, "GET", 200), (4, "POST", 401),
+                                            (9, "POST", 401), (15, "POST", 200))]
     elif profile == "ordinary_login_retries":
         steps = [
             (0.0, "GET", "/login", 200, None),

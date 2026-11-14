@@ -11,7 +11,7 @@ The owner approved execution of modules plan.md and the audit fixes. Work is on 
 - [ ] Phase 0: baseline verification, reconcile runtime/challenge docs, docs/MODULES.md.
 - [x] Phase 1.1: additive migrations for existing/new tables, populated upgrade and fresh/restart/concurrent tests.
 - [x] Phase 1.2: SQL request/session/label repository, atomic source checkpoints/event identity, readers/cutover/backfill/rollback and retention.
-- [ ] Phase 1.3–4: bounded cached live network evidence and complete scoped campaign/rule provenance.
+- [x] Phase 1.3–4: bounded cached live network evidence and complete scoped campaign/rule provenance.
 - [ ] Phase 1.5: authenticated private log import with redaction/limits/reports.
 - [ ] Phase 1.6: detailed health, pagination, backup/restore, measured resources, deployment smoke.
 - [ ] Phase 1.7–8: consent records, real data collection, whole-actor/run/time holdouts, independent hidden attack and separate evaluation artifacts. External participants/independent author remain required; never fabricate their evidence.
@@ -47,3 +47,11 @@ Normalized traffic, exact source-byte identities, revision CAS, full fresh histo
 Review reproduced and fixed late/bridging ownership, stale gold labels, origin flips, dropped overflow history, stat/open/copytruncate/gzip/retained-rotation races, archive inode reuse and mixed-batch read snapshots. Final full checks:616 Python tests with PostgreSQL enabled and Ruff passed;7frontendunit+build+36 browserchecks passed. Packaged SQL Docker stack:21 sessions/235 synthetic requests, checkpoint revision 8, no primaryJSON, no paidrequests; resources cleaned. Wheels and SQL assets build; repository hygiene and both Compose configs pass. Independent final review approved after focused regressions.
 
 Next:Phase 1.3–4 bounded live network provenance and complete scoped evidence, followed by imports, remaining operations/study/evaluation and the three modules. Live Hostinger cutover is NOT performed. Archive/backup deletion lifecycle, external real-human/hidden evidence and liveDNS/final release gates remain open in their corresponding later tasks. Do not mark the overall goal complete from this storage increment.
+
+## Evidence: Phase 1.3–4 implementation
+
+Bounded child-process S4 lookups, TTL/LRU and cycle budgets, private retained resolver/rule/config/feature observations, scoped campaign summaries and strict review-packet validation are implemented. Hosted runtime now selects the bounded path in code. The sampler includes complete connected campaign context up to 32 sessions or keeps explicit incompleteness. Original Decision observations omit local predictions; coordination/attack/action safeguards remain. Native synthetic generator v2 adds bounded monitor and shared-NAT retry controls without rewriting frozen metrics or reserved evidence.
+
+Verification: 739 Python tests passed with disposable PostgreSQL, Ruff passed. Real lookup of 3.5.140.2 completed in 0.907 seconds as timeout/unknown while retaining curated ASN 16509; this is not live DNS verification. Packaged isolated SQL runtime with the bounded path ingested 21 sessions / 235 synthetic requests, checkpoint revision 7, no JSON primary and no paid calls; all owned resources removed. An additional inspection attempted during teardown was unavailable; do not claim that inspection passed. Independent review approved after the complete bounded sampler regression passed. Raw consent/public-data acquisition and independent withheld attack inputs remain unavailable; user intends public data mixed with real human activity.
+
+Next is Phase 1.5 private native log import, followed by operations, consent/enrollment and leakage-safe evaluation. Live Hostinger deployment/verified DNS/real-human and genuinely hidden quality gates remain separate; the overall goal is not complete.

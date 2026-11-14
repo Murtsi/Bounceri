@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
-PROMPT_VERSION = "traffic-review-v3"
+PROMPT_VERSION = "traffic-review-v4"
 SCHEMA_VERSION = "traffic-assessment-v1"
 MAX_OUTPUT_TOKENS = 800
 MAX_REQUEST_BYTES = 24_576

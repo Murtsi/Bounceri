@@ -50,6 +50,7 @@ from bouncer.ingest.sample import _timestamp, parse_access_record
 from bouncer.ingest.tail import LogTail
 from bouncer.session import rules, score
 from bouncer.session.actions import recommend
+from bouncer.session.features import compute_features
 
 IntelFn = Callable[[str], IpIntel]
 CampaignsFn = Callable[[Sequence[Session]], list[Any]]
@@ -149,7 +150,7 @@ class Worker:
         ]
 
     def _intel(self, ip: str) -> IpIntel:
-        if ip not in self.intel_cache:
+        if (hasattr(self.intel_fn, "observation") or ip not in self.intel_cache):
             self.intel_cache[ip] = self.intel_fn(ip) if self.intel_fn else IpIntel()
         return self.intel_cache[ip]
 
@@ -206,17 +207,40 @@ class Worker:
             self.intel_cache = {
                 ip: intel for ip, intel in self.intel_cache.items() if ip in active_ips
             }
-        intel = {s.ip: self._intel(s.ip) for s in sessions}
+        if hasattr(self.intel_fn, "begin_cycle"):
+            self.intel_fn.begin_cycle()
+        intel, ip_evidence = {}, {}
+        for ip in sorted({s.ip for s in sessions}):
+            intel[ip] = self._intel(ip)
+            if hasattr(self.intel_fn, "observation"):
+                # Capture before the bounded resolver cache can evict another active client.
+                ip_evidence[ip] = self.intel_fn.observation(ip)
         _, camp_by_session = network_signals(sessions, None, self.campaigns_fn)
         campaigns = {id(c): c for c in camp_by_session.values()}.values()
 
         verdicts = {}
+        rule_observations = {}
         traps = rules.load_traps()
+        trap_version = hashlib.sha256("\n".join(sorted(traps)).encode()).hexdigest()
+        feature_fields = {
+            "duration_s", "requests_per_min", "peak_requests_per_min", "static_share",
+            "html_share", "vuln_path_hits", "header_inconsistency_share", "ua_is_tool",
+            "ua_claims_bot",
+        }
         for s in sessions:
             camp: Campaign | None = camp_by_session.get(s.id)
             v = score(s, intel[s.ip], camp, traps=traps)
             hits = rules.evaluate(s, intel[s.ip], traps, camp)
             rule_id = hits[0].rule_id if hits else None
+            rule_observations[s.id] = {
+                "version": "bouncer-rule-observations-v1",
+                "trap_hits": len({r.path for r in s.requests if rules._normalise(r.path) in traps}),
+                "trap_config_version": trap_version,
+                "rule_ids": [hit.rule_id for hit in hits],
+                "features": {key: value for key, value in dataclasses.asdict(
+                    compute_features(s)
+                ).items() if key in feature_fields},
+            }
             verdicts[s.id] = {
                 "rule_id": rule_id,
                 "action": recommend(v.label, rule_id),
@@ -251,6 +275,8 @@ class Worker:
             "synthetic": self.synthetic,
             "source": f"caddy:{self.tail.path}",
             "verdicts": verdicts,
+            "ip_evidence": ip_evidence,
+            "rule_observations": rule_observations,
             "campaigns": [_campaign_dict(c) for c in campaigns],
             "ingest": {
                 **stats.as_dict(),
@@ -340,11 +366,13 @@ def main(argv: Sequence[str] | None = None) -> int:
               "Aseta se tai käytä --allow-unsigned paikallisesti.")  # fmt: skip
         return 1
     intel_fn = campaigns_fn = None
-    from bouncer.network import find_campaigns, ip_intel_contract
+    from bouncer.network import find_campaigns
 
     campaigns_fn = find_campaigns
     if not a.offline:
-        intel_fn = ip_intel_contract
+        from bouncer.network.live import LiveIntel
+
+        intel_fn = LiveIntel()
     w = Worker(a.log, a.store or store_path(), secret=secret, intel_fn=intel_fn,
                campaigns_fn=campaigns_fn, synthetic=not a.real,
                repository=traffic_repository(), source_key=traffic_source(),

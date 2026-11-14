@@ -194,3 +194,8 @@ uv run --no-sync python -m bouncer.review.worker --close-interrupted JOB_ID --wo
 The command requires the stored owner and running state. It marks the job unavailable/interrupted, releases unused job reservation amounts, and preserves all dispatched pending/unknown charge holds. It never sends a model request or retries inference. Unknown charges still require authoritative billing reconciliation.
 
 The isolated local Docker/Caddy acceptance run passed five of six gates after core hardening. Fake-crawler verification remained unknown when DNS was unavailable. This does not establish a passing live-DNS or Hostinger deployment gate.
+
+
+## Bounded network evidence in runtime code
+
+The current source now uses process-isolated, cached S4 lookups and retained resolver/rule/feature/campaign evidence. See [network evidence and limits](NETWORK_EVIDENCE.md). This source change has been checked in an isolated packaged SQL stack; it is not a claim that the Hostinger deployment has been upgraded or that live crawler DNS verification was available. Paid calls and automatic enforcement retain their existing separate gates.

@@ -15,6 +15,7 @@ from bouncer.db.store import traffic_repository, traffic_retention, traffic_sour
 from bouncer.ingest.worker import Worker
 from bouncer.investigations import InvestigationStore
 from bouncer.network import find_campaigns
+from bouncer.network.live import LiveIntel
 from bouncer.review import ReviewSettings, capabilities
 from tools.sim.run import run
 
@@ -57,10 +58,34 @@ def selected_session_snapshot(snapshot: dict, index: int) -> dict:
     findings.sort(key=lambda s: verdicts.get(s["id"], {}).get("rule_id") != "vuln_paths")
     bucket = (findings if index % 2 == 0 else controls) or findings or controls
     session = bucket[(index // 2) % len(bucket)]
+    selected_ids = {session["id"]}
+    available = {item["id"] for item in snapshot["sessions"]}
+    campaigns = snapshot.get("campaigns", [])
+    while True:
+        expanded = selected_ids | {sid for campaign in campaigns
+                                   if selected_ids.intersection(campaign.get("session_ids", []))
+                                   for sid in campaign.get("session_ids", [])}
+        if len(expanded) > 32 or not expanded <= available:
+            # Keep the limitation visible; never truncate a relation and call it complete.
+            selected_ids = {session["id"]}
+            break
+        if expanded == selected_ids:
+            break
+        selected_ids = expanded
+    selected_sessions = [item for item in snapshot["sessions"] if item["id"] in selected_ids]
+    selected_ips = {item.get("ip") for item in selected_sessions}
     return {
         "synthetic": snapshot["synthetic"],
-        "sessions": [session],
-        "verdicts": {session["id"]: snapshot.get("verdicts", {}).get(session["id"], {})},
+        "sessions": selected_sessions,
+        "verdicts": {sid: snapshot.get("verdicts", {}).get(sid, {}) for sid in selected_ids},
+        "rule_observations": {sid: value for sid, value in snapshot.get(
+            "rule_observations", {}
+        ).items() if sid in selected_ids},
+        "ip_evidence": {ip: value for ip, value in snapshot.get("ip_evidence", {}).items()
+                        if ip in selected_ips},
+        "campaigns": [c for c in campaigns if selected_ids.intersection(c.get("session_ids", []))],
+        "ingest": {k: v for k, v in snapshot.get("ingest", {}).items()
+                   if k in {"updated_at", "rotation_gaps", "discarded_by_retention"}},
     }
 
 
@@ -70,7 +95,7 @@ def ingest(stop: threading.Event) -> None:
         Path("/logs/access.log"),
         Path("/data/store.json"),
         secret=os.environ["SIM_RUN_SECRET"],
-        intel_fn=None,
+        intel_fn=LiveIntel(),
         campaigns_fn=find_campaigns,
         synthetic=True,
         max_records=6000,

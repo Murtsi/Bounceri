@@ -7,7 +7,7 @@ S4 hyväksytty: `verified_bot: bool | None` (päätökset 020 + 027).
 from __future__ import annotations
 
 from bouncer.network.asn import lookup_asn
-from bouncer.network.bots import verify_search_bot
+from bouncer.network.bots import BotCheck, verify_search_bot
 from bouncer.network.threat import lookup_threat
 from bouncer.network.types import IpIntel
 
@@ -18,6 +18,11 @@ def ip_intel(ip: str) -> IpIntel:
     `country` tulee curated ASN-prefixeistä (ei MaxMind/GeoIP) — vain kun
     listassa on eksplisiittinen `country`-kenttä (päätös 040).
     """
+    return inspect_ip(ip)[0]
+
+
+def inspect_ip(ip: str) -> tuple[IpIntel, BotCheck]:
+    """Keep the original DNS observation alongside S4 without resolving twice."""
     bot = verify_search_bot(ip)
     asn = lookup_asn(ip)
     threat = lookup_threat(ip)
@@ -38,7 +43,7 @@ def ip_intel(ip: str) -> IpIntel:
         asn_type=asn_type,
         country=asn.country,
         threat_label=threat.label if threat else None,
-    )
+    ), bot
 
 
 def ip_intel_contract(ip: str) -> object:

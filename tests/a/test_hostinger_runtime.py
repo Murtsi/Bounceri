@@ -51,3 +51,40 @@ def test_review_selection_includes_findings_and_controls_without_reference_label
     }
     assert selected_session_snapshot(snapshot, 0)["sessions"][0]["id"] == "scanner"
     assert selected_session_snapshot(snapshot, 1)["sessions"][0]["id"] == "human"
+
+
+def test_review_scope_includes_complete_bounded_campaign_component():
+    snapshot = {
+        "synthetic": True,
+        "sessions": [{"id": str(i), "ip": f"192.0.2.{i + 1}", "requests": [{
+            "ts": "2026-11-14T12:00:00+00:00", "method": "POST", "path": "/login",
+            "status": 401, "username": "private-target",
+        }]} for i in range(3)],
+        "verdicts": {str(i): {"label": "bad_bot"} for i in range(3)},
+        "campaigns": [{"id": "group", "kind": "credential_stuffing",
+                       "session_ids": ["0", "1", "2"]}],
+    }
+    selected = selected_session_snapshot(snapshot, 0)
+    assert {s["id"] for s in selected["sessions"]} == {"0", "1", "2"}
+    from bouncer.investigations import InvestigationStore
+    store = InvestigationStore("sqlite:///:memory:")
+    case = store.create_from_legacy(selected)
+    assert case["complete"] is True
+    assert case["review_eligibility"]["eligible"] is True
+    assert any(e["kind"] == "campaign_summary" for e in case["evidence"])
+    store.engine.dispose()
+
+
+def test_oversized_campaign_scope_remains_explicitly_incomplete():
+    from bouncer.investigations.evidence import traffic_packet
+    source = {
+        "synthetic": True,
+        "sessions": [{"id": str(i), "requests": []} for i in range(33)],
+        "verdicts": {},
+        "campaigns": [{"id": "large", "kind": "behavior_cluster",
+                       "session_ids": [str(i) for i in range(33)]}],
+    }
+    selected = selected_session_snapshot(source, 1)
+    assert len(selected["sessions"]) == 1
+    assert len(selected["campaigns"][0]["session_ids"]) == 33
+    assert traffic_packet(selected)["complete"] is False

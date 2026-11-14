@@ -181,3 +181,14 @@ def test_registry_missing_redistribution_terms_is_rejected(tmp_path):
     path.write_text(json.dumps(source))
     with pytest.raises(ValueError, match="redistribution"):
         load_registry(path)
+
+
+def test_bounded_and_shared_nat_retry_controls_remain_non_hostile(tmp_path):
+    manifest_path = generate_bundle(tmp_path / "controls", seed=41, runs_per_partition=1)
+    report = evaluate_bundle(manifest_path)
+    assert {"bounded_monitor_burst", "shared_nat_login_retries"} <= report["by_profile"].keys()
+    assert report["by_profile"]["shared_nat_login_retries"]["human_fpr"]["numerator"] == 0
+    assert report["by_profile"]["bounded_monitor_burst"]["unknown_intent_flagged_bad_bot"] == 0
+    manifest = verify_bundle(manifest_path)
+    assert manifest["version"] == "native-synthetic-v2"
+    assert manifest["reserved_is_genuinely_hidden"] is False

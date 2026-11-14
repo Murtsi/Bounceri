@@ -226,3 +226,13 @@ Verified 616 backend tests with disposable PostgreSQL, frontend build/7 unit/36 
 ### 069 — Canonical client IPs at the native boundary
 
 2026-11-14. Normalize plain IPv4/IPv6 addresses in the native parser and typed storage readers. Reject malformed/scoped addresses per record rather than allowing an invalid INET value to repeatedly abort a source transaction. Preserve opaque existing session IDs while normalizing their client identity. This closes reproduced PostgreSQL ingestion failures for malformed input, scoped IPv6 and expanded/compressed spellings; it does not infer that one IP identifies one person.
+
+### 070 — Bounded S4 evidence and scoped review context
+
+2026-11-14. The hosted worker selects LiveIntel around the existing S4 computation. A child performs one existing verifier pass; the parent validates its bounded protocol, caches verification/mismatch for 300 seconds and unknown outcomes for 60 seconds, caps cache at 2048 and admits at most four one-second lookups per cycle within a four-second DNS budget. Startup and cleanup time are charged; OS process creation cannot itself be preempted by Python. Capacity is not cached. DNS failures never become spoofing proof. ASN/country origin stays explicitly curated or inferred rather than pretending to be live GeoIP.
+
+The worker captures each observation before cache eviction and retains the active trap-config hash, unique trap-path counts, finite allowlisted features and local rule IDs. Public case projection drops raw identifiers/requests/truth. Campaign relationships are derived from complete scoped member requests, with explicit source gaps/incompleteness. Intentional read-window retention is a scope limitation. The sampler includes connected campaign context up to 32 sessions; missing/oversized components remain review-ineligible rather than dropping relationships to obtain a paid review.
+
+Packet validation rejects unknown nested keys, incoherent DNS status, invalid feature/count types, duplicate/missing/aggregate member references and inconsistent campaign counts. Decision input strips local rule IDs along with local labels/scores. Prompt version v4 reflects the new context, but coordination remains unknown and candidate relationships do not establish a common operator. Deterministic probe/trap evidence is still required for maliciousness/restrictive suggestions; all model output remains advisory.
+
+Synthetic generator v2 adds transparent bounded-monitor/shared-NAT login controls. The previously viewed benchmark stays frozen; no new real-world accuracy or hidden-attack claim is made. Owner steering confirms permitted public data mixed with consented human activity as the intended later evaluation sources.
