@@ -78,6 +78,16 @@ def test_sample_loader_does_not_treat_header_as_forwarded_client_ip() -> None:
     assert request.ip == "198.51.100.10"
 
 
+def test_caddy_epoch_float_timestamp_is_parsed() -> None:
+    """Oikea Caddy kirjoittaa `ts`:n Unix-aikana (liukuluku), ei ISO-merkkijonona."""
+    records = _records()
+    records[0]["ts"] = 1794671640.384715  # type: ignore[index]
+
+    request, _ = parse_access_record(records[0])
+
+    assert request.ts.isoformat() == "2026-11-14T15:54:00.384715+00:00"
+
+
 def test_caddy_client_ip_is_used_when_caddy_resolved_it() -> None:
     """Paikallinen demo (päätös 050): Caddy laskee client_ip:n luotetulta proxyltä.
     Ilman luotettua proxyä client_ip == remote_ip; XFF-otsakkeeseen ei luoteta."""

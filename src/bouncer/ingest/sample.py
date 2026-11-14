@@ -48,6 +48,10 @@ def _normalised_headers(headers: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _timestamp(value: Any) -> datetime:
+    # Caddy kirjoittaa oletuksena Unix-ajan liukulukuna (esim. 1794671640.38);
+    # käsin kirjoitetut fixturet käyttävät ISO-merkkijonoa. Hyväksytään molemmat.
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return datetime.fromtimestamp(float(value), tz=UTC)
     if not isinstance(value, str):
         raise ValueError("Caddy record is missing its timestamp")
     try:
