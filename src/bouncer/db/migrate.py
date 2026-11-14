@@ -10,19 +10,7 @@ import hashlib
 import re
 from pathlib import Path
 
-from sqlalchemy import (
-    BigInteger,
-    Column,
-    ForeignKey,
-    Index,
-    Integer,
-    MetaData,
-    Table,
-    Text,
-    UniqueConstraint,
-    inspect,
-)
-from sqlalchemy.dialects.postgresql import INET, JSONB, TIMESTAMP
+from sqlalchemy import UniqueConstraint, inspect
 from sqlalchemy.engine import Connection, Engine
 
 MIGRATIONS_DIR = Path(__file__).with_name("migrations")
@@ -38,50 +26,10 @@ REQUEST_DEFAULTS = {
 
 def _expected_tables():
     # Import lazily: both stores call this runner after defining their metadata.
+    from bouncer.db.traffic import metadata as traffic
     from bouncer.enforcement import metadata as enforcement
     from bouncer.investigations.store import metadata as investigations
 
-    traffic = MetaData()
-    sessions = Table(
-        "sessions",
-        traffic,
-        Column("id", BigInteger, primary_key=True),
-        Column("ip", INET, nullable=False),
-        Column("user_agent", Text, nullable=False),
-        Column("started_at", TIMESTAMP(timezone=True), nullable=False),
-        Column("ended_at", TIMESTAMP(timezone=True), nullable=False),
-    )
-    Index("sessions_started_at_idx", sessions.c.started_at)
-    Table(
-        "requests",
-        traffic,
-        Column("id", BigInteger, primary_key=True),
-        Column("ts", TIMESTAMP(timezone=True), nullable=False),
-        Column("ip", INET, nullable=False),
-        Column("method", Text, nullable=False),
-        Column("path", Text, nullable=False),
-        Column("status", Integer, nullable=False),
-        Column("user_agent", Text, nullable=False),
-        Column("query", Text, nullable=False),
-        Column("bytes", Integer, nullable=False),
-        Column("headers", JSONB, nullable=False),
-        Column("content_type", Text),
-        Column("session_id", BigInteger, ForeignKey("sessions.id", ondelete="SET NULL")),
-        UniqueConstraint("ts", "ip", "method", "path", "status", "user_agent"),
-    )
-    Table(
-        "labels",
-        traffic,
-        Column(
-            "session_id",
-            BigInteger,
-            ForeignKey("sessions.id", ondelete="CASCADE"),
-            primary_key=True,
-        ),
-        Column("run_id", Text, nullable=False),
-        Column("sim_class", Text, nullable=False),
-        Column("campaign_id", Text),
-    )
     return {**traffic.tables, **investigations.tables, **enforcement.tables}
 
 

@@ -22,6 +22,12 @@ from bouncer.investigations.store import budget
 from bouncer.investigations.store import metadata as investigation_metadata
 
 
+def versions():
+    return sorted(
+        int(path.name.split("_", 1)[0]) for path in Path("src/bouncer/db/migrations").glob("*.sql")
+    )
+
+
 @pytest.fixture(scope="module")
 def postgres_url():
     if os.getenv("BOUNCER_TEST_POSTGRES") != "1":
@@ -98,7 +104,7 @@ def migrate(engine, **kwargs):
 def test_fresh_database_restart_and_concurrent_initialization(engine):
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(lambda _: migrate(engine), range(4)))
-    assert sorted(map(len, results)) == [0, 0, 0, 2]
+    assert sorted(map(len, results)) == [0, 0, 0, len(versions())]
     assert migrate(engine) == []
     tables = set(inspect(engine).get_table_names())
     assert {"requests", "sessions", "labels", "schema_migrations"} <= tables
@@ -106,10 +112,7 @@ def test_fresh_database_restart_and_concurrent_initialization(engine):
     with engine.connect() as conn:
         assert conn.exec_driver_sql(
             "SELECT version FROM schema_migrations ORDER BY version"
-        ).all() == [
-            (1,),
-            (2,),
-        ]
+        ).all() == [(version,) for version in versions()]
 
 
 def test_populated_create_all_database_is_adopted_without_changing_types_or_data(engine):
@@ -118,7 +121,7 @@ def test_populated_create_all_database_is_adopted_without_changing_types_or_data
     with engine.begin() as conn:
         conn.execute(insert(budget).values(id=1, spent=17, reserved=23, executions=2, requests=4))
     before = inspect(engine).get_columns("investigation_budget")
-    assert migrate(engine) == [1, 2]
+    assert migrate(engine) == versions()
     assert migrate(engine) == []
     assert [(c["name"], str(c["type"])) for c in before] == [
         (c["name"], str(c["type"])) for c in inspect(engine).get_columns("investigation_budget")
@@ -141,7 +144,7 @@ def test_populated_001_database_upgrades_without_losing_traffic(engine):
         conn.exec_driver_sql(
             "INSERT INTO labels (session_id, run_id, sim_class) VALUES (1, 'fixture', 'human')"
         )
-    assert migrate(engine) == [1, 2]
+    assert migrate(engine) == versions()
     with engine.connect() as conn:
         assert conn.exec_driver_sql("SELECT run_id FROM labels").scalar_one() == "fixture"
 
@@ -241,7 +244,9 @@ def test_production_stores_initialize_through_checked_migrations(engine, monkeyp
             conn.exec_driver_sql("SELECT count(*) FROM investigation_budget WHERE id=1").scalar()
             == 1
         )
-        assert conn.exec_driver_sql("SELECT count(*) FROM schema_migrations").scalar() == 2
+        assert conn.exec_driver_sql("SELECT count(*) FROM schema_migrations").scalar() == len(
+            versions()
+        )
 
 
 @pytest.mark.parametrize(
@@ -291,7 +296,7 @@ def test_known_version_one_upgrades_to_two_with_concurrent_budget_writers(engine
 
     with ThreadPoolExecutor(max_workers=5) as pool:
         writes = [pool.submit(write_budget, index) for index in range(4)]
-        assert pool.submit(migrate, engine).result(timeout=15) == [2]
+        assert pool.submit(migrate, engine).result(timeout=15) == versions()[1:]
         for write in writes:
             write.result(timeout=15)
     assert migrate(engine) == []
@@ -303,7 +308,7 @@ def test_checksums_are_stable_across_platform_line_endings(engine, tmp_path):
     source = Path("src/bouncer/db/migrations")
     for path in source.glob("*.sql"):
         (tmp_path / path.name).write_bytes(path.read_text(encoding="utf-8-sig").encode("utf-8"))
-    assert migrate(engine, migrations_dir=tmp_path) == [1, 2]
+    assert migrate(engine, migrations_dir=tmp_path) == versions()
     for path in tmp_path.glob("*.sql"):
         path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
     assert migrate(engine, migrations_dir=tmp_path) == []
@@ -312,12 +317,12 @@ def test_checksums_are_stable_across_platform_line_endings(engine, tmp_path):
 def test_scripts_preserve_quoted_semicolons_and_do_blocks(engine, tmp_path):
     for path in Path("src/bouncer/db/migrations").glob("*.sql"):
         (tmp_path / path.name).write_bytes(path.read_bytes())
-    (tmp_path / "003_literal.sql").write_text(
+    (tmp_path / f"{len(versions()) + 1:03d}_literal.sql").write_text(
         "CREATE TABLE literal_probe (value TEXT); "
         "DO $$ BEGIN INSERT INTO literal_probe VALUES ('a;b'); END $$;",
         encoding="utf-8",
     )
-    assert migrate(engine, migrations_dir=tmp_path) == [1, 2, 3]
+    assert migrate(engine, migrations_dir=tmp_path) == versions() + [len(versions()) + 1]
     with engine.connect() as conn:
         assert conn.exec_driver_sql("SELECT value FROM literal_probe").scalar_one() == "a;b"
 
@@ -326,10 +331,10 @@ def test_additive_column_upgrade_validates_the_resulting_schema(engine, tmp_path
     from sqlalchemy import Column, MetaData, Text
 
     module = importlib.import_module("bouncer.db.migrate")
-    assert migrate(engine) == [1, 2]
+    assert migrate(engine) == versions()
     for path in Path("src/bouncer/db/migrations").glob("*.sql"):
         (tmp_path / path.name).write_bytes(path.read_bytes())
-    (tmp_path / "003_source_reference.sql").write_text(
+    (tmp_path / f"{len(versions()) + 1:03d}_source_reference.sql").write_text(
         "ALTER TABLE investigation_cases ADD COLUMN source_reference TEXT;", encoding="utf-8"
     )
     original_tables = module._expected_tables
@@ -341,7 +346,7 @@ def test_additive_column_upgrade_validates_the_resulting_schema(engine, tmp_path
         return tables | {"investigation_cases": table}
 
     monkeypatch.setattr(module, "_expected_tables", expected_tables)
-    assert migrate(engine, migrations_dir=tmp_path) == [3]
+    assert migrate(engine, migrations_dir=tmp_path) == [len(versions()) + 1]
     assert migrate(engine, migrations_dir=tmp_path) == []
 
 

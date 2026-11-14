@@ -204,3 +204,11 @@ Interrupted review recovery is an explicit operator action naming the running jo
 2026-11-14. Pin development-only Playwright 1.65.1 and run the existing browser checks through native Node tests and Vite's local server API. The runner starts on an ephemeral localhost port, creates isolated Chromium state, verifies nonempty checks, exits nonzero on failures, and closes browser/server even when startup or an assertion fails. CI uses Node 22.18.0 and installs Chromium system dependencies explicitly. No production bundle dependency or new UI test framework is introduced.
 
 Verified 7 unit tests, production build and 36 browser checks locally, including the exact CI Node version. Injected assertion/startup failures exited nonzero and cleaned up resources. GitHub's Ubuntu execution remains external verification; it is not claimed as locally run.
+
+### 067 — Durable traffic identities and source isolation
+
+2026-11-14. Migration003 adds source-scoped external session IDs and immutable `(source_key,generation,byte_offset)` request identities while keeping internal bigint foreign keys. It removes the lossy natural uniqueness tuple; distinct identical requests stay distinct. Source rows serialize writers with checkpoint revision comparison, keeping normalized history, visibility, private resume state and explicit age pruning in one transaction. Historical readers and visible snapshots use one read transaction (PostgreSQL repeatable read; explicit SQLite read transaction).
+
+Synthetic/non-synthetic provenance is immutable within a source. Unknown legacy origins remain unknown and cannot silently become real evaluation data. Frozen snapshot-backfill archives preserve IDs and canonical content but never invent source byte positions; they reject live batches and changed replacements. Raw source/continuity/marker state is private and excluded from SQL read-model metadata. Existing001/002 SQL files remain immutable.
+
+Verified with disposable PostgreSQL/SQLite transaction, replay, exact multiplicity, collision, stale writer, label invalidation, provenance, archive, retention and concurrent read regressions. Runtime selection/cutover uses the same repository and is recorded in the next increment; no live Hostinger switch is implied by this schema commit.
