@@ -90,7 +90,11 @@
   text-wrap: balance;
   animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 150ms backwards;
 }
-.lp-hero h1 span { color: var(--primary); }
+.lp-hero h1 .lp-h1-brand { color: var(--primary); white-space: nowrap; }
+/* Logo otsikon sisällä: sama kirjasinkoko ja paino kuin otsikolla; ponnahdus alkaa, kun otsikko on näkyvissä. */
+.lp-h1-logo { margin-left: 0.1em; font-size: 1em; font-weight: inherit; letter-spacing: inherit; vertical-align: baseline; }
+.lp-h1-logo.bouncer-play .bouncer-bowl { animation-delay: 650ms; }
+.lp-h1-logo.bouncer-play .bouncer-tail { animation-delay: 1140ms; }
 .lp-lede {
   margin: 0;
   max-width: 46ch;

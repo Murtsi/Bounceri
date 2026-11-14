@@ -1,6 +1,8 @@
 import "./Landing.css";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { api } from "@/api";
 import { BouncerLogo } from "@/components/BouncerLogo";
 import { GatehouseScene, type GateMode } from "@/views/GatehouseScene";
 
@@ -56,6 +58,9 @@ const MODULES = [
 
 export default function Landing({ open }: { open: (t: Target) => void }) {
   const [mode, setMode] = useState<GateMode>("idle");
+  // Merkintä "synthetic" vain, kun API kertoo datan olevan synteettistä (ei kovakoodattuna).
+  const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
+  const synthetic = summary?.synthetic === true;
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
@@ -78,8 +83,9 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
         {/* Hero: lupaus vasemmalla, elävä porttikoppi oikealla. */}
         <section className="lp-hero" aria-labelledby="lp-title">
           <div className="lp-hero-copy">
+            {/* Otsikon "Bouncer" on sama logo kuin latausruudussa: B:n alakaari ponnauttaa "ouncer"-sanan. */}
             <h1 id="lp-title">
-              Every session meets <span>the bouncer.</span>
+              Every session meets <span className="lp-h1-brand">the{" "}<BouncerLogo mode="play" className="lp-h1-logo" />.</span>
             </h1>
             <p className="lp-lede">
               Bounceri reads your website’s traffic session by session and tells you who is really at the door: a
@@ -100,7 +106,7 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
                 : mode === "replay"
                   ? "Each dot is a real recent session, replayed while traffic is quiet"
                   : "Waiting for traffic"}
-              <span> · synthetic demo traffic</span>
+              {synthetic && <span> · synthetic traffic</span>}
             </p>
           </div>
           <div className="lp-hero-scene">
@@ -209,7 +215,7 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
 
       <footer className="lp-foot">
         <span>Built in 48 hours at Junction 2026 by Murtsi, Niko and Joonas for Hostinger’s Decode the Noise.</span>
-        <span>Advisory prototype · demo traffic is synthetic · Bouncer never blocks requests itself.</span>
+        <span>Advisory: Bouncer recommends actions and never blocks requests itself.</span>
       </footer>
     </div>
   );

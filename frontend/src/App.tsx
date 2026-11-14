@@ -205,9 +205,9 @@ export default function App() {
             <span className="ml-auto tabular-nums text-muted-foreground">{activity.time ?? "—"}</span>
           </div>
           {s?.synthetic && (
-            <div className="flex items-start gap-2 text-muted-foreground">
-              <FlaskConical className="mt-px size-3.5 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
-              <span>{SYNTHETIC_DATA_NOTICE}</span>
+            <div className="flex items-center gap-2 text-muted-foreground" title={SYNTHETIC_DATA_NOTICE}>
+              <FlaskConical className="size-3.5 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
+              <span>Synthetic traffic</span>
             </div>
           )}
         </div>

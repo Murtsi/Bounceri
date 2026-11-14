@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { api } from "@/api";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
@@ -8,7 +7,7 @@ import { SplashScreen } from "@/components/BouncerLogo";
 import { OverviewSkeleton } from "@/components/Skeletons";
 import { TrafficChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { GatehouseScene, type GateMode } from "@/views/GatehouseScene";
+import { DepthFloor, DepthPanel } from "@/components/Depth";
 import { LiveFeed } from "@/views/LiveFeed";
 
 function clock(iso: string) {
@@ -29,7 +28,6 @@ export default function Overview({
   showSession: (sessionId: string) => void;
 }) {
   const { data: o, error } = useQuery({ queryKey: ["overview"], queryFn: api.overview });
-  const [gateMode, setGateMode] = useState<GateMode>("idle");
   if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!o) return <OverviewSkeleton />;
   if (o.n_sessions === 0)
@@ -43,6 +41,7 @@ export default function Overview({
   const requests = pts.reduce((sum, p) => sum + p.human + p.good_bot + p.bad_bot + p.uncertain, 0);
   return (
     <div className="overview-stack">
+      <DepthFloor />
       <div className="overview-context">
         <span><strong>{requests.toLocaleString("en-GB")}</strong> requests</span>
         <span className="overview-context-separator" aria-hidden="true" />
@@ -51,34 +50,7 @@ export default function Overview({
         <span className="overview-advisory">Detector classification · no live blocking</span>
       </div>
 
-      {/* Näyteikkuna: jokainen piste on oikea sessio Bouncerin luokittelemana. */}
-      <section className="showcase" aria-labelledby="showcase-title">
-        <div className="showcase-copy">
-          <h2 id="showcase-title">
-            Every session meets <span>the bouncer.</span>
-          </h2>
-          <p className="showcase-lede">
-            Each dot is a real session, sorted by Bouncer as it arrives.
-          </p>
-          <ul className="showcase-legend">
-            <li><i className="sw sw-pass" aria-hidden="true" />Walks through · human or good bot</li>
-            <li><i className="sw sw-stop" aria-hidden="true" />Held at the door · bad bot</li>
-            <li><i className="sw sw-check" aria-hidden="true" />Checked, then let in · uncertain</li>
-          </ul>
-          <p className={`showcase-mode is-${gateMode}`} role="status">
-            <i aria-hidden="true" />
-            {gateMode === "live"
-              ? "Live · following incoming sessions"
-              : gateMode === "replay"
-                ? "No new traffic · replaying the latest sessions"
-                : "Waiting for traffic"}
-          </p>
-          <p className="showcase-note">Illustration. Bouncer recommends actions; it never blocks requests itself.</p>
-        </div>
-        <div className="showcase-scene">
-          <GatehouseScene onMode={setGateMode} />
-        </div>
-      </section>
+      <DepthPanel>
       <section className="attention-panel" aria-labelledby="attention-title">
         <div className="attention-heading">
           <div>
@@ -113,6 +85,7 @@ export default function Overview({
           <Button variant="ghost" size="sm" className="attention-all" onClick={() => goSessions("")}>View all sessions <ChevronRight /></Button>
         </div>
       </section>
+      </DepthPanel>
 
       {/* Todisteet: liikenne aikajanalla ja uusimmat sessiot rinnakkain, ilman kortteja. */}
       <div className="overview-evidence">
