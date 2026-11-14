@@ -22,17 +22,24 @@ function time(iso: string) {
   return new Date(iso).toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-/** Avausruutu näkyy vähintään yhden logo-pompun ajan, sitten häivytys (380 ms). */
+/** Latauslogon yksi kierros (index.css: bowl-spring-loop / tail-bounce-loop). */
+const LOOP_MS = 2600;
+
+/**
+ * Avausruutu poistuu vasta, kun data on tullut JA latauslogon kierros on lopussa
+ * (sana on palannut B:n kaareen) — animaatio ei katkea kesken. Vähennetty liike → heti.
+ */
 function useSplash(loaded: boolean): "show" | "leaving" | "gone" {
-  const [minDone, setMinDone] = useState(false);
   const [state, setState] = useState<"show" | "leaving" | "gone">("show");
+  const [start] = useState(() => performance.now());
   useEffect(() => {
-    const t = setTimeout(() => setMinDone(true), 1100);
+    if (!loaded || state !== "show") return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const elapsed = performance.now() - start;
+    const wait = reduced ? 0 : Math.ceil(Math.max(elapsed, 1) / LOOP_MS) * LOOP_MS - elapsed;
+    const t = setTimeout(() => setState("leaving"), wait);
     return () => clearTimeout(t);
-  }, []);
-  useEffect(() => {
-    if (loaded && minDone && state === "show") setState("leaving");
-  }, [loaded, minDone, state]);
+  }, [loaded, state, start]);
   useEffect(() => {
     if (state !== "leaving") return;
     const t = setTimeout(() => setState("gone"), 400);
@@ -45,13 +52,17 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("overview");
   const [picked, setPicked] = useState<string | null>(null);
   const { data: s, isFetched } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
-  const splash = useSplash(isFetched);
+  // Yleiskuva haetaan jo avausruudun aikana, jotta sen animaatiot näkyvät alusta asti.
+  const { isFetched: overviewFetched } = useQuery({ queryKey: ["overview"], queryFn: api.overview });
+  const splash = useSplash(isFetched && overviewFetched);
+  const live = splash !== "show";
   return (
     <div className="min-h-screen">
       {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
       <header className="sticky top-0 z-10 border-b border-white/5 bg-[#08110c]/40 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          <BouncerLogo mode="play" className="text-2xl" />
+          {/* Otsikon logo laukeaa vasta, kun avausruutu väistyy: sana ponnahtaa B:stä näkyvästi. */}
+          <BouncerLogo key={live ? "play" : "hold"} mode={live ? "play" : "hold"} className="text-2xl" />
           <span className="hidden text-sm text-muted-foreground sm:inline">Kuka sivulla oikeasti käy</span>
           <div className="ml-auto flex items-center gap-3 py-1.5">
             <span className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground min-[400px]:inline">
@@ -60,15 +71,16 @@ export default function App() {
           </div>
         </div>
       </header>
-      <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6">
-        {s?.synthetic && (
-          <div role="status" className="glass flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm">
-            <FlaskConical className="size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
-            <span>
-              <span className="font-medium">Synteettinen data</span>
-              <span className="text-muted-foreground"> — päätökset ovat oikeita, mutta niistä ei lasketa mittareita.</span>
-            </span>
-          </div>
+      {live && (
+        <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6">
+          {s?.synthetic && (
+            <div role="status" className="glass flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm">
+              <FlaskConical className="size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
+              <span>
+                <span className="font-medium">Synteettinen data</span>
+                <span className="text-muted-foreground"> — päätökset ovat oikeita, mutta niistä ei lasketa mittareita.</span>
+              </span>
+            </div>
         )}
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="gap-4">
           <TabsList aria-label="Näkymät" className="self-start">
@@ -98,6 +110,7 @@ export default function App() {
           </TabsContent>
         </Tabs>
       </main>
+      )}
     </div>
   );
 }

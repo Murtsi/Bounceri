@@ -3,12 +3,13 @@ import { cn } from "@/lib/utils";
 
 const TAIL = "ouncer".split("");
 
-type Mode = "play" | "loop" | "static";
+type Mode = "play" | "loop" | "static" | "hold";
 
 /**
  * "Bouncer": B:n alakaari painuu sisään kuin jousi ja ponnauttaa loppusanan "ouncer" ulos,
  * joka pomppii paikalleen kuin pallo.
- * play = kerran (otsikko), loop = toistuu (latausnäyttö), static = ei liikettä.
+ * play = kerran (otsikko), loop = toistuu (latausnäyttö), static = ei liikettä,
+ * hold = vain B näkyy (odottaa avausruudun poistumista, sitten play).
  * prefers-reduced-motion poistaa animaation (index.css).
  */
 export function BouncerLogo({ mode = "play", className }: { mode?: Mode; className?: string }) {
@@ -21,6 +22,7 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
         mode === "play" && "bouncer-play",
         mode === "loop" && "bouncer-loop",
         mode === "static" && "bouncer-static",
+        mode === "hold" && "bouncer-hold",
         className,
       )}
     >
@@ -36,7 +38,8 @@ export function BouncerLogo({ mode = "play", className }: { mode?: Mode; classNa
         <path d="M7 0V72" />
         <path d="M7 7H33A14 14 0 0 1 33 35H7" />
         <g className="bouncer-bowl">
-          <path d="M7 35H37A15 15 0 0 1 37 65H7" />
+          {/* non-scaling-stroke: viiva pysyy saman paksuisena, vaikka kaari puristuu kasaan. */}
+          <path d="M7 35H37A15 15 0 0 1 37 65H7" vectorEffect="non-scaling-stroke" style={{ strokeWidth: "0.14em" }} />
         </g>
       </svg>
       {/* "ouncer" yhtenä sanana: syntyy B:n alakaaresta ja pomppii paikalleen. */}
