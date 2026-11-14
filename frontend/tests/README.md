@@ -12,4 +12,4 @@ const result = await checkInvestigations(await browser.newPage());
 console.log(result);
 ```
 
-The existing Finnish overview remains the default home with its original navigation, header and visual system. The additional Investigations tab uses English and is marked with `lang="en"`.
+The latest Finnish dashboard overview remains the default home, preserving its Bouncer logo, theme toggle, shadcn/ui navigation and all existing views. The additional Investigations tab uses English, follows both themes and is marked with `lang="en"`.

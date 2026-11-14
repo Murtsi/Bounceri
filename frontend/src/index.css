@@ -1,11 +1,150 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+/* shadcn/ui (new-york, neutral) + Bouncerin datavärit.
+   Kaaviovärit: dataviz-skillin validoitu paletti, järjestys ihminen → hyvä botti →
+   haitallinen → epävarma (CVD ΔE ≥ 9,2, normaali ≥ 17,6 molemmissa tiloissa; harmaa
+   on de-emphasis-rooli). Tumma tila on valittu erikseen, ei automaattinen käännös. */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --radius: 0.75rem;
+  --background: #f9f9f7;
+  --foreground: #0b0b0b;
+  --card: #fcfcfb;
+  --card-foreground: #0b0b0b;
+  --popover: #fcfcfb;
+  --popover-foreground: #0b0b0b;
+  --primary: #0b0b0b;
+  --primary-foreground: #fcfcfb;
+  --secondary: #f0efec;
+  --secondary-foreground: #0b0b0b;
+  --muted: #f0efec;
+  --muted-foreground: #52514e;
+  --accent: #f0efec;
+  --accent-foreground: #0b0b0b;
+  --destructive: #d03b3b;
+  --border: rgba(11, 11, 11, 0.1);
+  --input: rgba(11, 11, 11, 0.15);
+  --ring: #2a78d6;
+
+  /* data (dataviz) */
+  --series-human: #2a78d6;
+  --series-good: #1baf7a;
+  --series-bad: #eb6834;
+  --series-uncertain: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --ink-muted: #898781;
+  /* status (vain tila-merkitys, aina kuvake + teksti) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
 }
 
-body {
-  @apply bg-stone-50 text-zinc-900;
+.dark {
+  --background: #0d0d0d;
+  --foreground: #f0efec;
+  --card: #1a1a19;
+  --card-foreground: #f0efec;
+  --popover: #1a1a19;
+  --popover-foreground: #f0efec;
+  --primary: #f0efec;
+  --primary-foreground: #1a1a19;
+  --secondary: #2c2c2a;
+  --secondary-foreground: #f0efec;
+  --muted: #2c2c2a;
+  --muted-foreground: #c3c2b7;
+  --accent: #2c2c2a;
+  --accent-foreground: #f0efec;
+  --destructive: #d03b3b;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #3987e5;
+
+  --series-human: #3987e5;
+  --series-good: #199e70;
+  --series-bad: #d95926;
+  --series-uncertain: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+}
+
+@theme inline {
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-series-human: var(--series-human);
+  --color-series-good: var(--series-good);
+  --color-series-bad: var(--series-bad);
+  --color-series-uncertain: var(--series-uncertain);
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-serious: var(--status-serious);
+  --color-status-critical: var(--status-critical);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* --- Bouncer-logo: "ouncer" pomppaa ulos B-kirjaimesta ------------------------- */
+@keyframes b-launch {
+  0%, 100% { transform: scale(1, 1); }
+  8% { transform: scale(1.12, 0.82); }
+  16% { transform: scale(0.94, 1.06); }
+  26% { transform: scale(1, 1); }
+}
+@keyframes letter-bounce {
+  0% { transform: translateX(var(--from)) translateY(0) scale(0.2); opacity: 0; }
+  12% { opacity: 1; }
+  38% { transform: translateX(0) translateY(-0.55em) scale(1); }
+  55% { transform: translateX(0) translateY(0) scale(1.08, 0.9); }
+  66% { transform: translateY(-0.18em) scale(1); }
+  76% { transform: translateY(0) scale(1.03, 0.97); }
+  84%, 100% { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+}
+.bouncer-b { display: inline-block; transform-origin: 50% 100%; }
+.bouncer-letter { display: inline-block; transform-origin: 50% 100%; opacity: 0; }
+.bouncer-play .bouncer-b { animation: b-launch 900ms ease-out both; }
+.bouncer-play .bouncer-letter {
+  animation: letter-bounce 900ms cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  animation-delay: calc(80ms + var(--i) * 70ms);
+}
+.bouncer-loop .bouncer-b { animation: b-launch 1800ms ease-out infinite; }
+.bouncer-loop .bouncer-letter {
+  animation: letter-bounce 1800ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+  animation-delay: calc(80ms + var(--i) * 70ms);
+}
+.bouncer-static .bouncer-letter { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .bouncer-b, .bouncer-letter { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 .investigations-view :is(button, select, summary, a) {
@@ -14,7 +153,7 @@ body {
 }
 
 .investigations-view :focus-visible {
-  outline: 2px solid #1d4ed8;
+  outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
 

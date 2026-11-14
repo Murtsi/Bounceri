@@ -151,6 +151,15 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       ingest: {},
     },
     "/api/overview": { n_sessions: 0 },
+    "/api/sessions": [],
+    "/api/campaigns": [],
+    "/api/metrics": {
+      stub: true,
+      synthetic_data: true,
+      metrics: { model_version: "stub-v0" },
+      known_weaknesses: ["Fixture limitation"],
+      ingest: {},
+    },
   });
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -169,17 +178,21 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     await page.goto(baseURL);
     await page.waitForLoadState("networkidle");
     check(
-      await page.getByRole("heading", { name: "Kuka sivulla oikeasti käy" }).isVisible(),
+      await page.locator("header").getByRole("img", { name: "Bouncer", exact: true }).isVisible(),
       "Existing header changed",
     );
     check(
-      (await page.getByRole("button", { name: "Yleiskuva", exact: true }).getAttribute("aria-current")) === "page",
+      (await page.getByRole("tab", { name: "Yleiskuva", exact: true }).getAttribute("aria-selected")) === "true",
       "Existing overview is no longer the default",
     );
     for (const name of ["Sessiot", "Kampanjat", "Mittarit"]) {
-      check(await page.getByRole("button", { name, exact: true }).isVisible(), "Existing navigation changed");
+      check(await page.getByRole("tab", { name, exact: true }).isVisible(), "Existing navigation changed");
     }
-    await page.getByRole("button", { name: "Investigations", exact: true }).click();
+    check(await page.getByRole("button", { name: /Vaihda .* teemaan/ }).isVisible(), "Theme toggle missing");
+    await page.getByRole("tab", { name: "Investigations", exact: true }).click();
+    if (mode === "empty") await page.getByText("No investigations published yet", { exact: true }).waitFor();
+    else if (mode === "error") await page.getByText("Investigations could not be loaded", { exact: true }).waitFor();
+    else await page.getByRole("button", { name: /fixture-case/ }).waitFor();
     await page.waitForLoadState("networkidle");
   };
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -190,6 +203,36 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     await page.getByText("Model execution halted: fixture_budget_halt", { exact: true }).isVisible(),
     "Execution halt missing",
   );
+  if (!(await page.evaluate(() => document.documentElement.classList.contains("dark")))) {
+    await page.getByRole("button", { name: "Vaihda tummaan teemaan", exact: true }).click();
+  }
+  await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
+  check(
+    await page
+      .locator(".investigations-view section")
+      .first()
+      .evaluate((node) => getComputedStyle(node).backgroundColor === "rgb(26, 26, 25)"),
+    "Investigation panels do not follow dark theme",
+  );
+  await page.getByRole("button", { name: "Vaihda vaaleaan teemaan", exact: true }).click();
+  await page.waitForFunction(() => !document.documentElement.classList.contains("dark"));
+  check(
+    await page
+      .locator(".investigations-view section")
+      .first()
+      .evaluate((node) => getComputedStyle(node).backgroundColor === "rgb(252, 252, 251)"),
+    "Investigation panels do not follow light theme",
+  );
+  await page.getByRole("tab", { name: "Sessiot", exact: true }).click();
+  await page.getByText("Ei sessioita tällä suodattimella.", { exact: true }).waitFor();
+  await page.getByRole("tab", { name: "Kampanjat", exact: true }).click();
+  await page.getByText("Ei kampanjoita:", { exact: false }).waitFor();
+  await page.getByRole("tab", { name: "Mittarit", exact: true }).click();
+  await page.getByText("models/metrics.json on stub:", { exact: false }).waitFor();
+  await page.getByRole("tab", { name: "Yleiskuva", exact: true }).click();
+  await page.getByText("Odotetaan liikennettä…", { exact: false }).waitFor();
+  await page.getByRole("tab", { name: "Investigations", exact: true }).click();
+  await page.getByText("No investigations published yet", { exact: true }).waitFor();
 
   mode = "error";
   await reload();
@@ -349,13 +392,15 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.getByText("History could not be loaded", { exact: true }).waitFor();
   check(await page.getByRole("heading", { name: "Evidence snapshot" }).isVisible(), "History failure hid evidence");
   await page.getByRole("button", { name: "Open current traffic overview →" }).click();
-  await page.getByText("Ei vielä liikennettä.", { exact: false }).waitFor();
+  await page.getByText("Odotetaan liikennettä…", { exact: false }).waitFor();
   check(writes.length === 0, `Public UI issued write requests: ${writes.join(", ")}`);
   check(errors.length === 0, `Browser errors: ${errors.join(", ")}`);
   return {
     passed: [
       "existing overview remains default",
       "existing header and navigation preserved",
+      "PR23 sessions campaigns metrics and overview preserved",
+      "investigation light and dark theme",
       "empty state",
       "outage distinction",
       "future modules disabled",

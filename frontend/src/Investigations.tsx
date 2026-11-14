@@ -19,11 +19,12 @@ import {
 } from "./investigationPresentation";
 
 const TONES: Record<Tone, string> = {
-  neutral: "border-zinc-200 bg-zinc-100 text-zinc-700",
-  info: "border-blue-200 bg-blue-50 text-blue-800",
-  warning: "border-amber-300 bg-amber-50 text-amber-900",
-  danger: "border-red-200 bg-red-50 text-red-800",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  neutral: "border-border bg-muted text-muted-foreground",
+  info: "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200",
+  warning: "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-200",
+  danger: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200",
+  success:
+    "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200",
 };
 
 function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: Tone }) {
@@ -36,13 +37,16 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
 
 function ErrorState({ title, error, retry }: { title: string; error: unknown; retry: () => void }) {
   return (
-    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+    <div
+      role="alert"
+      className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4 text-sm text-red-900 dark:text-red-200"
+    >
       <p className="font-semibold">{title}</p>
       <p className="mt-1">
         {error instanceof Error ? error.message : "The service could not be reached."} This is not a no-findings result.
       </p>
       <button
-        className="mt-3 rounded-md border border-red-300 bg-white px-3 py-1.5 font-semibold hover:bg-red-100"
+        className="mt-3 rounded-md border border-red-300 dark:border-red-700 bg-card px-3 py-1.5 font-semibold hover:bg-red-100 dark:hover:bg-red-900"
         onClick={retry}
       >
         Try again
@@ -54,9 +58,9 @@ function ErrorState({ title, error, retry }: { title: string; error: unknown; re
 function Loading({ label }: { label: string }) {
   return (
     <div role="status" className="space-y-3 py-3">
-      <p className="text-sm text-zinc-600">{label}</p>
-      <div className="h-3 w-2/3 rounded bg-zinc-200" />
-      <div className="h-3 w-1/2 rounded bg-zinc-100" />
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <div className="h-3 w-2/3 rounded bg-muted" />
+      <div className="h-3 w-1/2 rounded bg-muted" />
     </div>
   );
 }
@@ -86,26 +90,28 @@ function CapabilitiesPanel() {
     ["trust_the_source", "Trust the source", "Source provenance · optional later module"],
   ];
   return (
-    <section aria-labelledby="modules-title" className="rounded-xl border border-zinc-200 bg-white">
-      <div className="border-b border-zinc-200 px-5 py-4">
+    <section aria-labelledby="modules-title" className="rounded-xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4">
         <h2 id="modules-title" className="font-semibold">
           Investigation modules
         </h2>
-        <p className="mt-1 text-sm text-zinc-600">Traffic first. Each module has its own evidence and limits.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Traffic first. Each module has its own evidence and limits.
+        </p>
       </div>
       {query.error && (
         <div className="p-4">
           <ErrorState title="Capability status unavailable" error={query.error} retry={() => void query.refetch()} />
         </div>
       )}
-      <ul className="divide-y divide-zinc-100">
+      <ul className="divide-y divide-border">
         {modules.map(([id, name, description]) => {
           const state = capabilityState(id, moduleCapability(query.data, id));
           return (
             <li key={id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{name}</p>
-                <p className="mt-0.5 text-xs text-zinc-600">{description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
               </div>
               <Badge tone={state.enabled ? "info" : "neutral"}>
                 {query.isPending && id === "clean_traffic" ? "Checking status…" : state.label}
@@ -130,7 +136,7 @@ function UsagePanel() {
     typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "Not reported";
   const count = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : "—");
   return (
-    <section aria-labelledby="usage-title" className="rounded-xl border border-zinc-200 bg-white p-5">
+    <section aria-labelledby="usage-title" className="rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="usage-title" className="font-semibold">
           Model review budget
@@ -161,12 +167,12 @@ function UsagePanel() {
               ] as const
             ).map(([name, value]) => (
               <div key={name}>
-                <dt className="text-xs text-zinc-600">{name}</dt>
+                <dt className="text-xs text-muted-foreground">{name}</dt>
                 <dd className="mt-1 font-mono font-semibold tabular-nums">{money(value)}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-4 border-t border-zinc-100 pt-3 text-xs leading-relaxed text-zinc-600">
+          <p className="mt-4 border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">
             Executions {count(usage.executions)} / {count(usage.max_executions)} · Requests {count(usage.requests)} /{" "}
             {count(usage.max_requests)}
             <br />
@@ -175,11 +181,14 @@ function UsagePanel() {
         </>
       )}
       {usage?.execution_halted === true && (
-        <p role="alert" className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+        <p
+          role="alert"
+          className="mt-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-3 text-sm text-red-900 dark:text-red-200"
+        >
           Model execution halted{usage.halt_reason ? `: ${usage.halt_reason}` : "."}
         </p>
       )}
-      <p className="mt-3 text-xs leading-relaxed text-zinc-600">
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         Public access is read-only. Model reviews and enforcement require an authorised operator.
       </p>
     </section>
@@ -188,10 +197,10 @@ function UsagePanel() {
 
 function RecordFields({ data }: { data: Record<string, unknown> }) {
   return (
-    <dl className="divide-y divide-zinc-100 text-sm">
+    <dl className="divide-y divide-border text-sm">
       {Object.entries(data).map(([key, value]) => (
         <div key={key} className="grid gap-1 py-2 sm:grid-cols-[minmax(8rem,1fr)_2fr] sm:gap-4">
-          <dt className="break-words text-zinc-600">{key.replaceAll("_", " ")}</dt>
+          <dt className="break-words text-muted-foreground">{key.replaceAll("_", " ")}</dt>
           <dd className="min-w-0 break-words whitespace-pre-wrap font-mono text-xs leading-relaxed">
             {Array.isArray(value) && value.every((item) => typeof item === "string" || typeof item === "number")
               ? value.join(", ")
@@ -209,16 +218,16 @@ function RecordFields({ data }: { data: Record<string, unknown> }) {
 
 function EvidenceLinks({ ids, onEvidence }: { ids?: unknown; onEvidence: (id: string) => void }) {
   if (!Array.isArray(ids) || ids.length === 0)
-    return <p className="mt-3 text-xs text-zinc-600">No evidence references supplied.</p>;
+    return <p className="mt-3 text-xs text-muted-foreground">No evidence references supplied.</p>;
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-      <span className="text-zinc-600">Evidence</span>
+      <span className="text-muted-foreground">Evidence</span>
       {ids
         .filter((id): id is string => typeof id === "string")
         .map((id) => (
           <a
             key={id}
-            className="break-all rounded border border-zinc-200 px-2 py-1 font-mono text-blue-800 underline decoration-blue-200 underline-offset-2 hover:bg-blue-50"
+            className="break-all rounded border border-border px-2 py-1 font-mono text-blue-800 dark:text-blue-200 underline decoration-blue-200 underline-offset-2 hover:bg-accent"
             href={`#evidence-${encodeURIComponent(id)}`}
             onClick={() => onEvidence(id)}
           >
@@ -238,7 +247,7 @@ function LocalFinding({
 }) {
   if (!assessment)
     return (
-      <p className="text-sm text-zinc-600">
+      <p className="text-sm text-muted-foreground">
         No local assessment has been supplied. This does not establish that the activity is benign.
       </p>
     );
@@ -247,11 +256,11 @@ function LocalFinding({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{findingLabel(assessment.label)}</p>
-          <p className="mt-1 text-xs text-zinc-600">Detector score: {formatScore(assessment.score)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Detector score: {formatScore(assessment.score)}</p>
         </div>
         <Badge>Local detector</Badge>
       </div>
-      <p className="mt-3 text-xs text-zinc-600">
+      <p className="mt-3 text-xs text-muted-foreground">
         {assessment.model_version ?? "Model version not reported"} · {dateTime(assessment.created_at)}
       </p>
       {Array.isArray(assessment.reasons) && assessment.reasons.length > 0 ? (
@@ -261,20 +270,20 @@ function LocalFinding({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-zinc-600">No supporting reasons supplied.</p>
+        <p className="mt-3 text-muted-foreground">No supporting reasons supplied.</p>
       )}
       <EvidenceLinks ids={assessment.evidence_ids} onEvidence={onEvidence} />
       {Array.isArray(assessment.limitations) && assessment.limitations.length > 0 && (
         <div className="mt-3">
           <h4 className="text-xs font-semibold">Local assessment limitations</h4>
-          <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-relaxed text-zinc-600">
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-relaxed text-muted-foreground">
             {assessment.limitations.map((value, index) => (
               <li key={index}>{value}</li>
             ))}
           </ul>
         </div>
       )}
-      <p className="mt-3 text-xs leading-relaxed text-zinc-600">
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         A detector score is not verified human identity or proof of malicious intent.
       </p>
     </div>
@@ -284,9 +293,9 @@ function LocalFinding({
 function AssessmentRecord({ assessment, onEvidence }: { assessment: Assessment; onEvidence: (id: string) => void }) {
   const payload = assessment.payload;
   return (
-    <li className="border-t border-zinc-200 py-4 first:border-0 first:pt-0">
-      <p className="text-xs text-zinc-600">{dateTime(assessment.created_at)}</p>
-      <p className="mt-1 break-all font-mono text-xs text-zinc-600">{assessment.id}</p>
+    <li className="border-t border-border py-4 first:border-0 first:pt-0">
+      <p className="text-xs text-muted-foreground">{dateTime(assessment.created_at)}</p>
+      <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{assessment.id}</p>
       {assessment.metadata && (
         <RecordFields
           data={Object.fromEntries(
@@ -311,7 +320,7 @@ function AssessmentRecord({ assessment, onEvidence }: { assessment: Assessment; 
           <EvidenceLinks ids={payload.evidence_ids ?? payload.supporting_evidence_ids} onEvidence={onEvidence} />
         </>
       ) : (
-        <p className="mt-2 text-sm text-zinc-600">No assessment payload supplied.</p>
+        <p className="mt-2 text-sm text-muted-foreground">No assessment payload supplied.</p>
       )}
     </li>
   );
@@ -351,7 +360,7 @@ function AssessmentHistory({
         <h3 id="history-title" className="font-semibold">
           Assessment history
         </h3>
-        <p className="mt-1 text-sm text-zinc-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Stages are separate records. Model agreement is not independent corroboration.
         </p>
       </div>
@@ -360,7 +369,7 @@ function AssessmentHistory({
         <ErrorState title="History could not be loaded" error={query.error} retry={() => void query.refetch()} />
       )}
       {query.data && (
-        <div className="grid divide-y divide-zinc-200 rounded-lg border border-zinc-200 md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="grid divide-y divide-border rounded-lg border border-border md:grid-cols-3 md:divide-x md:divide-y-0">
           {stages.map(([kind, title, subtitle]) => {
             const records = query.data.filter((item) => assessmentStage(item) === kind);
             const provider =
@@ -372,9 +381,9 @@ function AssessmentHistory({
             return (
               <div key={kind} className="min-w-0 p-4">
                 <h4 className="text-sm font-semibold">{title}</h4>
-                <p className="mt-1 text-xs text-zinc-600">{subtitle}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
                 {provider && (
-                  <div className="mt-3 space-y-1 text-xs text-zinc-600">
+                  <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                     <p>Current configuration</p>
                     <RecordFields data={{ provider: provider.provider, model: provider.model, role: provider.role }} />
                     <Badge tone={provider.available === true ? "info" : "neutral"}>
@@ -394,7 +403,7 @@ function AssessmentHistory({
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm leading-relaxed text-zinc-600">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
                       {kind === "local" && local
                         ? "Current local assessment is shown above. No history revision supplied."
                         : "No recorded assessment."}
@@ -407,7 +416,7 @@ function AssessmentHistory({
         </div>
       )}
       {other.length > 0 && (
-        <details className="rounded-lg border border-zinc-200 p-4">
+        <details className="rounded-lg border border-border p-4">
           <summary className="cursor-pointer text-sm font-medium">Other assessment stages ({other.length})</summary>
           <ul className="mt-4">
             {other.map((record) => (
@@ -434,11 +443,11 @@ function EnforcementPanel({ id }: { id: string }) {
   const count = (value?: number) =>
     typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : "Not reported";
   return (
-    <section className="border-t border-zinc-200 pt-5" aria-labelledby="enforcement-title">
+    <section className="border-t border-border pt-5" aria-labelledby="enforcement-title">
       <h3 id="enforcement-title" className="font-semibold">
         Enforcement
       </h3>
-      <p className="mt-2 text-xs leading-relaxed text-zinc-600">
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
         These policies apply only to registered demo actors. Assessments are advisory; applying or reversing an action
         requires an authorised operator.
       </p>
@@ -455,9 +464,9 @@ function EnforcementPanel({ id }: { id: string }) {
       {!query.error &&
         query.data &&
         (query.data.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-600">No enforcement policies recorded for this investigation.</p>
+          <p className="mt-3 text-sm text-muted-foreground">No enforcement policies recorded for this investigation.</p>
         ) : (
-          <ul className="mt-4 divide-y divide-zinc-200">
+          <ul className="mt-4 divide-y divide-border">
             {query.data.map((policy) => {
               const status = (
                 {
@@ -478,7 +487,7 @@ function EnforcementPanel({ id }: { id: string }) {
                     </p>
                     <Badge tone={status.tone}>{status.label}</Badge>
                   </div>
-                  <p className="break-all font-mono text-xs text-zinc-600">{policy.id}</p>
+                  <p className="break-all font-mono text-xs text-muted-foreground">{policy.id}</p>
                   {policy.approval_basis === "manual_demo_override" && (
                     <p className="text-sm font-medium">Manually approved demo policy</p>
                   )}
@@ -489,28 +498,28 @@ function EnforcementPanel({ id }: { id: string }) {
                   </div>
                   <dl className="grid gap-3 text-xs sm:grid-cols-2">
                     <div>
-                      <dt className="text-zinc-600">Approved</dt>
+                      <dt className="text-muted-foreground">Approved</dt>
                       <dd className="mt-1">{timestamp(policy.created_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-zinc-600">Expires</dt>
+                      <dt className="text-muted-foreground">Expires</dt>
                       <dd className="mt-1">{timestamp(policy.expires_at)}</dd>
                     </div>
                     {policy.revoked_at != null && (
                       <div>
-                        <dt className="text-zinc-600">Revoked at</dt>
+                        <dt className="text-muted-foreground">Revoked at</dt>
                         <dd className="mt-1">{timestamp(policy.revoked_at)}</dd>
                       </div>
                     )}
                     {policy.expired_at != null && (
                       <div>
-                        <dt className="text-zinc-600">Expired at</dt>
+                        <dt className="text-muted-foreground">Expired at</dt>
                         <dd className="mt-1">{timestamp(policy.expired_at)}</dd>
                       </div>
                     )}
                   </dl>
                   <details>
-                    <summary className="cursor-pointer text-xs font-medium text-blue-800">
+                    <summary className="cursor-pointer text-xs font-medium text-blue-800 dark:text-blue-200">
                       Policy scope and audit record
                     </summary>
                     <RecordFields
@@ -543,14 +552,14 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
   const origin = sourceState(investigation?.source);
   const review = reviewState(investigation?.review?.status);
   return (
-    <section aria-labelledby="case-title" className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 sm:p-6">
+    <section aria-labelledby="case-title" className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2 id="case-title" className="text-lg font-semibold">
           Investigation record
         </h2>
         <button
           onClick={onClose}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-50"
+          className="rounded-md border border-input px-3 py-1.5 text-sm font-medium hover:bg-accent"
         >
           Back to investigations
         </button>
@@ -570,10 +579,10 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
                   : (investigation.module ?? "Module not reported")}
               </Badge>
             </div>
-            <p className="mt-3 break-all font-mono text-xs text-zinc-600">{investigation.id}</p>
-            <p className="mt-1 text-xs text-zinc-600">Created {dateTime(investigation.created_at)}</p>
+            <p className="mt-3 break-all font-mono text-xs text-muted-foreground">{investigation.id}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Created {dateTime(investigation.created_at)}</p>
             {origin.synthetic && (
-              <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm leading-relaxed text-amber-900">
+              <p className="mt-3 rounded-md bg-amber-50 dark:bg-amber-950 p-3 text-sm leading-relaxed text-amber-900 dark:text-amber-200">
                 This is a synthetic example. Its findings do not establish performance on real traffic.
               </p>
             )}
@@ -582,7 +591,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
             {investigation.complete === false && (
               <p
                 role="status"
-                className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                className="mb-3 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-3 text-sm text-amber-900 dark:text-amber-200"
               >
                 Evidence snapshot is incomplete. Findings must be interpreted with the missing information below.
               </p>
@@ -590,7 +599,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
             {Array.isArray(investigation.missing_information) && investigation.missing_information.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-semibold">Missing information</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-600">
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   {investigation.missing_information.map((value, index) => (
                     <li key={index}>{value}</li>
                   ))}
@@ -602,46 +611,50 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
             </h3>
             <LocalFinding assessment={investigation.local_assessment} onEvidence={setExpandedEvidence} />
           </section>
-          <section aria-labelledby="review-title" className="border-t border-zinc-200 pt-5">
+          <section aria-labelledby="review-title" className="border-t border-border pt-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id="review-title" className="font-semibold">
                 Model review
               </h3>
               <Badge tone={review.tone}>{review.label}</Badge>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600">{review.description}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{review.description}</p>
             {investigation.review?.reason && (
-              <p className="mt-2 text-sm text-zinc-600">Review reason: {investigation.review.reason}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Review reason: {investigation.review.reason}</p>
             )}
             {investigation.review?.job_id && (
-              <p className="mt-2 break-all font-mono text-xs text-zinc-600">Job {investigation.review.job_id}</p>
+              <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+                Job {investigation.review.job_id}
+              </p>
             )}
             {investigation.review?.result && (
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-blue-800">Recorded review result</summary>
+                <summary className="cursor-pointer text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Recorded review result
+                </summary>
                 <RecordFields data={investigation.review.result} />
               </details>
             )}
           </section>
-          <section aria-labelledby="evidence-title" className="border-t border-zinc-200 pt-5">
+          <section aria-labelledby="evidence-title" className="border-t border-border pt-5">
             <h3 id="evidence-title" className="font-semibold">
               Evidence snapshot
             </h3>
             <dl className="mt-3 space-y-2 text-xs">
               <div className="flex flex-wrap gap-2">
-                <dt className="text-zinc-600">Version</dt>
+                <dt className="text-muted-foreground">Version</dt>
                 <dd className="font-mono">{investigation.evidence_version ?? "Not reported"}</dd>
               </div>
               <div>
-                <dt className="text-zinc-600">Snapshot hash</dt>
+                <dt className="text-muted-foreground">Snapshot hash</dt>
                 <dd className="mt-1 break-all font-mono">{investigation.evidence_hash ?? "Not reported"}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-xs leading-relaxed text-zinc-600">
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               The snapshot belongs to this investigation. Current traffic drilldowns can contain newer observations.
             </p>
             {Array.isArray(investigation.evidence) && investigation.evidence.length > 0 ? (
-              <div className="mt-4 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+              <div className="mt-4 divide-y divide-border rounded-lg border border-border">
                 {investigation.evidence.map((item) => (
                   <details
                     key={item.id}
@@ -655,20 +668,20 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
                   >
                     <summary className="cursor-pointer break-all text-sm font-medium">
                       <span>{(item.kind ?? "Evidence").replaceAll("_", " ")}</span>
-                      <span className="ml-2 font-mono text-xs text-zinc-600">{item.id}</span>
+                      <span className="ml-2 font-mono text-xs text-muted-foreground">{item.id}</span>
                     </summary>
                     <div className="mt-3">
                       {item.data && typeof item.data === "object" ? (
                         <RecordFields data={item.data} />
                       ) : (
-                        <p className="text-sm text-zinc-600">No evidence data supplied.</p>
+                        <p className="text-sm text-muted-foreground">No evidence data supplied.</p>
                       )}
                     </div>
                   </details>
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-zinc-600">
+              <p className="mt-3 text-sm text-muted-foreground">
                 No evidence items supplied. The evidence basis cannot be inspected.
               </p>
             )}
@@ -677,7 +690,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
           <EnforcementPanel id={id} />
           <button
             onClick={goTraffic}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold hover:bg-zinc-50"
+            className="rounded-md border border-input px-3 py-2 text-sm font-semibold hover:bg-accent"
           >
             Open current traffic overview →
           </button>
@@ -694,11 +707,11 @@ function CaseRow({ investigation, onPick }: { investigation: Investigation; onPi
     <li>
       <button
         onClick={() => onPick(investigation.id)}
-        className="group flex w-full flex-wrap items-center justify-between gap-4 border-t border-zinc-200 px-5 py-5 text-left hover:bg-blue-50/50"
+        className="group flex w-full flex-wrap items-center justify-between gap-4 border-t border-border px-5 py-5 text-left hover:bg-accent/60"
       >
         <div className="min-w-0 flex-1 basis-64">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold group-hover:text-blue-800">
+            <span className="text-sm font-semibold group-hover:text-blue-800 dark:text-blue-200">
               {investigation.title ??
                 (investigation.module === "clean_the_traffic" || investigation.module === "clean_traffic"
                   ? "Traffic investigation"
@@ -706,16 +719,16 @@ function CaseRow({ investigation, onPick }: { investigation: Investigation; onPi
             </span>
             <Badge tone={origin.tone}>{origin.label}</Badge>
           </div>
-          <p className="mt-2 break-all font-mono text-xs text-zinc-600">{investigation.id}</p>
-          <p className="mt-1 text-xs text-zinc-600">{dateTime(investigation.created_at)}</p>
+          <p className="mt-2 break-all font-mono text-xs text-muted-foreground">{investigation.id}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{dateTime(investigation.created_at)}</p>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-4">
           <div className="text-sm">
             <p className="font-medium">{findingLabel(investigation.local_assessment?.label)}</p>
-            <p className="mt-1 text-xs text-zinc-600">Local assessment</p>
+            <p className="mt-1 text-xs text-muted-foreground">Local assessment</p>
           </div>
           <Badge tone={review.tone}>{review.label}</Badge>
-          <span aria-hidden="true" className="text-zinc-500">
+          <span aria-hidden="true" className="text-muted-foreground">
             →
           </span>
         </div>
@@ -744,7 +757,7 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Investigation workspace</h2>
-        <p className="mt-1 max-w-prose text-sm text-zinc-600">
+        <p className="mt-1 max-w-prose text-sm text-muted-foreground">
           Clean the traffic is the first module. Inspect source evidence, local findings and optional model review.
         </p>
       </div>
@@ -759,23 +772,23 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
       ) : (
         <section
           aria-labelledby="investigations-title"
-          className="overflow-hidden rounded-xl border border-zinc-200 bg-white"
+          className="overflow-hidden rounded-xl border border-border bg-card"
         >
           <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
             <div>
               <h2 id="investigations-title" className="text-lg font-semibold">
                 Investigations
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Follow the evidence, local findings and each recorded review.
               </p>
             </div>
-            <label className="flex items-center gap-2 text-sm text-zinc-600">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               Source
               <select
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-zinc-900"
+                className="rounded-md border border-input bg-card px-2 py-1.5 text-foreground"
               >
                 <option value="all">All origins</option>
                 <option value="real">Real traffic</option>
@@ -798,18 +811,18 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
             </div>
           )}
           {query.data && cases.length === 0 && (
-            <div className="border-t border-zinc-200 px-5 py-8">
+            <div className="border-t border-border px-5 py-8">
               <h3 className="text-sm font-semibold">
                 {query.data.length === 0 ? "No investigations published yet" : "No investigations match this source"}
               </h3>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-zinc-600">
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
                 {query.data.length === 0
                   ? "An operator can publish a sanitised traffic snapshot. An empty case list does not mean the monitored traffic is safe."
                   : "Choose another source to inspect the available cases."}
               </p>
               <button
                 onClick={goTraffic}
-                className="mt-4 text-sm font-semibold text-blue-800 underline underline-offset-4"
+                className="mt-4 text-sm font-semibold text-blue-800 dark:text-blue-200 underline underline-offset-4"
               >
                 Inspect current traffic
               </button>
