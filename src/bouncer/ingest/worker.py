@@ -36,7 +36,8 @@ from bouncer.explain import explain
 from bouncer.ingest import simrun
 from bouncer.ingest.sample import parse_access_records
 from bouncer.ingest.simrun import IngestStats
-from bouncer.session import score
+from bouncer.session import rules, score
+from bouncer.session.actions import recommend
 
 IntelFn = Callable[[str], IpIntel]
 CampaignsFn = Callable[[Sequence[Session]], list[Any]]
@@ -139,10 +140,15 @@ class Worker:
         campaigns = {id(c): c for c in camp_by_session.values()}.values()
 
         verdicts = {}
+        traps = rules.load_traps()
         for s in sessions:
             camp: Campaign | None = camp_by_session.get(s.id)
-            v = score(s, intel[s.ip], camp)
+            v = score(s, intel[s.ip], camp, traps=traps)
+            hits = rules.evaluate(s, intel[s.ip], traps, camp)
+            rule_id = hits[0].rule_id if hits else None
             verdicts[s.id] = {
+                "rule_id": rule_id,
+                "action": recommend(v.label, rule_id),
                 "label": v.label,
                 "score": v.score,
                 "reasons": list(v.reasons),

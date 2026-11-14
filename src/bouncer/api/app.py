@@ -16,6 +16,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
+from bouncer.api.overview import enrich_campaigns, overview
 from bouncer.db.store import _read_raw, store_path
 from bouncer.eval.metrics import METRICS_PATH
 from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
@@ -46,6 +47,7 @@ def _row(s: dict[str, Any], v: dict[str, Any], truth: dict[str, str]) -> dict[st
         "score": v.get("score"),
         "reason": (v.get("reasons") or [""])[0],
         "campaign_id": v.get("campaign_id"),
+        "action": v.get("action"),
         "sim_class": truth.get(s["id"]),
     }
 
@@ -103,15 +105,15 @@ def session(sid: str) -> dict[str, Any]:
     }
 
 
+@app.get("/api/overview")
+def overview_view() -> dict[str, Any]:
+    """Omistajan etusivu: hälytykset, aikajana, jakauma, toimijat, luotettavuus."""
+    return overview(_store())
+
+
 @app.get("/api/campaigns")
 def campaigns() -> list[dict[str, Any]]:
-    st = _store()
-    verdicts = st.get("verdicts", {})
-    out = []
-    for c in st.get("campaigns", []):
-        labels = [verdicts.get(sid, {}).get("label", "uncertain") for sid in c["session_ids"]]
-        out.append({**c, "labels": {lab: labels.count(lab) for lab in set(labels)}})
-    return sorted(out, key=lambda c: c["size"], reverse=True)
+    return enrich_campaigns(_store())
 
 
 @app.get("/api/metrics")

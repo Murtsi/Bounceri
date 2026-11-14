@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { api, LABEL_TEXT, type Label, type SessionRow } from "./api";
+import { ACTION_TEXT, api, LABEL_TEXT, type Label, type SessionRow } from "./api";
+import Overview, { ActionChip } from "./Overview";
 
-type Tab = "sessions" | "campaigns" | "metrics";
+type Tab = "overview" | "sessions" | "campaigns" | "metrics";
 
 const CHIP: Record<Label, string> = {
   bad_bot: "bg-red-50 text-red-800 ring-red-200",
@@ -35,6 +36,7 @@ function SyntheticBanner({ show }: { show: boolean }) {
 function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   const { data: s } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
   const tabs: [Tab, string][] = [
+    ["overview", "Yleiskuva"],
     ["sessions", "Sessiot"],
     ["campaigns", "Kampanjat"],
     ["metrics", "Mittarit"],
@@ -46,7 +48,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Bouncer</p>
           <h1 className="text-3xl font-bold">Kuka sivulla oikeasti käy</h1>
         </div>
-        {s && (
+        {s && tab !== "overview" && (
           <dl className="flex flex-wrap gap-3 text-sm">
             {(Object.keys(LABEL_TEXT) as Label[]).map((l) => (
               <div key={l} className="rounded-lg bg-white px-3 py-2 ring-1 ring-zinc-200">
@@ -117,6 +119,7 @@ function SessionsTable({ onPick, picked }: { onPick: (id: string) => void; picke
                 <th className="px-3 py-2">User-Agent</th>
                 <th className="px-3 py-2 text-right">Pyynt.</th>
                 <th className="px-3 py-2">Tärkein syy</th>
+                <th className="px-3 py-2">Toimenpide</th>
                 <th className="px-3 py-2">Totuus (simulaattori)</th>
               </tr>
             </thead>
@@ -142,6 +145,13 @@ function SessionsTable({ onPick, picked }: { onPick: (id: string) => void; picke
                   <td className="px-3 py-2 text-right">{r.n_requests}</td>
                   <td className="max-w-[320px] truncate px-3 py-2" title={r.reason}>
                     {r.reason}
+                  </td>
+                  <td className="px-3 py-2">
+                    {r.action && r.action !== "none" ? (
+                      <ActionChip action={r.action} text={ACTION_TEXT[r.action]} />
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-3 py-2 text-xs text-zinc-700">{r.sim_class ?? "—"}</td>
                 </tr>
@@ -325,11 +335,20 @@ function Metrics() {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("sessions");
+  const [tab, setTab] = useState<Tab>("overview");
   const [picked, setPicked] = useState<string | null>(null);
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
       <Header tab={tab} setTab={setTab} />
+      {tab === "overview" && (
+        <Overview
+          onPick={(id) => {
+            setPicked(id);
+            setTab("sessions");
+          }}
+          goSessions={() => setTab("sessions")}
+        />
+      )}
       {tab === "sessions" && (
         <div className="flex flex-col gap-4 lg:flex-row">
           <SessionsTable onPick={setPicked} picked={picked} />
