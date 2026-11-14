@@ -45,6 +45,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Tunnettu heikkous: C:n käyttäytymisklusterointi niputti MVP:ssä simuloidut ihmiset kampanjaksi
 - [B] Varma sääntö kirjautumishyökkäyksille: session kuuluminen C:n `credential_stuffing`- tai `distributed_login_spray`-kampanjaan (≥ 3 sessiota) → `bad_bot`, syynä kampanjan kuvaus. MVP:n Caddy-lokilla kaikki 6 tunnusten kokeilu -sessiota tunnistuvat (aiemmin `uncertain`) (päätös 053)
 - [A] MVP vaihe 3: live-worker `python -m bouncer.ingest.worker` seuraa Caddy-lokia (sietää rikkinäiset rivit, katkaisun ja rotaation), sessioi allekirjoitetuilla merkinnöillä, hakee C:n IP-tiedot kerran per IP ja kampanjat, pisteyttää B:n `score()`:lla ja selittää C:n `explain()`:lla ilman LLM:ää, ja kirjoittaa päätökset storeen. Session ID on vakaa (`ip|ua|alkuaika`). MVP:n Caddy-lokilla kriteerit 1–4 täyttyvät (A-5/A-6)
+- [A] MVP vaihe 4a: ohut API `bouncer.api` (`/api/summary`, `/api/sessions`, `/api/sessions/{id}`, `/api/campaigns`, `/api/metrics`) lukee workerin storea; `/api/metrics` kertoo stub- ja synteettinen-tilan sekä tunnetut heikkoudet. Tarjoilee myös `frontend/dist`:in, jos se on käännetty (A-11)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
