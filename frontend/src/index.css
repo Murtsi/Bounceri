@@ -318,3 +318,8 @@
 .session-item-time { color:var(--muted-foreground); font-size:12px; font-variant-numeric:tabular-nums; }
 .session-item-reason { font-size:13px; line-height:1.45; }
 .session-item-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; color:var(--muted-foreground); font-size:11px; }
+
+/* Vasemman yläkulman logo vie etusivulle: painike ilman painikkeen ulkoasua. */
+.home-link { display:inline-flex; padding:2px 4px; margin:-2px -4px; border:0; border-radius:8px; background:none; color:var(--foreground); cursor:pointer; transition:opacity 150ms; }
+.home-link:hover { opacity:.8; }
+.home-link:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }

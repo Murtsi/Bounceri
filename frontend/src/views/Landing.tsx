@@ -66,9 +66,14 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
   return (
     <div className="lp">
       <header className="lp-bar">
-        <a href="./" className="lp-brand" aria-label="Bounceri home">
+        <button
+          type="button"
+          className="lp-brand home-link"
+          aria-label="Bounceri home"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
           <BouncerLogo mode="static" className="text-[22px]" />
-        </a>
+        </button>
         <nav aria-label="Page sections" className="lp-links">
           <button type="button" onClick={() => jump("how")}>How it works</button>
           <button type="button" onClick={() => jump("proof")}>Results</button>

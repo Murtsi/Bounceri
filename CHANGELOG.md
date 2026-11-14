@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [X] Vasemman yläkulman Bouncer-logo vie etusivulle sekä työpöydällä (sivupalkki) että mobiilissa (yläpalkki); etusivulla logo vierittää alkuun lataamatta sivua uudelleen
 - [X] Mobiili: sessiot pinottuna listana (ei vaakavieritystä), "Needs attention" -rivit ja uusin aktiivisuus rivittyvät, etusivun selite kuvan alle, synteettisyysmerkintä lyhyenä. Dashboardin tausta: hento turkoosi–sininen liukuväri ja rakeisuus (ei ruudukkoa, valolistaa eikä keskelle osuvaa valohehkua); "Needs attention" huurrettuna lasina sen päällä
 - [X] Etusivun otsikon "Bouncer" on animoitu logo (B:n alakaari ponnauttaa "ouncer"-sanan); "synthetic"-merkinnät näkyvät etusivulla vain, kun API ilmoittaa datan synteettiseksi, ja sivupalkissa lyhyenä merkintänä. Porttikoppi poistettu dashboardin yleiskuvasta; tilalle hiiren mukaan kallistuva valoheijasteinen "Needs attention" -paneeli (vähennetty liike huomioitu)
 - [X] Etusivu (landing page) pitchiä varten: hero elävällä porttikopilla, ongelma, toiminta neljässä vaiheessa, mikä tekee Bouncerista erilaisen, mitatut synteettiset tulokset rajoituksineen (EVALUATION.md), Hostinger-ajoympäristö, moduulit ja toimintakehote. Etusivu avautuu oletuksena; dashboard on `?tab=overview` ja sivupalkin logo palaa etusivulle (päätös 066, needs-ack)

@@ -186,7 +186,7 @@ export default function App() {
       {/* Sivupalkki (≥ lg): logo, navigaatio, tila alhaalla. */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[232px] flex-col border-r border-white/[0.07] bg-[#07100b]/80 px-4 py-6 lg:flex">
         <div className="px-3 pb-8">
-          <button type="button" onClick={() => go("home")} aria-label="Bounceri home" className="rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+          <button type="button" onClick={() => go("home")} aria-label="Bounceri home" title="Back to the landing page" className="home-link">
             <BouncerLogo mode="static" className="text-2xl" />
           </button>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -215,7 +215,9 @@ export default function App() {
 
       {/* Yläpalkki (< lg): logo + tila. */}
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-white/5 bg-[#08110c]/50 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <BouncerLogo mode="static" className="text-2xl" />
+        <button type="button" onClick={() => go("home")} aria-label="Bounceri home" className="home-link">
+          <BouncerLogo mode="static" className="text-2xl" />
+        </button>
         <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
           {activity.live && <LiveDot />}
           <span>{activity.label}{activity.time ? ` · ${activity.time}` : ""}</span>

@@ -14,7 +14,7 @@
   background: rgba(7, 16, 11, 0.72);
   backdrop-filter: blur(14px);
 }
-.lp-brand { display: inline-flex; color: var(--foreground); text-decoration: none; }
+.lp-brand { color: var(--foreground); }
 .lp-links { display: flex; gap: 4px; margin-left: auto; }
 .lp-links button {
   padding: 8px 12px;
