@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -27,7 +27,7 @@ def test_ip_intel_sets_threat_label() -> None:
 
 
 def test_campaign_graph_shape() -> None:
-    ts = datetime(2026, 11, 14, tzinfo=timezone.utc)
+    ts = datetime(2026, 11, 14, tzinfo=UTC)
     sessions = [
         SimpleNamespace(
             id="1",

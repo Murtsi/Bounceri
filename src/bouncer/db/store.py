@@ -8,9 +8,8 @@ from __future__ import annotations
 
 import json
 import os
-import os
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,13 +27,13 @@ def store_path() -> Path:
 def _dt(value: Any) -> datetime:
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+            return value.replace(tzinfo=UTC)
         return value
     text = str(value).replace("Z", "+00:00")
     dt = datetime.fromisoformat(text)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def _request_from_dict(row: dict[str, Any]) -> Request:

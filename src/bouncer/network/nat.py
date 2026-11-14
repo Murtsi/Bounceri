@@ -47,7 +47,4 @@ def looks_like_shared_nat(sessions: list[SessionView]) -> bool:
 
     # Yksi UA mutta residential + eri polut ilman login-stuffingia
     has_logins = any(s.logins for s in sessions)
-    if not has_logins and len({s.paths for s in sessions}) >= 2:
-        return True
-
-    return False
+    return not has_logins and len({s.paths for s in sessions}) >= 2

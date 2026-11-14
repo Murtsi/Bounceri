@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import json
+from dataclasses import fields
 from datetime import timedelta
 from pathlib import Path
 
 import pytest
 
-from dataclasses import fields
-
 from bouncer.contracts import Campaign, IpIntel, Request, Session, SessionLabel, Verdict
-from bouncer.ingest.simrun import IngestStats
 from bouncer.ingest.sample import (
     load_sample_labels,
     load_sample_sessions,
@@ -17,12 +15,23 @@ from bouncer.ingest.sample import (
     parse_access_records,
     parse_sim_run,
 )
+from bouncer.ingest.simrun import IngestStats
 from bouncer.session._provisional_types import (
     Campaign as SessionCampaign,
+)
+from bouncer.session._provisional_types import (
     IpIntel as SessionIpIntel,
+)
+from bouncer.session._provisional_types import (
     Request as SessionRequest,
+)
+from bouncer.session._provisional_types import (
     Session as SessionSession,
+)
+from bouncer.session._provisional_types import (
     SessionLabel as SessionSessionLabel,
+)
+from bouncer.session._provisional_types import (
     Verdict as SessionVerdict,
 )
 

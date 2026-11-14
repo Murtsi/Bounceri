@@ -59,4 +59,4 @@ Työnimi **Bouncer**: kertoo sivuston omistajalle, onko kävijä ihminen, hyvä 
 - [ ] Virallinen palautusaika? (`DEADLINE` TODO.md:ssä)
 - [x] PRE-1: VPS ja domain vahvistettu Hostinger Connectorilla
 - [ ] PRE-1: AI Router -avain ja toimiva sovellusdeploy vahvistamatta
-- [ ] Hostingerilta (PRE-4, Joonas): saako DB olla muualla? Decision-1:n tarkka endpoint/mallitunniste ja rajat? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? Arvioija on Featherless (057).
+- [ ] Hostingerilta (PRE-4, Joonas): saako DB olla muualla? Decision-1:n tarkka endpoint/mallitunniste ja rajat? Kelpaako self-hosted TimescaleDB Tiger Data -palkintoon? Arvioija on Featherless (061).

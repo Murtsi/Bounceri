@@ -18,7 +18,7 @@ Bounceri is an online investigation platform. Clean the traffic is its first mod
 - A synthetic example is always labelled; unknown origin is never called real.
 - Missing findings, unavailable services and failed analysis are different states.
 - Public visitors inspect records. Administrators control paid review and enforcement outside the public interface.
-- Preserve the latest dashboard header, Bouncer logo, theme toggle, default overview, shadcn/ui navigation and all existing views. Within the additional tab, use the dashboard theme tokens for light and dark surfaces, blue selection and amber synthetic or unavailable states, the existing sans family and monospace identifiers.
+- Preserve the latest dashboard header, Bouncer logo, splash/motion, default overview, shadcn/ui navigation and all existing views. The owner-selected PR24 UI is dark-only with glass surfaces and lime accents; preserve the removed theme toggle. Within the additional tab, use the dashboard theme tokens and glass surfaces, blue links and amber synthetic or unavailable states, the existing sans family and monospace identifiers.
 
 ## Accessibility and inclusion
 

@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 
 from bouncer.db.store import clear_store, seed_from_sample, store_path
 

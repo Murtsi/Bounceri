@@ -86,22 +86,24 @@ def enrich_campaigns(st: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 #: Palkin pituudet (s); valitaan lyhin, jolla `BUCKETS` palkkia kattaa datan keston.
-STEPS_S = (10, 30, 60, 300, 900)
-BUCKETS = 24
-MIN_POINTS = 8
+STEPS_S = (1, 2, 5, 10, 30, 60, 300, 900)
+BUCKETS = 40
+MIN_POINTS = 12
 
 
 def step_for(st: dict[str, Any], buckets: int = BUCKETS) -> int:
     times = [_dt(r["ts"]) for s in st.get("sessions", []) for r in s["requests"]]
     if not times:
         return STEPS_S[0]
-    span = (max(times) - min(times)).total_seconds()
+    # Ikkuna päättyy hetkeen "nyt" (_now), joten kesto mitataan siitä, ei viimeisestä pyynnöstä.
+    end = max([*times, _now(st) or max(times)])
+    span = (end - min(times)).total_seconds()
     return next((s for s in STEPS_S if s * buckets >= span), STEPS_S[-1])
 
 
 def timeline(st: dict[str, Any], buckets: int = BUCKETS) -> dict[str, Any]:
     """Pyynnöt aikaväleittäin session luokan mukaan. Välin pituus mukautuu datan
-    kestoon, jotta lyhytkin demoajo näkyy (10 s … 15 min)."""
+    kestoon, jotta lyhytkin demoajo näkyy tiheänä sarjana (1 s … 15 min)."""
     now = _now(st)
     step = step_for(st, buckets)
     if now is None:

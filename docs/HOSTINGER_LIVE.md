@@ -34,8 +34,10 @@ recreates application processes rather than leaving old imports running.
 Run from the repository root, with Node/corepack, uv and Docker available:
 
 ```powershell
-corepack pnpm --dir frontend install --frozen-lockfile
-corepack pnpm --dir frontend run build
+Push-Location frontend
+corepack pnpm install --frozen-lockfile
+corepack pnpm run build
+Pop-Location
 uv run pytest -q
 uv export --frozen --no-dev --no-emit-project --no-hashes --output-file deploy/requirements-runtime.txt
 uv run python -m tools.hostinger.package --output C:/private/bounceri-deploy
@@ -52,6 +54,15 @@ Deploy the **contents** of `compose.private.json` through Hostinger Connector
 Do not use an existing Hermes/Traefik project name. Do not remove data volumes or
 change the database password when updating existing data. Wait for init completion,
 read container status back and verify the HTTPS URLs, not just the API's queue reply.
+The hosted connector currently limits both content and environment fields to 8192
+characters, so it cannot upload this complete capsule. Use the authorized SSH/SCP
+fallback: verify the SSH host public key through the authenticated Hostinger
+connection, retain strict host-key checking, copy the bundle to
+`/docker/bounceri-live/docker-compose.yml`, set directory/file permissions to
+0700/0600, validate it and run `docker compose -p bounceri-live -f
+/docker/bounceri-live/docker-compose.yml up -d`. Use the connector to read projects,
+containers and logs back afterward. Never disable host-key checking.
+
 For a local production-stack smoke test, add `--local` and run:
 
 ```powershell

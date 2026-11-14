@@ -12,4 +12,4 @@ const result = await checkInvestigations(await browser.newPage());
 console.log(result);
 ```
 
-The latest Finnish dashboard overview remains the default home, preserving its Bouncer logo, theme toggle, shadcn/ui navigation and all existing views. The additional Investigations tab uses English, follows both themes and is marked with `lang="en"`.
+The latest Finnish dashboard overview remains the default home, preserving PR24's Bouncer logo, splash/motion, dark-only glass palette, shadcn/ui navigation and all existing views. The removed theme toggle stays removed. The additional Investigations tab uses English, follows the current theme and is marked with `lang="en"`.

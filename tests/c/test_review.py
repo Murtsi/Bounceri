@@ -881,3 +881,40 @@ def test_supported_attack_observation_and_ambiguous_automation_remain_assessment
     assert store.finished == ("completed", "")
     assert len(source.requests) == 2
     assert store.assessments[0]["payload"]["answers"]["automation"]["choice"] == automation
+
+
+@pytest.mark.parametrize("output_limit", ["absent", 2048, None, 0, -1, True, "800"])
+def test_discovery_preserves_real_access_when_output_limit_metadata_is_absent(output_limit):
+    from bouncer.review import discover_featherless
+
+    def metadata(endpoint, headers, timeout):
+        if endpoint.endswith("/plan"):
+            return {"api_access": True, "max_context_length": None, "concurrency": 100}
+        detail = {
+            "id": "Qwen/Qwen2.5-7B-Instruct",
+            "available_on_current_plan": True,
+            "context_length": 32768,
+            "is_gated": False,
+            "status": "active",
+            "pricing": {"prompt": "0.00000017", "completion": "0.0000002", "request": "0"},
+        }
+        if output_limit != "absent":
+            detail["max_completion_tokens"] = output_limit
+        return detail
+
+    report = discover_featherless(
+        "fixture-credential", "Qwen/Qwen2.5-7B-Instruct", get_json=metadata
+    )
+    if output_limit == "absent" or type(output_limit) is int and output_limit > 0:
+        assert report["available"] is True
+        assert report["effective_context_length"] == 32768
+        assert report["max_completion_tokens"] == (
+            None if output_limit == "absent" else output_limit
+        )
+        assert report["output_limit_verified"] is (output_limit != "absent")
+        assert report["pricing_usd_per_token"]["prompt"] == "1.7E-7"
+        assert report["activation"] == "unchanged"
+        assert "fixture-credential" not in repr(report)
+    else:
+        assert report["available"] is False
+        assert report["reason"] == "invalid_metadata"

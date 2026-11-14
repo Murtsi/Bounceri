@@ -38,13 +38,13 @@ def discover_featherless(api_key: str, model: str, *, get_json=None) -> dict:
             TIMEOUT_SECONDS,
         )
         model_context, plan_context = detail["context_length"], plan.get("max_context_length")
-        output = detail["max_completion_tokens"]
+        output = detail.get("max_completion_tokens")
         if (
             detail.get("id") != model
             or type(model_context) is not int
             or model_context <= 0
-            or type(output) is not int
-            or output <= 0
+            or "max_completion_tokens" in detail
+            and (type(output) is not int or output <= 0)
             or plan_context is not None
             and (type(plan_context) is not int or plan_context <= 0)
         ):
@@ -69,6 +69,7 @@ def discover_featherless(api_key: str, model: str, *, get_json=None) -> dict:
             "reason": "metadata_accessible" if accessible else "model_access_not_established",
             "effective_context_length": context,
             "max_completion_tokens": output,
+            "output_limit_verified": output is not None,
             "pricing_usd_per_token": {key: pricing[key] for key in ("prompt", "completion")},
             "request_cost_usd": pricing["request"],
             "structured_schema_support": "unverified",

@@ -56,7 +56,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install test runner
-        run: python -m pip install pytest
+      - name: Install locked runtime and test dependencies
+        run: |
+          python -m pip install uv==0.11.26
+          uv sync --frozen
       - name: Run all team tests
-        run: python -m pytest tests -q
+        run: uv run --no-sync pytest tests -q
+      - name: Python lint
+        run: uv run --no-sync ruff check src tests notebooks tools/hostinger
+
+  frontend:
+    name: Frontend build and unit tests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frozen frontend dependencies
+        run: |
+          corepack enable
+          corepack pnpm install --frozen-lockfile
+      - name: Test and build existing dashboard plus investigations
+        run: |
+          corepack pnpm test
+          corepack pnpm run build

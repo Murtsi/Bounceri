@@ -193,7 +193,10 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     for (const name of ["Sessiot", "Kampanjat", "Mittarit"]) {
       check(await page.getByRole("tab", { name, exact: true }).isVisible(), "Existing navigation changed");
     }
-    check(await page.getByRole("button", { name: /Vaihda .* teemaan/ }).isVisible(), "Theme toggle missing");
+    check(
+      (await page.getByRole("button", { name: /Vaihda .* teemaan/ }).count()) === 0,
+      "PR24 removed theme toggle was restored",
+    );
     await page.getByRole("tab", { name: "Investigations", exact: true }).click();
     if (mode === "empty") await page.getByText("No investigations published yet", { exact: true }).waitFor();
     else if (mode === "error") await page.getByText("Investigations could not be loaded", { exact: true }).waitFor();
@@ -208,25 +211,19 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     await page.getByText("Model execution halted: fixture_budget_halt", { exact: true }).isVisible(),
     "Execution halt missing",
   );
-  if (!(await page.evaluate(() => document.documentElement.classList.contains("dark")))) {
-    await page.getByRole("button", { name: "Vaihda tummaan teemaan", exact: true }).click();
-  }
-  await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
   check(
-    await page
-      .locator(".investigations-view section")
-      .first()
-      .evaluate((node) => getComputedStyle(node).backgroundColor === "rgb(26, 26, 25)"),
-    "Investigation panels do not follow dark theme",
+    await page.evaluate(() => document.documentElement.classList.contains("dark")),
+    "PR24 dark-only default changed",
   );
-  await page.getByRole("button", { name: "Vaihda vaaleaan teemaan", exact: true }).click();
-  await page.waitForFunction(() => !document.documentElement.classList.contains("dark"));
   check(
     await page
       .locator(".investigations-view section")
       .first()
-      .evaluate((node) => getComputedStyle(node).backgroundColor === "rgb(252, 252, 251)"),
-    "Investigation panels do not follow light theme",
+      .evaluate(
+        (node) =>
+          node.classList.contains("glass") && getComputedStyle(node).backgroundColor === "rgba(255, 255, 255, 0.055)",
+      ),
+    "Investigation panels do not follow PR24 dark glass theme",
   );
   await page.getByRole("tab", { name: "Sessiot", exact: true }).click();
   await page.getByText("Ei sessioita tällä suodattimella.", { exact: true }).waitFor();
@@ -422,8 +419,8 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     passed: [
       "existing overview remains default",
       "existing header and navigation preserved",
-      "PR23 sessions campaigns metrics and overview preserved",
-      "investigation light and dark theme",
+      "PR24 sessions campaigns metrics and overview preserved",
+      "PR24 dark-only glass theme preserved",
       "empty state",
       "outage distinction",
       "future modules disabled",

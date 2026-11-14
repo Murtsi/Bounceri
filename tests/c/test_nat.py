@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 from bouncer.network import find_campaigns
@@ -11,7 +11,7 @@ from bouncer.network.session_view import iter_session_views
 
 
 def _sess(sid: str, ip: str, ua: str, paths: list[str], minute: int = 0) -> SimpleNamespace:
-    ts = datetime(2026, 11, 14, 16, 0, tzinfo=timezone.utc) + timedelta(minutes=minute)
+    ts = datetime(2026, 11, 14, 16, 0, tzinfo=UTC) + timedelta(minutes=minute)
     return SimpleNamespace(
         id=sid,
         ip=ip,

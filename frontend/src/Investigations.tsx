@@ -90,7 +90,7 @@ function CapabilitiesPanel() {
     ["trust_the_source", "Trust the source", "Source provenance · optional later module"],
   ];
   return (
-    <section aria-labelledby="modules-title" className="rounded-xl border border-border bg-card">
+    <section aria-labelledby="modules-title" className="glass rounded-2xl border border-border">
       <div className="border-b border-border px-5 py-4">
         <h2 id="modules-title" className="font-semibold">
           Investigation modules
@@ -136,7 +136,7 @@ function UsagePanel() {
     typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "Not reported";
   const count = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : "—");
   return (
-    <section aria-labelledby="usage-title" className="rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="usage-title" className="glass rounded-2xl border border-border p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="usage-title" className="font-semibold">
           Model review budget
@@ -574,7 +574,7 @@ function InvestigationDetail({ id, onClose, goTraffic }: { id: string; onClose: 
   const origin = sourceState(investigation?.source);
   const review = reviewState(investigation?.review?.status);
   return (
-    <section aria-labelledby="case-title" className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-6">
+    <section aria-labelledby="case-title" className="min-w-0 glass rounded-2xl border border-border p-4 sm:p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2 id="case-title" className="text-lg font-semibold">
           Investigation record
@@ -796,7 +796,7 @@ export default function Investigations({ goTraffic }: { goTraffic: () => void })
       ) : (
         <section
           aria-labelledby="investigations-title"
-          className="overflow-hidden rounded-xl border border-border bg-card"
+          className="overflow-hidden glass rounded-2xl border border-border"
         >
           <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
             <div>

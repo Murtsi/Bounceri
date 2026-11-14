@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
 import { api } from "@/api";
-import { SplashScreen } from "@/components/BouncerLogo";
+import { ListSkeleton } from "@/components/Skeletons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)} %` : "—");
 
 function Tile({ title, value, note }: { title: string; value: string; note?: string }) {
   return (
-    <Card className="gap-2">
+    <Card className="rise gap-2">
       <CardHeader>
         <CardDescription>{title}</CardDescription>
       </CardHeader>
@@ -23,7 +23,7 @@ function Tile({ title, value, note }: { title: string; value: string; note?: str
 export default function Metrics() {
   const { data: m, error } = useQuery({ queryKey: ["metrics"], queryFn: api.metrics });
   if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
-  if (!m) return <SplashScreen />;
+  if (!m) return <ListSkeleton rows={4} />;
   // Rehellisyys (AGENTS.md §7): stub-tilassa lukuja ei näytetä eikä keksitä.
   const hide = m.stub;
   return (
