@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [X] Runtime dependencies for transactional investigation storage and bounded provider HTTP transport; existing local demo remains unchanged.
 - [A] CI now runs the complete Python test suite instead of leaving stack checks as a commented Node.js scaffold.
 - [A] Public-release preparation: English setup/status README and private vulnerability-reporting guidance; preserve synthetic ingestion fixtures and tests in Git.
 - [A] S2-tyyppien ehdotus, kuuden rivin synteettinen Caddy JSONL -fixture ja parseri/sessionointi sekä `traps.txt` ovat mainissa (PR #5); yhteinen S2/S10-hyväksyntä, 50-rivin sopimusfixture, Postgres-ingest, live-loki ja sovelluspalvelu puuttuvat vielä (A-1).
