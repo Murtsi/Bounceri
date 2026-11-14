@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Siren } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { api, type Alert } from "@/api";
 import { ActionBadge } from "@/components/badges";
 import { SplashScreen } from "@/components/BouncerLogo";
@@ -19,12 +19,17 @@ const ADVICE: Record<string, string> = {
 
 function AlertCard({ a, onShow }: { a: Alert; onShow: () => void }) {
   return (
-    <Card className="gap-0 overflow-hidden border-[color:var(--status-critical)]/40 py-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <div className="flex flex-wrap">
         <div className="flex min-w-0 flex-[999_1_460px] flex-col gap-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="gap-1.5 border-transparent bg-[color:var(--status-critical)] text-white">
-              <Siren /> Käynnissä
+            {/* Live-merkki: sykkivä lime-piste + teksti (tila ei ole pelkän värin varassa). */}
+            <Badge variant="outline" className="gap-2 border-primary/40 bg-primary/10 font-semibold text-foreground">
+              <span className="relative flex size-2" aria-hidden="true">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60 motion-reduce:animate-none" />
+                <span className="relative inline-flex size-2 rounded-full bg-primary" />
+              </span>
+              Käynnissä
             </Badge>
             <span className="text-sm tabular-nums text-muted-foreground">
               alkoi {clock(a.started_at)} · viimeksi {clock(a.last_seen)} · {Math.round(a.duration_s)} s
