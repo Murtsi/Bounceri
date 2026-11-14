@@ -38,6 +38,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [B] Proof of concept `notebooks/b/poc.py`: A:n parseri → C:n IP-tiedot ja kampanjat → B:n säännöt ja malli → C:n selitys ilman LLM:ää, A:n näytteellä ja C:n tunnusten kokeilun fixturella (synteettinen data, ei tietokantaa). B:n ja C:n integraatiotesti `tests/b/test_integration_c.py` (DNS mockattuna) (päätökset 042–043)
 - [A] Kirjautumistunnus lokista: demosivun `X-Login-User`-vastausotsake `POST /login` -pyynnöstä tallentuu kenttään `Request.username`, jolloin C:n tunnusten kokeilun tunnistus toimii oikeasta Caddy-lokista (A-3/A-5, päätös 047)
 - [A] `bouncer.ingest.simrun`: `X-Sim-Run`-merkinnän allekirjoitus (`sign`/`verify`) ja `IngestStats`-laskurit hylätyille merkinnöille (A-5, päätös 046)
+- [X] MVP-määrittely `docs/MVP.md`: hyväksymiskriteerit, rakenne ja vaiheet paikalliselle demolle (päätökset 048–051)
+- [X] Yhteinen `pyproject.toml` + `uv.lock`; `make test` ajaa kaikkien kaistojen testit, `make lint` / `make fmt` käyttävät ruffia (päätös 048)
 
 ### Changed
 - [A] BREAKING: S10 — kun `SIM_RUN_SECRET` on asetettu, `X-Sim-Run` hyväksytään vain oikealla `X-Sim-Sig`-allekirjoituksella; muuten kuka tahansa voisi labeloida bottinsa ihmiseksi (päätös 046, needs-ack)
