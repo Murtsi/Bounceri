@@ -182,3 +182,11 @@ Decision: Keep local detection independent. Use two explicitly identified Feathe
 Consequences: Never claim Microsoft Decision ran for a Featherless call, that two calls are independent votes, or that test enforcement establishes evasion-resistant Internet blocking. Native Hostinger remains gated. Actual credentials, pricing/access metadata and a bounded validation experiment are required before live AI activation; missing access leaves an honest unavailable state.
 Revisit if: evidence linkage and held-out measurements justify a different review or enforcement policy.
 
+
+### 064 — Core audit hardening
+
+2026-11-14. Demo login has a fixed 8 KiB streamed body limit and an ASCII telemetry username alphabet. Invalid parsed log records are counted and skipped; crawler lookup failures stay unknown and confirmation supports both IP families.
+
+Session continuity metadata is private and persisted separately from retained requests. Keep each identity while its session is visible or until five idle event minutes elapse. This fixes reproduced retention/restart failures without storing duplicate requests or exposing continuity metadata in public projections. SQL persistence and atomic checkpoints remain separate required plan work.
+
+Rejected: buffering arbitrary form bodies, treating lookup errors as spoofing, or deriving continuity only from an evictable request slice. These changes implement the owner-approved audit fixes and module plan.

@@ -3,7 +3,7 @@
 Sivu on tarkoituksella tavallinen: sivuja, CSS/JS/kuvia ja kirjautuminen, jotta
 ihmisen ja botin käyttäytyminen eroaa samalla tavalla kuin oikealla sivustolla.
 
-- `POST /login`: ei oikeita tunnuksia, aina 401. Vastaukseen otsake
+- `POST /login`: ei oikeita tunnuksia, 401 (ylisuuri pyyntö 413). Vastaukseen otsake
   `X-Login-User: <syötetty tunnus>`, jonka Caddy lokittaa (päätös 047).
   Salasanaa ei lueta talteen eikä lokiteta.
 - Ansapolut (`deploy/traps.txt`, S11): piilolinkki etusivulla, kielletty
@@ -29,7 +29,8 @@ from bouncer.session.rules import TRAPS_PATH, parse_traps
 STATIC = Path(__file__).resolve().parent / "static"
 LOGIN_USER_HEADER = "X-Login-User"
 MAX_USERNAME = 64
-_USERNAME_OK = re.compile(r"[^\w.@+\-]")
+MAX_LOGIN_BYTES = 8 * 1024
+_USERNAME_OK = re.compile(r"[^a-zA-Z0-9_.@+\-]")
 
 PRODUCTS = {
     i: name
@@ -133,7 +134,12 @@ def clean_username(raw: str) -> str:
 
 @app.post("/login")
 async def login(request: Request) -> Response:
-    form = parse_qs((await request.body()).decode("utf-8", "replace"))
+    body = bytearray()
+    async for chunk in request.stream():
+        if len(body) + len(chunk) > MAX_LOGIN_BYTES:
+            return PlainTextResponse("Login request too large", status_code=413)
+        body.extend(chunk)
+    form = parse_qs(body.decode("utf-8", "replace"))
     username = clean_username((form.get("username") or [""])[0])
     # Salasana jätetään tarkoituksella lukematta: sitä ei käsitellä eikä lokiteta.
     resp = _page("Kirjaudu", "<h1>Väärä tunnus tai salasana</h1>")

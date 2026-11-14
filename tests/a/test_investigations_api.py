@@ -155,3 +155,10 @@ def test_review_endpoint_rejects_model_ineligible_packet_before_reserving(
     usage = client.get("/api/usage").json()
     assert usage["executions"] == usage["requests"] == 0
     assert usage["reserved_usd"] == 0
+
+
+def test_repository_fixture_creates_case(client):
+    response = client.post("/api/investigations", headers=ADMIN,
+                           json={"source": "fixture", "public_demo": True})
+    assert response.status_code == 201, response.text
+    assert response.json()["source"] == {"kind": "fixture", "synthetic": True}

@@ -4,6 +4,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+- [X] Core audit regressions: malformed log records no longer stop later valid requests, origin-form double slashes retain their path, fixture investigations accept serialized sessions, and private session identity survives request retention and worker restart.
+- [C] Forward DNS lookup failures remain unknown, while successful mismatches remain false; crawler confirmation now supports normalized IPv4 and IPv6 addresses.
+- [A] Demo login reads at most 8 KiB even for chunked or misleading Content-Length requests, and uses an ASCII telemetry alphabet so international input cannot crash response headers.
+
+
 ### Added
 - [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.

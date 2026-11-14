@@ -1,10 +1,13 @@
 """Demosivu (A-3): reitit, kirjautumisotsake (047) ja ansat (S11)."""
 
+import asyncio
+
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 
 from bouncer.session.rules import load_traps
-from bouncer.site.app import app, clean_username
+from bouncer.site.app import app, clean_username, login
 
 
 @pytest.fixture(scope="module")
@@ -43,6 +46,56 @@ def test_login_without_username_sets_no_header(client):
 def test_username_is_sanitised_for_a_header():
     assert clean_username("ad\r\nmin<script>") == "adminscript"
     assert len(clean_username("a" * 500)) == 64
+
+
+@pytest.mark.parametrize(
+    ("username", "expected"),
+    [
+        ("用户", ""),
+        ("😀", ""),
+        ("用户Admin😀", "Admin"),
+        (" Åda.test+tag_1@ex-ample ", "da.test+tag_1@ex-ample"),
+    ],
+)
+def test_login_username_uses_ascii_header_alphabet(client, username, expected):
+    response = client.post("/login", data={"username": username, "password": "secret"})
+    assert response.status_code == 401
+    assert response.headers.get("X-Login-User", "") == expected
+    assert clean_username(username) == expected
+
+
+@pytest.mark.parametrize(("size", "status"), [(8192, 401), (8193, 413)])
+def test_login_body_size_limit(client, size, status):
+    prefix = b"username=Admin&password="
+    response = client.post("/login", content=prefix + b"x" * (size - len(prefix)))
+    assert response.status_code == status
+    if status == 413:
+        assert "X-Login-User" not in response.headers
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [[], [(b"transfer-encoding", b"chunked")], [(b"content-length", b"1")]],
+    ids=["unknown-length", "chunked", "lying-content-length"],
+)
+def test_login_stops_reading_stream_when_limit_is_exceeded(headers):
+    chunks = [b"username=Admin&password=" + b"x" * 4000, b"x" * 4200, b"unread-tail"]
+    reads = 0
+
+    async def receive():
+        nonlocal reads
+        chunk = chunks[reads]
+        reads += 1
+        return {"type": "http.request", "body": chunk, "more_body": reads < len(chunks)}
+
+    request = Request(
+        {"type": "http", "method": "POST", "path": "/login", "headers": headers},
+        receive=receive,
+    )
+    response = asyncio.run(login(request))
+    assert response.status_code == 413
+    assert reads == 2
+    assert "X-Login-User" not in response.headers
 
 
 def test_traps_are_hidden_and_disallowed(client):

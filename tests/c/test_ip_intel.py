@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import socket
 from unittest.mock import patch
+
+import pytest
 
 from bouncer.network import VERIFIABLE_CRAWLER_TOKENS, ip_intel
 from bouncer.network.asn import lookup_asn
@@ -52,8 +55,8 @@ def test_googlebot_verified_with_forward_confirm() -> None:
             return_value=("crawl-66-249-66-1.googlebot.com", [], [ip]),
         ),
         patch(
-            "bouncer.network.bots.socket.gethostbyname_ex",
-            return_value=("crawl-66-249-66-1.googlebot.com", [], [ip]),
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, 0))],
         ),
     ):
         check = verify_search_bot(ip)
@@ -70,8 +73,8 @@ def test_fake_googlebot_ua_ip_fails_forward_confirm() -> None:
             return_value=("crawl-fake.googlebot.com", [], [ip]),
         ),
         patch(
-            "bouncer.network.bots.socket.gethostbyname_ex",
-            return_value=("crawl-fake.googlebot.com", [], ["8.8.8.8"]),
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("8.8.8.8", 0))],
         ),
     ):
         check = verify_search_bot(ip)
@@ -86,8 +89,8 @@ def test_ip_intel_wires_bot_and_asn() -> None:
             return_value=("crawl-66-249-66-1.googlebot.com", [], [ip]),
         ),
         patch(
-            "bouncer.network.bots.socket.gethostbyname_ex",
-            return_value=("crawl-66-249-66-1.googlebot.com", [], [ip]),
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, 0))],
         ),
     ):
         intel = ip_intel(ip)
@@ -106,6 +109,56 @@ def test_dns_failure_returns_none_not_false() -> None:
         intel = ip_intel("66.249.66.1")
     assert check.verified is None
     assert intel.verified_bot is None
+
+
+@pytest.mark.parametrize("host", ["crawl.googlebot.com", "crawl.search.msn.com"])
+@pytest.mark.parametrize("error", [socket.gaierror, socket.herror, TimeoutError, OSError])
+def test_forward_dns_failure_returns_none(host: str, error: type[OSError]) -> None:
+    ip = "66.249.66.1"
+    with (
+        patch(
+            "bouncer.network.bots.socket.gethostbyaddr",
+            return_value=(host, [], [ip]),
+        ),
+        patch("bouncer.network.bots.socket.getaddrinfo", side_effect=error("offline")),
+    ):
+        check = verify_search_bot(ip)
+        intel = ip_intel(ip)
+    assert check.verified is None
+    assert check.name is None
+    assert check.reverse_host == host
+    assert intel.verified_bot is None
+
+
+@pytest.mark.parametrize(
+    ("host", "name"),
+    [("crawl.googlebot.com", "googlebot"), ("crawl.search.msn.com", "bingbot")],
+)
+def test_ipv6_bot_verified_with_normalized_forward_confirm(host: str, name: str) -> None:
+    ip = "2001:db8::1"
+    with (
+        patch(
+            "bouncer.network.bots.socket.gethostbyaddr",
+            return_value=(host, [], [ip]),
+        ),
+        patch(
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("203.0.113.1", 0)),
+                (
+                    socket.AF_INET6,
+                    socket.SOCK_STREAM,
+                    6,
+                    "",
+                    ("2001:0db8:0000:0000:0000:0000:0000:0001", 0, 0, 0),
+                ),
+            ],
+        ) as forward,
+    ):
+        check = verify_search_bot(ip)
+    assert check.verified is True
+    assert check.name == name
+    forward.assert_called_once_with(host, None, family=socket.AF_UNSPEC)
 
 
 def test_ptr_without_search_bot_suffix_is_false() -> None:

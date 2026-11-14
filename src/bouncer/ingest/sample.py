@@ -94,7 +94,8 @@ def parse_access_record(
         raise ValueError("Caddy request and response headers must be objects")
 
     uri = str(raw_request.get("uri") or "/")
-    parsed_uri = urlsplit(uri)
+    # Origin-form request targets may start with //; they are not URL authorities.
+    parsed_uri = urlsplit("http://request.invalid" + uri if uri.startswith("/") else uri)
     path = parsed_uri.path or "/"
     request_headers = _normalised_headers(raw_headers)
     method = str(raw_request.get("method") or "GET").upper()
@@ -154,7 +155,12 @@ def parse_access_records(
     """
     grouped: dict[tuple[str, str], list[tuple[Request, str | None]]] = defaultdict(list)
     for record in records:
-        request, marker = parse_access_record(record, secret=secret, stats=stats)
+        try:
+            request, marker = parse_access_record(record, secret=secret, stats=stats)
+        except (ValueError, TypeError, OverflowError, OSError, AttributeError):
+            if stats is not None:
+                stats.invalid_records += 1
+            continue
         grouped[(request.ip, request.user_agent)].append((request, marker))
 
     sessions: list[Session] = []

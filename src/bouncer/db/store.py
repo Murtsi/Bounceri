@@ -77,6 +77,7 @@ def _serialize_session(session: Session) -> dict[str, Any]:
     data["id"] = str(session.id)
     data["started_at"] = session.started_at.isoformat()
     data["ended_at"] = session.ended_at.isoformat()
+    data["requests"] = list(data["requests"])
     for req in data["requests"]:
         req["ts"] = _dt(req["ts"]).isoformat()
     return data

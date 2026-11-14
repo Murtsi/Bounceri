@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import socket
 from dataclasses import dataclass
+from ipaddress import ip_address
 
 #: UA-/DNS-varmistettavat crawlerit. Synkassa B:n fake-crawler -säännön kanssa.
 VERIFIABLE_CRAWLER_TOKENS = ("googlebot", "bingbot")
@@ -36,12 +37,13 @@ def _suffix_match(host: str, suffixes: tuple[str, ...]) -> bool:
     return any(host == s[1:] or host.endswith(s) for s in suffixes)
 
 
-def _forward_resolves_to(host: str, ip: str) -> bool:
+def _forward_resolves_to(host: str, ip: str) -> bool | None:
     try:
-        _hostname, _aliases, addresses = socket.gethostbyname_ex(host)
+        addresses = socket.getaddrinfo(host, None, family=socket.AF_UNSPEC)
     except (socket.gaierror, socket.herror, OSError):
-        return False
-    return ip in addresses
+        return None
+    expected = ip_address(ip)
+    return any(ip_address(address[4][0]) == expected for address in addresses)
 
 
 def verify_search_bot(ip: str) -> BotCheck:
@@ -59,15 +61,14 @@ def verify_search_bot(ip: str) -> BotCheck:
     host = _normalize_host(reverse_host)
 
     if _suffix_match(host, _GOOGLE_SUFFIXES):
-        if _forward_resolves_to(host, ip):
-            return BotCheck(verified=True, name="googlebot", reverse_host=host)
-        # PTR näyttää Googlebotilta mutta forward ei täsmää → väärennös
-        return BotCheck(verified=False, name=None, reverse_host=host)
+        verified = _forward_resolves_to(host, ip)
+        return BotCheck(
+            verified=verified, name="googlebot" if verified else None, reverse_host=host
+        )
 
     if _suffix_match(host, _BING_SUFFIXES):
-        if _forward_resolves_to(host, ip):
-            return BotCheck(verified=True, name="bingbot", reverse_host=host)
-        return BotCheck(verified=False, name=None, reverse_host=host)
+        verified = _forward_resolves_to(host, ip)
+        return BotCheck(verified=verified, name="bingbot" if verified else None, reverse_host=host)
 
     # PTR saatiin, mutta ei hakukonebottia → tarkistettu, ei verified bot
     return BotCheck(verified=False, reverse_host=host)

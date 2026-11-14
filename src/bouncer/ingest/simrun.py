@@ -43,6 +43,7 @@ def verify(marker: str, signature: str, secret: str) -> bool:
 class IngestStats:
     """Mitä lukemisessa ohitettiin. Näytetään, ei piiloteta."""
 
+    invalid_records: int = 0
     records: int = 0
     unsigned_markers: int = 0  # avain asetettu, mutta merkintä ilman oikeaa allekirjoitusta
     invalid_markers: int = 0  # väärä muoto, esim. "pelkkä-ajo"
@@ -52,6 +53,7 @@ class IngestStats:
     def as_dict(self) -> dict[str, object]:
         return {
             "records": self.records,
+            "invalid_records": self.invalid_records,
             "unsigned_markers": self.unsigned_markers,
             "invalid_markers": self.invalid_markers,
             "conflicting_sessions": list(self.conflicting_sessions),

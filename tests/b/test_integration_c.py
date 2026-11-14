@@ -4,6 +4,7 @@ DNS-haut korvataan mockilla (ei verkkoa). Aineistot: A:n näyte (S1) ja C:n
 tunnusten kokeilun fixture, jotka luetaan A:n parserilla.
 """
 
+import socket
 from pathlib import Path
 from unittest.mock import patch
 
@@ -71,7 +72,10 @@ def test_verified_googlebot_from_a_sample_is_good_bot():
     gb = next(s for s in sessions if "Googlebot" in s.user_agent)
     with (
         patch("bouncer.network.bots.socket.gethostbyaddr", return_value=(GB_HOST, [], [gb.ip])),
-        patch("bouncer.network.bots.socket.gethostbyname_ex", return_value=(GB_HOST, [], [gb.ip])),
+        patch(
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", (gb.ip, 0))],
+        ),
     ):
         intel = ip_intel_contract(gb.ip)
     assert intel.verified_bot is True
@@ -84,7 +88,8 @@ def test_spoofed_googlebot_from_a_sample_is_bad_bot():
     with (
         patch("bouncer.network.bots.socket.gethostbyaddr", return_value=(GB_HOST, [], [gb.ip])),
         patch(
-            "bouncer.network.bots.socket.gethostbyname_ex", return_value=(GB_HOST, [], ["8.8.8.8"])
+            "bouncer.network.bots.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("8.8.8.8", 0))],
         ),
     ):
         intel = ip_intel_contract(gb.ip)

@@ -117,3 +117,38 @@ def test_cli_requires_secret(monkeypatch, tmp_path, capsys):
         main(["--log", str(tmp_path / "x.log"), "--store", str(tmp_path / "s.json"), "--once"]) == 1
     )
     assert simrun.SECRET_ENV in capsys.readouterr().out
+
+
+def test_worker_continues_after_invalid_record(tmp_path):
+    rows = [_rec(100, "192.0.2.1"), _rec(101, "192.0.2.1"),
+            _rec(102, "192.0.2.1", uri="/about")]
+    rows[1]["status"] = "broken"
+    _write(tmp_path / "access.log", rows, "w")
+    worker = _worker(tmp_path, [])
+    for _ in range(2):
+        snapshot = worker.cycle()
+        assert len(snapshot["sessions"][0]["requests"]) == 2
+        assert snapshot["ingest"]["invalid_records"] == 1
+
+
+def test_worker_preserves_double_slash_request_target(tmp_path):
+    _write(tmp_path / "access.log", [_rec(100, "192.0.2.1", uri="//[")], "w")
+    result = _worker(tmp_path, []).cycle()
+    assert result["sessions"][0]["requests"][0]["path"] == "//["
+
+
+def test_session_identity_survives_eviction_and_restart(tmp_path):
+    log = tmp_path / "access.log"
+    def worker():
+        return Worker(log, tmp_path / "store.json", secret=SECRET, intel_fn=None,
+                      campaigns_fn=None, synthetic=True, max_records=2)
+    _write(log, [_rec(1000, "192.0.2.1"), _rec(1001, "192.0.2.1")], "w")
+    w = worker()
+    original = w.cycle()["sessions"][0]["id"]
+    _write(log, [_rec(1002, "192.0.2.1")])
+    assert w.cycle()["sessions"][0]["id"] == original
+    w = worker()
+    assert w.cycle()["sessions"][0]["id"] == original
+    _write(log, [_rec(1400, "192.0.2.1")])
+    latest = w.cycle()["sessions"][-1]
+    assert latest["id"] != original

@@ -24,14 +24,22 @@ import os
 import signal
 import sys
 import threading
+from collections import defaultdict
 from collections.abc import Callable, Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import time as _retention_now
 from typing import Any
 
 from bouncer.contracts import Campaign, IpIntel, Session, SessionLabel
-from bouncer.db.store import _serialize_label, _serialize_session, _write_raw, store_path
+from bouncer.db.store import (
+    _read_raw,
+    _serialize_label,
+    _serialize_session,
+    _session_from_dict,
+    _write_raw,
+    store_path,
+)
 from bouncer.eval.run import network_signals
 from bouncer.explain import explain
 from bouncer.ingest import simrun
@@ -134,6 +142,11 @@ class Worker:
         self.synthetic = synthetic
         self.records: list[dict[str, Any]] = []
         self.intel_cache: dict[str, IpIntel] = {}
+        saved = _read_raw(store)
+        self.previous_sessions = [
+            dataclasses.replace(_session_from_dict(row), requests=())
+            for row in saved.get("session_identity_state", saved.get("sessions", []))
+        ]
 
     def _intel(self, ip: str) -> IpIntel:
         if ip not in self.intel_cache:
@@ -163,7 +176,21 @@ class Worker:
         self._retain()
         stats = IngestStats()
         sessions, labels = parse_access_records(self.records, secret=self.secret, stats=stats)
-        sessions, labels = restamp(sessions, labels)
+        previous_by_client = defaultdict(list)
+        for old in self.previous_sessions:
+            previous_by_client[(old.ip, old.user_agent)].append(old)
+        mapping = {}
+        used = set()
+        for session in sessions:
+            previous = next((old for old in previous_by_client[(session.ip, session.user_agent)]
+                             if old.id not in used
+                             and old.started_at <= session.started_at
+                             <= old.ended_at + timedelta(minutes=5)), None)
+            mapping[session.id] = previous.id if previous else stable_id(session)
+            used.add(mapping[session.id])
+        sessions = [dataclasses.replace(s, id=mapping[s.id]) for s in sessions]
+        labels = [dataclasses.replace(lab, session_id=mapping[lab.session_id]) for lab in labels]
+
         if self.max_records is not None or self.window_seconds is not None:
             active_ips = {session.ip for session in sessions}
             self.intel_cache = {
@@ -192,7 +219,21 @@ class Worker:
                 "verified_bot": intel[s.ip].verified_bot,
                 "asn_type": intel[s.ip].asn_type,
             }
+        identities = {s.id: s for s in self.previous_sessions}
+        for session in sessions:
+            old = identities.get(session.id, session)
+            identities[session.id] = dataclasses.replace(
+                session, requests=(), started_at=min(old.started_at, session.started_at),
+                ended_at=max(old.ended_at, session.ended_at),
+            )
+        watermark = max((s.ended_at for s in identities.values()), default=None)
+        visible_ids = {s.id for s in sessions}
+        identity_state = [s for s in identities.values()
+                          if s.id in visible_ids or watermark is None
+                          or s.ended_at >= watermark - timedelta(minutes=5)]
         payload = {
+            # Private continuity state survives eviction of visible request records.
+            "session_identity_state": [_serialize_session(s) for s in identity_state],
             "sessions": [_serialize_session(s) for s in sessions],
             "labels": [_serialize_label(lab) for lab in labels],
             "synthetic": self.synthetic,
@@ -208,6 +249,7 @@ class Worker:
             },  # fmt: skip
         }
         _write_raw(payload, self.store)
+        self.previous_sessions = identity_state
         return payload
 
     def run(self, interval: float, stop: threading.Event) -> None:
