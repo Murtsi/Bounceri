@@ -17,6 +17,10 @@ KNOWN_WEAKNESSES: tuple[str, ...] = (
     "Malli oppii C:n kampanjajäsenyyden painon vain, jos opetusdatassa on kampanjoita: "
     "PoC:ssa (synteettinen data) C löysi tunnusten kokeilun, mutta B jätti sessiot "
     "'uncertain'-luokkaan.",
+    "C:n käyttäytymisklusterointi (behavior_cluster) niputti MVP:ssä kuusi simuloitua ihmistä "
+    "samaksi kampanjaksi (sama selain-otsakesormenjälki, samankaltaiset polut); samaa "
+    "selainversiota käyttävät oikeat ihmiset voivat näyttää samalta. B:n kampanjasääntö "
+    "koskee siksi vain tunnusten kokeilua.",
     "Malli (lr-v1) on lineaarinen: piirteiden yhteisvaikutukset (esim. nopea tahti vain "
     "ilman CSS/JS-pyyntöjä) eivät näy, ellei niitä lisätä piirteiksi.",
     "Väärennetty Googlebot/Bingbot IP-osoitteesta, jolla ei ole PTR-tietuetta, saa "
