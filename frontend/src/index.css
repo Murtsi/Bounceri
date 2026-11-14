@@ -169,6 +169,12 @@
 .attention-empty { padding:18px 2px; color:var(--muted-foreground); font-size:12px; }
 .attention-all { align-self:flex-start; margin:7px 0 0 -8px; }
 .overview-trend { border-radius:14px; }
+/* Etusivun yläosa: porttikoppi-kuvitus + huomiota vaativat. */
+.overview-hero { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr); gap:16px; align-items:stretch; }
+.gatehouse-panel { position:relative; min-width:0; overflow:hidden; border:1px solid rgba(197,239,93,.14); border-radius:16px; background:radial-gradient(ellipse at 55% 60%,rgba(65,112,67,.2),transparent 65%),linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 70%); padding:6px; }
+@media (max-width:1100px) {
+  .overview-hero { grid-template-columns:minmax(0,1fr); }
+}
 .human-numbers { border-top:1px solid rgba(238,243,234,.12); border-bottom:1px solid rgba(238,243,234,.12); padding:14px 0; }
 @media (max-width:760px) {
   .overview-context { flex-wrap:wrap; gap:8px 11px; }

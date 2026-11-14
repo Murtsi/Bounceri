@@ -10,6 +10,7 @@ import { TrafficChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { CardHeading } from "@/components/CardIcon";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { GatehouseScene } from "@/views/GatehouseScene";
 import { LiveFeed } from "@/views/LiveFeed";
 
 function clock(iso: string) {
@@ -52,6 +53,10 @@ export default function Overview({
         <span className="overview-advisory">Detector classification · no live blocking</span>
       </div>
 
+      <div className="overview-hero">
+      <div className="gatehouse-panel">
+        <GatehouseScene />
+      </div>
       <section className="attention-panel" aria-labelledby="attention-title">
         <div className="attention-heading">
           <div>
@@ -86,6 +91,7 @@ export default function Overview({
           <Button variant="ghost" size="sm" className="attention-all" onClick={() => goSessions("")}>View all sessions <ChevronRight /></Button>
         </div>
       </section>
+      </div>
 
       <Card className="overview-trend rise min-w-0" style={d(100)}>
         <CardHeader>

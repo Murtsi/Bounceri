@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [X] Etusivulle elävöittävä 3D-porttikoppi (CSS 3D, ei uusia riippuvuuksia): portsari seisoo oven edessä ja pysäyttää punaisen reitin, vihreä reitti kulkee oviaukosta läpi ja jatkuu kopin takaa; yksi valo ja samansuuntaiset varjot, hiiri kallistaa näkymää hieman. Animaatio on hillitty ja jatkuva, pysähtyy taustalla, näkymän ulkopuolella ja tauko-painikkeella; vähennetty liike näyttää staattisen kuvan. Kuvitus ei näytä lukuja. Käyttämätön GatehouseConcept-kokeilu poistettu
 - [A] Seed-replayable variable traffic episodes compose browsing, cached/privacy/NAT controls, benign automation, unknown-intent scraping, varied probes and login campaigns; fresh live entropy replaces the repeating fixed wave.
 - [A] Public synthetic evaluation evidence includes measured denominators, confidence intervals, detector freeze provenance and unavailable real/hidden evidence, with a separate dashboard card; S8 remains an unmeasured real-world metrics stub.
 - [A] Reproducible signed native datasets, provenance/checksum registry, whole-run partitions, leakage guards, current-parser features and offline baseline reports; historical robot labels remain separate from maliciousness and real/independently hidden evidence remains unavailable.
