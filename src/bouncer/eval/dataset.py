@@ -25,7 +25,7 @@ from bouncer.contracts import IpIntel, Label, Session, SessionLabel
 from bouncer.session import rules
 from bouncer.session.features import SessionFeatures, compute_features
 
-TruthSource = Literal["sim", "trap", "dns"]
+TruthSource = Literal["sim", "trap", "dns", "study"]
 Origin = Literal["simulated", "real"]
 
 #: A:n simulaattoriluokat → B:n label. Tuntematon luokka ei koskaan arvaa
@@ -63,6 +63,14 @@ class DatasetRow:
     origin: Origin
     run_id: str | None = None
     campaign_id: str | None = None
+    source_id: str | None = None
+    external_session_id: str | None = None
+    actor_id: str | None = None
+    ended_at: datetime | None = None
+    group_ids: tuple[str, ...] = ()
+    session_digest: str | None = None
+    annotation_id: str | None = None
+    annotation_revision: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

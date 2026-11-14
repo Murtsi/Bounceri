@@ -16,6 +16,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] BREAKING: Additive migration 007 stores private pseudonymous study subjects, consented collection windows and append-only session reviews separately from simulator labels; dedicated-source withdrawal atomically erases collection payloads while preserving financial audit and minimal revocation tombstones.
+- [B] Private operator enrollment, bounded inspection and review commands require the inspected native session digest and annotation revision; changed content, revoked consent and newer rejected reviews cannot enter the current human-reference subset. Automation and intent remain separate observations, with no inferred bot truth or published quality claims.
 - [A] BREAKING: Source-scoped runtime health and explicit investigation origin bindings use additive migrations 005–006; probes separate liveness, ingest lag, traffic age and optional review availability without provider calls.
 - [A] Private full-database backup/empty-target restore preserves review spending and reservations; explicit source purge erases bound payloads while retaining tombstones/financial audit and rejects ambiguous database or legacy-origin configurations.
 - [C] Hosted worker memory is bounded by retained bytes as well as record count/time; repeated behavior-cluster path comparisons are collapsed, with constrained-container resource measurements and operational limits documented.

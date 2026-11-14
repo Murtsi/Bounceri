@@ -30,6 +30,9 @@ def source(tmp_path):
             "investigation_assessments",
             "investigation_budget",
             "enforcement_policies",
+            "study_subjects",
+            "study_enrollments",
+            "study_session_reviews",
         ):
             db.execute(f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT NOT NULL)")
             db.execute(f"INSERT INTO {table} VALUES (1, ?)", (table + "-private",))
@@ -256,10 +259,18 @@ def test_real_postgres_full_roundtrip_and_occupied_target_refusal(owned_postgres
             conn.exec_driver_sql(
                 "INSERT INTO labels (session_id,run_id,sim_class) VALUES (1,'fixture','human')"
             )
+        from bouncer.db.participants import StudyStore
+        from tests.a.test_participants import enroll, review
+        from tests.a.test_participants import source as study_source
+
+        study = StudyStore(source)
+        study_source(study.traffic)
+        enrolled = enroll(study)
+        review(study, enrolled)
         artifact = tmp_path / "database.dump"
         manifest = backup(base + "backup_source", artifact, runner=runner)
         assert artifact.read_bytes().startswith(b"PGDMP")
-        assert manifest["schema"]["version"] >= 4
+        assert manifest["schema"]["version"] >= 7
         report = restore(str(artifact) + ".manifest.json", base + "backup_target", runner=runner)
         assert report["verified"] is True
         with source.connect() as left, target.connect() as right:

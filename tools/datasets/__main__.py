@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from .native import (
@@ -18,10 +19,16 @@ from .registry import checksum, load_registry
 
 
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["participants"]:
+        from .participants import main as participants_main
+
+        return participants_main(argv[1:])
     parser = argparse.ArgumentParser(
         description="Offline dataset provenance and native fixtures; no network or model calls."
     )
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("participants", help="Private consent and reviewed-session records.")
     generate = commands.add_parser(
         "generate", help="Create new deterministic native synthetic data outside Git."
     )
