@@ -98,3 +98,7 @@ secrets.*
 *.tfstate.*
 .worktrees/
 graphify-out/
+
+# MVP: workerin store (docker volume)
+/data/store.json
+/data/store.json.tmp

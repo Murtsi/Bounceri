@@ -33,3 +33,8 @@ backups
 .mypy_cache
 .worktrees
 graphify-out
+
+# MVP-build
+**/node_modules
+frontend/dist
+data

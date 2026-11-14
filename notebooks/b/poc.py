@@ -45,7 +45,7 @@ def read_logs(paths=LOGS):
     for p in paths:
         records += [json.loads(line) for line in p.read_text("utf-8").splitlines() if line.strip()]
     records.sort(key=lambda r: r["ts"])
-    return parse_access_records(records)
+    return parse_access_records(records, secret=None)  # repon fixturet ovat luotettuja
 
 
 def synthetic_model():
