@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ACTION_TEXT, api, LABEL_TEXT, type Label, type SessionRow } from "./api";
-import Overview, { ActionChip } from "./Overview";
+import { api, LABEL_TEXT, type Label, type SessionRow } from "./api";
+import Overview from "./Overview";
+import { ActionBadge } from "@/components/badges";
+import { BouncerLogo } from "@/components/BouncerLogo";
 
 type Tab = "overview" | "sessions" | "campaigns" | "metrics";
 
@@ -45,7 +47,7 @@ function Header({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
     <header className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Bouncer</p>
+          <BouncerLogo className="text-2xl" />
           <h1 className="text-3xl font-bold">Kuka sivulla oikeasti käy</h1>
         </div>
         {s && tab !== "overview" && (
@@ -148,7 +150,7 @@ function SessionsTable({ onPick, picked }: { onPick: (id: string) => void; picke
                   </td>
                   <td className="px-3 py-2">
                     {r.action && r.action !== "none" ? (
-                      <ActionChip action={r.action} text={ACTION_TEXT[r.action]} />
+                      <ActionBadge action={r.action} />
                     ) : (
                       "—"
                     )}
