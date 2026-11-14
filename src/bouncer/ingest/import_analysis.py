@@ -99,6 +99,8 @@ class _Ingest(_Strict):
     bad_lines: Literal[0]
     rotation_gaps: Literal[0]
     retained_records: int = Field(ge=1, le=MAX_RECORDS)
+    retained_bytes: int = Field(ge=0, le=16 * 1024**2)
+    last_event_at: AwareDatetime | None
     discarded_by_retention: Literal[0]
     updated_at: AwareDatetime
 
@@ -234,7 +236,8 @@ def analyze_records(records: list[dict], synthetic: bool) -> dict:
             root = Path(directory)
             worker = Worker(root / "empty.log", root / "snapshot.json", secret=None,
                             intel_fn=None, campaigns_fn=import_campaigns, synthetic=synthetic,
-                            max_records=MAX_RECORDS, traps=frozenset(), rules_only=True)
+                            max_records=MAX_RECORDS, traps=frozenset(), rules_only=True,
+                            max_retained_bytes=16 * 1024**2)
             worker.records = safe
             result = worker.cycle()
             unavailable = {}

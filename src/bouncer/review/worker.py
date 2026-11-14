@@ -53,13 +53,19 @@ def main(argv=None, *, store_factory=None, transport=None) -> int:
             store.close_interrupted_job(args.close_interrupted, args.worker_id)
             print("Interrupted review closed; dispatched charge reservations retained; no retry.")
             return 0
+        settings = ReviewSettings.from_env()
         runner = ReviewRunner(
             store,
-            ReviewSettings.from_env(),
+            settings,
             transport=transport,
             worker_id=args.worker_id or "review-worker-1",
         )
         while True:
+            if hasattr(store, "heartbeat"):
+                store.heartbeat(os.getenv("BOUNCER_TRAFFIC_SOURCE", "monitored"), "review",
+                                state=("ready" if capabilities(settings)["enabled"] else
+                                       "disabled" if not settings.enabled else "unavailable"),
+                                config_key=settings.config_key)
             processed = runner.run_once()
             if args.once:
                 return 0

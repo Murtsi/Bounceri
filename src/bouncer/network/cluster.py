@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from hashlib import sha1
+from itertools import combinations, combinations_with_replacement, product
 
 from bouncer.network.session_view import SessionView
 from bouncer.network.types import Campaign, make_campaign
@@ -115,25 +116,36 @@ def find_behavior_campaigns(
     if len(sessions) < cfg.min_sessions:
         return []
 
-    shingles = [_shingles(s.paths, cfg.shingle_size) for s in sessions]
-    signatures = [minhash_signature(sh, cfg.minhash_perms) for sh in shingles]
+    buckets: dict[str, dict[frozenset[str], list[int]]] = {}
+    for i, session in enumerate(sessions):
+        header = session.header_fingerprint if cfg.require_same_header_fp else ""
+        if cfg.require_same_header_fp and not header:
+            continue
+        sh = frozenset(_shingles(session.paths, cfg.shingle_size))
+        buckets.setdefault(header, {}).setdefault(sh, []).append(i)
     uf = UnionFind(len(sessions))
 
-    for i in range(len(sessions)):
-        for j in range(i + 1, len(sessions)):
-            if cfg.require_same_header_fp:
-                if sessions[i].header_fingerprint != sessions[j].header_fingerprint:
+    # Repeated paths share evidence, but each session keeps its own time edges.
+    for bucket in buckets.values():
+        patterns = [set(sh) for sh in bucket]
+        members = list(bucket.values())
+        signatures = [minhash_signature(sh, cfg.minhash_perms) for sh in patterns]
+        for a, b in combinations_with_replacement(range(len(patterns)), 2):
+            pairs = combinations(members[a], 2) if a == b else product(members[a], members[b])
+            checked = False
+            for i, j in pairs:
+                if i > j:
+                    i, j = j, i
+                if not _overlap(sessions[i], sessions[j], cfg.max_time_gap):
                     continue
-                if not sessions[i].header_fingerprint:
-                    continue
-            if not _overlap(sessions[i], sessions[j], cfg.max_time_gap):
-                continue
-            # Exact Jaccard on shingles; MinHash as cheap pre-check
-            approx = minhash_approx_jaccard(signatures[i], signatures[j])
-            if approx < cfg.path_jaccard_min * 0.5:
-                continue
-            sim = jaccard(shingles[i], shingles[j])
-            if sim >= cfg.path_jaccard_min:
+                if not checked:
+                    approx = minhash_approx_jaccard(signatures[a], signatures[b])
+                    if approx < cfg.path_jaccard_min * 0.5:
+                        break
+                    sim = jaccard(patterns[a], patterns[b])
+                    if not sim >= cfg.path_jaccard_min:
+                        break
+                    checked = True
                 uf.union(i, j)
 
     groups: dict[int, list[int]] = {}

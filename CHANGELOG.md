@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- [A] Escaped invalid Unicode/NUL input cannot repeatedly stall worker checkpoints or PostgreSQL resume writes; bad records are counted/skipped, while malformed simulator credentials retain otherwise valid traffic without trusted labels.
 - [X] Malformed non-ASCII bearer/signature input now fails authorization safely; invalid simulator signatures discard only truth labels rather than hiding otherwise valid traffic.
 - [A] Malformed or scoped client addresses are rejected per record before PostgreSQL writes, and equivalent IPv6 spellings share canonical addresses without changing opaque session IDs on replay.
 - [A] Checkpointed ingestion recovers retained numeric/gzip rotations and partial lines, detects changed source prefixes, preserves committed session ownership for late/bridging events, and keeps signed-label conflicts invalid across eviction/restart; observed missing segments are reported.
@@ -15,6 +16,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] BREAKING: Source-scoped runtime health and explicit investigation origin bindings use additive migrations 005–006; probes separate liveness, ingest lag, traffic age and optional review availability without provider calls.
+- [A] Private full-database backup/empty-target restore preserves review spending and reservations; explicit source purge erases bound payloads while retaining tombstones/financial audit and rejects ambiguous database or legacy-origin configurations.
+- [C] Hosted worker memory is bounded by retained bytes as well as record count/time; repeated behavior-cluster path comparisons are collapsed, with constrained-container resource measurements and operational limits documented.
 - [A] Authenticated private Caddy/normalized JSONL and standard nginx/Apache combined imports now return bounded per-line reports, redact credentials, pseudonymize targets, analyze offline, and atomically retain private native data with a redacted investigation; publication requires explicit synthetic permission and paid work is never queued automatically.
 - [X] Imported availability masks survive analysis, storage, case projection and evaluation: unknown values stay missing, incomplete labeled data cannot train/write models, and foreign logs never inherit current DNS/project trap truth or calibrated native models.
 - [C] Bounded live S4 network lookups retain checked times, resolver outcomes and curated/inferred ASN origins with expiring cache and cycle limits; timeout/failure stays unknown and hosted runtime selects the bounded path without paid inference.

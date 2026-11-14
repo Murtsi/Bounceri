@@ -12,6 +12,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     Column,
+    Index,
     Integer,
     MetaData,
     String,
@@ -19,6 +20,7 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     insert,
+    inspect,
     select,
     update,
 )
@@ -32,12 +34,14 @@ cases = Table(
     metadata,
     Column("id", String, primary_key=True),
     Column("source_key", String, nullable=False),
+    Column("source_id", String),
     Column("evidence_hash", String, nullable=False),
     Column("public", Boolean, nullable=False),
     Column("payload", JSON, nullable=False),
     Column("created_at", String, nullable=False),
     UniqueConstraint("source_key", "evidence_hash"),
 )
+Index("investigation_cases_source_id_idx", cases.c.source_id)
 assessments = Table(
     "investigation_assessments",
     metadata,
@@ -110,6 +114,28 @@ class ReviewIneligible(ValueError):
         super().__init__("review_ineligible: " + reason)
 
 
+def _upgrade_sqlite_source_identity(engine):
+    """Add origin binding to existing local adapters without guessing review scopes."""
+    with engine.begin() as conn:
+        conn.exec_driver_sql("BEGIN IMMEDIATE")
+        inspector = inspect(conn)
+        if not inspector.has_table(cases.name):
+            return
+        if "source_id" not in {column["name"] for column in inspector.get_columns(cases.name)}:
+            conn.exec_driver_sql("ALTER TABLE investigation_cases ADD COLUMN source_id VARCHAR")
+        for index in cases.indexes:
+            index.create(conn, checkfirst=True)
+        if inspector.has_table("traffic_sources"):
+            from bouncer.db.traffic import sources
+
+            known_source = select(sources.c.source_key).where(
+                sources.c.source_key == cases.c.source_key
+            ).exists()
+            conn.execute(update(cases).where(cases.c.source_id.is_(None), known_source).values(
+                source_id=cases.c.source_key
+            ))
+
+
 def model_packet(payload: dict) -> dict:
     return {
         key: payload[key]
@@ -164,6 +190,9 @@ class InvestigationStore:
         self.engine = create_engine(database_url, **options)
         if self.engine.dialect.name == "sqlite":
             metadata.create_all(self.engine)
+            _upgrade_sqlite_source_identity(self.engine)
+            from bouncer.db.health import metadata as health_metadata
+            health_metadata.create_all(self.engine)
         else:
             from bouncer.db.migrate import run_migrations
 
@@ -196,13 +225,20 @@ class InvestigationStore:
                 raise
 
     def create_from_legacy(
-        self, snapshot: dict, source_key: str = "overview", public_demo: bool = False
+        self, snapshot: dict, source_key: str = "overview", public_demo: bool = False,
+        *, source_id: str | None = None,
     ) -> dict:
+        snapshot_source = snapshot.get("traffic_source_id")
+        if source_id is not None and snapshot_source is not None and source_id != snapshot_source:
+            raise ValueError("snapshot source identity does not match selected source")
+        source_id = source_id if source_id is not None else snapshot_source
+        if source_id is not None and (not isinstance(source_id, str) or not source_id.strip()):
+            raise ValueError("source identity must be a non-empty string")
         packet = traffic_packet(snapshot)
         if public_demo and not packet["synthetic"]:
             raise ValueError("only synthetic snapshots can be public demos")
         with self.transaction() as conn:
-            case_id = self._create_case(conn, packet, source_key, public_demo)
+            case_id = self._create_case(conn, packet, source_key, public_demo, source_id=source_id)
         return self.get_case(case_id, False)
 
     def create_traffic_import(
@@ -227,13 +263,29 @@ class InvestigationStore:
         repository = TrafficRepository(self.engine)
         with self.transaction() as conn:
             repository._freeze_snapshot(conn, private_snapshot, source_key=source_key)
-            case_id = self._create_case(conn, packet, source_key, public_demo, "uploaded_log")
+            case_id = self._create_case(conn, packet, source_key, public_demo, "uploaded_log",
+                                        source_id=source_key)
         return self.get_case(case_id, False)
 
-    def _create_case(self, conn, packet, source_key, public_demo, source_kind=None):
+    def _create_case(
+        self, conn, packet, source_key, public_demo, source_kind=None, *, source_id=None
+    ):
+        if inspect(conn).has_table("traffic_sources"):
+            from bouncer.db.traffic import sources
+
+            origin = source_id if source_id is not None else source_key
+            saved = conn.scalar(select(sources.c.snapshot).where(sources.c.source_key == origin))
+            if saved is not None and saved.get("source_deleted"):
+                raise ValueError("deleted source cannot accept new cases; use a new source key")
+            if source_id is None and saved is not None:
+                source_id = origin
+        scope = {"source_scope": source_key, "packet": packet}
+        if source_id is not None:
+            # Review jobs also deduplicate by this hash, so distinct origins must stay distinct.
+            scope["source_id"] = source_id
         digest = hashlib.sha256(
             json.dumps(
-                {"source_scope": source_key, "packet": packet},
+                scope,
                 sort_keys=True,
                 separators=(",", ":"),
             ).encode()
@@ -264,6 +316,7 @@ class InvestigationStore:
             insert(cases).values(
                 id=case_id,
                 source_key=source_key,
+                source_id=source_id,
                 evidence_hash=digest,
                 public=public_demo,
                 payload=payload,
@@ -615,6 +668,12 @@ class InvestigationStore:
                 .where(jobs.c.id == job_id)
                 .values(status="unavailable", reason="interrupted", remaining=0)
             )
+
+    def heartbeat(self, source_id, component, *, state, config_key=None):
+        from bouncer.db.health import record_heartbeat
+        return record_heartbeat(
+            self.engine, source_id, component, state=state, config_key=config_key
+        )
 
     def usage(self):
         with self.engine.connect() as conn:

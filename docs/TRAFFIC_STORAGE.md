@@ -44,7 +44,7 @@ Unset `BOUNCER_TRAFFIC_DATABASE_URL`, set `BOUNCER_STORE_PATH` to the new export
 python -m bouncer.db prune --before 2026-11-14T00:00:00+00:00 --source private-simulation
 ```
 
-Prune requires a timezone-aware cutoff and removes only nonvisible expired requests and empty inactive sessions/labels in that source. Immutable archives remain visible and require a separately authorized archival lifecycle; this command does not delete them. Dataset/study retention and consent withdrawal are separate plan work. `seed` and `clear` are deliberately offline JSON operations: with SQL selected they require `--offline` so they cannot be mistaken for clearing SQL.
+Prune requires a timezone-aware cutoff and removes only nonvisible expired requests and empty inactive sessions/labels in that source. Immutable archives remain visible; prune does not delete them. Explicit source purge and full-database backup/restore are documented in [OPERATIONS.md](OPERATIONS.md). Dataset/study retention and consent withdrawal are separate plan work. `seed` and `clear` are deliberately offline JSON operations: with SQL selected they require `--offline` so they cannot be mistaken for clearing SQL.
 
 ## Verification
 

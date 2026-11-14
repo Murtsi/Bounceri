@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from bouncer.contracts import IpIntel
-from bouncer.db.store import _serialize_session, read_snapshot
+from bouncer.db.store import _serialize_session, read_snapshot, traffic_source
 from bouncer.ingest.sample import load_sample_data
 from bouncer.investigations import InvestigationStore
 from bouncer.investigations.store import ReviewIneligible
@@ -232,7 +232,10 @@ async def create_case(request: Request):
     else:
         snapshot, source_key = read_snapshot(), body.source_key
     try:
-        return get_store().create_from_legacy(snapshot, source_key, body.public_demo)
+        return get_store().create_from_legacy(
+            snapshot, source_key, body.public_demo,
+            source_id=traffic_source() if body.source == "monitored_traffic" else None,
+        )
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 

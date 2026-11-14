@@ -28,6 +28,7 @@ from sqlalchemy import (
     create_engine,
     delete,
     insert,
+    inspect,
     select,
     text,
     tuple_,
@@ -132,6 +133,10 @@ class CheckpointConflict(RuntimeError):
     """The source advanced since the caller read its state."""
 
 
+class SourcePurgeBlocked(ValueError):
+    """A source cannot be erased while legacy case origins remain unproven."""
+
+
 def _checkpoint(row) -> Checkpoint | None:
     if row is None or row["generation"] is None:
         return None
@@ -174,6 +179,11 @@ class TrafficRepository:
             run_migrations(self.engine)
         else:
             metadata.create_all(self.engine)
+            from bouncer.investigations.store import _upgrade_sqlite_source_identity
+
+            _upgrade_sqlite_source_identity(self.engine)
+            from bouncer.db.health import metadata as health_metadata
+            health_metadata.create_all(self.engine)
 
     def load_checkpoint(self, source_key: str) -> Checkpoint | None:
         with self.engine.connect() as conn:
@@ -259,6 +269,8 @@ class TrafficRepository:
             )
             if retention_before is not None:
                 self._prune(conn, source_key, retention_before)
+            from bouncer.db.health import heartbeat_connection
+            heartbeat_connection(conn, source_key, "ingest", state="ready")
             committed = Checkpoint(
                 checkpoint.generation, checkpoint.byte_offset, current["revision"] + 1
             )
@@ -278,6 +290,107 @@ class TrafficRepository:
         """Freeze an immutable compatibility archive while preserving external session IDs."""
         with self.engine.begin() as conn:
             self._freeze_snapshot(conn, snapshot, source_key=source_key)
+
+    def delete_source(
+        self, source_key: str, *, expected_checkpoint: Checkpoint | None
+    ) -> dict[str, Any]:
+        """Erase source payloads in this database; retain identity and financial audit."""
+        from bouncer.investigations.store import assessments, budget, cases, jobs
+
+        with self.engine.begin() as conn:
+            if conn.dialect.name == "sqlite":
+                conn.exec_driver_sql("BEGIN IMMEDIATE")
+            tables = set(inspect(conn).get_table_names())
+            # Match the investigation transaction lock order, including import writers.
+            if budget.name in tables:
+                conn.execute(select(budget).where(budget.c.id == 1).with_for_update())
+            current = conn.execute(
+                select(sources).where(sources.c.source_key == source_key).with_for_update()
+            ).mappings().first()
+            if current is None:
+                raise ValueError("unknown source")
+            if _checkpoint(current) != expected_checkpoint:
+                raise CheckpointConflict("source checkpoint changed")
+            related = []
+            if cases.name in tables:
+                unbound = conn.scalar(select(cases.c.id).where(
+                    cases.c.source_id.is_(None),
+                    cases.c.source_key != source_key,
+                    cases.c.payload["source"]["kind"].as_string() == "monitored_traffic",
+                ).limit(1))
+                if unbound is not None:
+                    raise SourcePurgeBlocked(
+                        "purge blocked: unbound monitored cases have no proven source identity; "
+                        "bind verified source_id values before purging"
+                    )
+                related = list(conn.execute(
+                    select(cases).where(
+                        (cases.c.source_id == source_key) | (
+                            cases.c.source_id.is_(None) & (cases.c.source_key == source_key)
+                        )
+                    ).with_for_update()
+                ).mappings())
+            case_ids = [case["id"] for case in related]
+            if case_ids and jobs.name in tables:
+                active = conn.scalar(select(jobs.c.id).where(
+                    (jobs.c.case_id.in_(case_ids) | jobs.c.evidence_hash.in_(
+                        [case["evidence_hash"] for case in related]
+                    )),
+                    jobs.c.status.in_(("queued", "running")),
+                ).limit(1))
+                if active is not None:
+                    raise ValueError("source has queued or running reviews; resolve them first")
+            report = {
+                "source_key": source_key,
+                "revision": current["revision"] + 1,
+                "scope": "selected database only; original files and backups are excluded",
+                "cases_tombstoned": len(related),
+                "assessments_deleted": 0,
+                "heartbeats_deleted": 0,
+            }
+            if case_ids and assessments.name in tables:
+                report["assessments_deleted"] = conn.execute(
+                    delete(assessments).where(assessments.c.case_id.in_(case_ids))
+                ).rowcount
+            for case in related:
+                old = case["payload"]
+                tombstone = {
+                    "id": case["id"],
+                    "module": old.get("module", "clean_the_traffic"),
+                    "created_at": case["created_at"],
+                    "evidence_hash": case["evidence_hash"],
+                    "source": {"kind": "deleted"},
+                    "complete": False,
+                    "evidence": [],
+                    "local_assessment": None,
+                    "missing_information": ["Source payload was explicitly deleted."],
+                }
+                if type(old.get("synthetic")) is bool:
+                    tombstone["synthetic"] = old["synthetic"]
+                    tombstone["source"]["synthetic"] = old["synthetic"]
+                conn.execute(update(cases).where(cases.c.id == case["id"]).values(
+                    payload=tombstone, public=False,
+                ))
+            source_ids = select(sessions.c.id).where(sessions.c.source_key == source_key)
+            for name, table, condition in (
+                ("labels_deleted", labels, labels.c.session_id.in_(source_ids)),
+                ("requests_deleted", requests, requests.c.source_key == source_key),
+                ("sessions_deleted", sessions, sessions.c.source_key == source_key),
+            ):
+                report[name] = conn.execute(delete(table).where(condition)).rowcount
+            if "runtime_component_health" in tables:
+                health = Table("runtime_component_health", MetaData(), autoload_with=conn)
+                report["heartbeats_deleted"] = conn.execute(
+                    delete(health).where(health.c.source_id == source_key)
+                ).rowcount
+            snapshot = {"source_deleted": True}
+            if type(current["snapshot"].get("synthetic")) is bool:
+                snapshot["synthetic"] = current["snapshot"]["synthetic"]
+            conn.execute(update(sources).where(sources.c.source_key == source_key).values(
+                generation=None, byte_offset=0, revision=report["revision"],
+                snapshot=snapshot, resume_state={"deleted": True}, read_only=True,
+            ))
+        return report
 
     def _freeze_snapshot(self, conn, snapshot: dict[str, Any], *, source_key: str) -> None:
         """Freeze within the caller's transaction so related case writes stay atomic."""

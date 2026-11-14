@@ -8,18 +8,18 @@ Kaistat ovat oletusvastuita, eivät muokkauskieltoja. Alla säilytetty T+-aikata
 ja stub-taulukko ovat alkuperäinen hackathon-suunnitelma, eivät nykyinen työtila.
 Nykytila ja vaiheistus ovat [README.md](README.md):ssä ja [TODO.md](TODO.md):ssä.
 
-- **A:** Caddy-demo, allekirjoitetut simulaattorit, ingest-worker, JSON-store ja
-  `load_sessions()`/`load_labels()`, API sekä dashboard ovat toteutettu. Liikenteen
-  SQL repository, yhtenäinen versioitu migraatioajo ja replay/checkpointit ovat
-  seuraavaa ydintyötä; PostgreSQL-investigations ei vielä korvaa JSON-liikennestorea.
+- **A:** Caddy-demo, allekirjoitetut simulaattorit, worker/API/dashboard ja
+  investigation-runtime ovat toteutettu. Versioidut migraatiot, liikenteen SQL
+  repository/checkpointit, yksityinen loki-import ja JSON-yhteensopivuus on
+  varmennettu paikallisesti. SQL-polku valitaan erikseen; live-cutover on avoin.
 - **B:** paikalliset piirteet/säännöt, mallin latauspolku ja arviointityökalut ovat
   toteutettu. Production `models/metrics.json` on stub/null. Erillinen
   [synteettinen raportti](../../docs/EVALUATION.md) ei täytä oikeiden ihmisten
   FPR- tai aidosti piilotetun hyökkäyksen näyttövaatimusta.
-- **C:** HTTP-kampanjat, IP/DNS-funktiot, NAT-suodatus ja selitykset ovat toteutettu.
-  Hosted-worker käyttää nyt `intel_fn=None`; live-DNS-näyttöä ei pidä päätellä
-  paikallisten funktioiden olemassaolosta. Investigation-paketista puuttuvat
-  crawler-varmennuksen provenienssi ja mallille riittävä kampanjasuhdenäyttö.
+- **C:** HTTP-kampanjat, NAT-suodatus ja selitykset ovat toteutettu. Hosted-worker
+  käyttää rajattua cached LiveIntel -polkua; case säilyttää varmennusprovenienssin
+  ja scoped-kampanjasuhteet. DNS-failure jää unknown-tilaan. Uutta live-deployta
+  tai oikean liikenteen tunnistuslaatua ei ole varmennettu.
 - **Yhteinen review-runtime:** `src/bouncer/review/` sisältää asynkronisen bounded
   decision → final advisory reviewer -runnerin/workerin. Molemmat roolit käyttävät
   eksplisiittisesti aktivoitua Featherless-konfiguraatiota; investigation-store

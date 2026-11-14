@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import hashlib
+import json
 import os
 import signal
 import sys
@@ -41,12 +42,13 @@ from bouncer.db.store import (
     traffic_repository,
     traffic_retention,
     traffic_source,
+    write_snapshot_health,
 )
 from bouncer.eval.run import network_signals
 from bouncer.explain import explain
 from bouncer.ingest import simrun
 from bouncer.ingest.continuity import sessionize
-from bouncer.ingest.sample import _timestamp, parse_access_record
+from bouncer.ingest.sample import _timestamp, parse_access_record, storage_safe_record
 from bouncer.ingest.tail import LogTail
 from bouncer.session import rules, score
 from bouncer.session.actions import recommend
@@ -95,11 +97,16 @@ class Worker:
         history_retention_seconds: float | None = None,
         traps: frozenset[str] | None = None,
         rules_only: bool = False,
+        max_retained_bytes: int = 8 * 1024 * 1024,
     ) -> None:
         if max_records is not None and (type(max_records) is not int or max_records < 1):
             raise ValueError("max_records must be a positive integer")
         if window_seconds is not None and window_seconds <= 0:
             raise ValueError("window_seconds must be positive")
+        if type(max_retained_bytes) is not int or max_retained_bytes <= 0:
+            raise ValueError("retained byte limit must be positive")
+        self.max_retained_bytes = max_retained_bytes
+        self.retained_bytes = 0
         self.rules_only = rules_only
         self.trap_paths = traps
         self.history_retention_seconds = history_retention_seconds
@@ -125,6 +132,8 @@ class Worker:
             saved = repository.load_snapshot(source_key)
             self.committed_checkpoint = repository.load_checkpoint(source_key)
             resumed = repository.load_resume_state(source_key) or {}
+            if resumed.get("deleted"):
+                raise ValueError("deleted source cannot be used by a live worker; use a new key")
             if "archive_digest" in resumed:
                 raise ValueError("read-only archive cannot be used by a live worker")
             if self.committed_checkpoint is None and store.exists():
@@ -142,12 +151,17 @@ class Worker:
         self.label_state = saved.get("session_label_state", {})
         if resumed:
             self.tail.restore(resumed["tail"])
-            self.records = resumed["records"]
+            for record in resumed["records"]:
+                try:
+                    self.records.append(storage_safe_record(record))
+                except (ValueError, TypeError, AttributeError, RecursionError):
+                    self.tail.bad_lines += 1
             self.discarded_by_retention = resumed.get("discarded_by_retention", 0)
             saved["session_identity_state"] = resumed.get("session_identity_state", [])
             self.label_state = resumed.get("session_label_state", {})
         elif self.committed_checkpoint is not None:
             raise ValueError("traffic checkpoint has no private worker resume state")
+        self.last_event_at = saved.get("ingest", {}).get("last_event_at")
         self.previous_sessions = [
             dataclasses.replace(_session_from_dict(row), requests=())
             for row in saved.get("session_identity_state", saved.get("sessions", []))
@@ -173,17 +187,27 @@ class Worker:
             self.records = retained
         if self.max_records is not None:
             self.records = self.records[-self.max_records :]
+        kept, size = [], 0
+        for record in reversed(self.records):
+            encoded = len(json.dumps(record, ensure_ascii=False, separators=(",", ":")).encode())
+            if size + encoded > self.max_retained_bytes:
+                break
+            kept.append(record)
+            size += encoded
+        self.records = list(reversed(kept))
+        self.retained_bytes = size
         self.discarded_by_retention += before - len(self.records)
 
     def cycle(self) -> dict[str, Any]:
         before = (self.tail.checkpoint(), self.records[:], self.discarded_by_retention,
-                  dict(self.intel_cache))
+                  dict(self.intel_cache), self.retained_bytes, self.last_event_at)
         try:
             return self._cycle()
         except Exception:
             # A failed transaction must not acknowledge source bytes or mutate the retained window.
             self.tail.restore(before[0])
-            self.records, self.discarded_by_retention, self.intel_cache = before[1:]
+            (self.records, self.discarded_by_retention, self.intel_cache,
+             self.retained_bytes, self.last_event_at) = before[1:]
             raise
 
     def _cycle(self) -> dict[str, Any]:
@@ -200,17 +224,20 @@ class Worker:
         history_sessions, history_labels, stats, next_labels = sessionize(
             history_records, self.previous_sessions, self.secret, self.label_state
         )
+        if history_sessions:
+            newest = max(s.ended_at for s in history_sessions).isoformat()
+            if self.last_event_at is None or newest > self.last_event_at:
+                self.last_event_at = newest
         self._retain()
         known = {s.id: s for s in self.previous_sessions}
         known.update({s.id: s for s in history_sessions})
         sessions, labels, _, _ = sessionize(
             self.records, list(known.values()), self.secret, next_labels
         )
-        if self.max_records is not None or self.window_seconds is not None:
-            active_ips = {session.ip for session in sessions}
-            self.intel_cache = {
-                ip: intel for ip, intel in self.intel_cache.items() if ip in active_ips
-            }
+        active_ips = {session.ip for session in sessions}
+        self.intel_cache = {
+            ip: intel for ip, intel in self.intel_cache.items() if ip in active_ips
+        }
         if hasattr(self.intel_fn, "begin_cycle"):
             self.intel_fn.begin_cycle()
         intel, ip_evidence = {}, {}
@@ -278,6 +305,7 @@ class Worker:
             "sessions": [_serialize_session(s) for s in sessions],
             "labels": [_serialize_label(lab) for lab in labels],
             "synthetic": self.synthetic,
+            "traffic_source_id": self.source_key,
             "source": f"caddy:{self.tail.path}",
             "verdicts": verdicts,
             "ip_evidence": ip_evidence,
@@ -288,6 +316,8 @@ class Worker:
                 "bad_lines": self.tail.bad_lines,
                 "rotation_gaps": self.tail.rotation_gaps,
                 "retained_records": len(self.records),
+                "retained_bytes": self.retained_bytes,
+                "last_event_at": self.last_event_at,
                 "discarded_by_retention": self.discarded_by_retention,
                 "updated_at": datetime.now(UTC).isoformat(),
             },  # fmt: skip
@@ -295,6 +325,12 @@ class Worker:
         if self.repository is None:
             payload["worker_resume_state"] = self._resume_state(payload)
             _write_raw(payload, self.store)
+            try:
+                write_snapshot_health(
+                    self.store, payload["ingest"]["updated_at"], self.last_event_at
+                )
+            except OSError:
+                print("Worker health metadata unavailable; source commit preserved.", flush=True)
         else:
             self._persist_traffic(payload, history_records, history_sessions, history_labels)
         self.previous_sessions = identity_state

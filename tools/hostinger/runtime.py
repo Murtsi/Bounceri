@@ -76,6 +76,8 @@ def selected_session_snapshot(snapshot: dict, index: int) -> dict:
     selected_ips = {item.get("ip") for item in selected_sessions}
     return {
         "synthetic": snapshot["synthetic"],
+        **({"traffic_source_id": snapshot["traffic_source_id"]}
+           if snapshot.get("traffic_source_id") else {}),
         "sessions": selected_sessions,
         "verdicts": {sid: snapshot.get("verdicts", {}).get(sid, {}) for sid in selected_ids},
         "rule_observations": {sid: value for sid, value in snapshot.get(

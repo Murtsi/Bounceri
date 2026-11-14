@@ -53,6 +53,7 @@ def test_failed_commit_retries_same_bytes_without_json_write(tmp_path):
     assert w.records == []
     repository.fail = False
     snapshot = w.cycle()
+    assert snapshot["traffic_source_id"] == "test"
     assert len(snapshot["sessions"][0]["requests"]) == 1
     assert len(repository.events) == 1
     assert not (tmp_path / "offline.json").exists()
@@ -257,3 +258,51 @@ def test_empty_json_view_still_requires_archive_and_restores_tail(tmp_path, monk
         assert paths == [1001, 1002]
     finally:
         repository.engine.dispose()
+
+
+def test_byte_window_bounds_memory_without_discarding_uncommitted_history(tmp_path):
+    from bouncer.db.traffic import TrafficRepository
+    repo = TrafficRepository(f"sqlite:///{tmp_path / 'bytes.db'}")
+    try:
+        rows = [_rec(1000 + i, "192.0.2.1") for i in range(5)]
+        for row in rows:
+            row["request"]["headers"]["Accept"] = ["x" * 1000]
+        _write(tmp_path / "access.log", rows, "w")
+        from bouncer.ingest.worker import Worker
+        instance = Worker(tmp_path / "access.log", tmp_path / "none.json", secret=SECRET,
+                          intel_fn=None, campaigns_fn=None, synthetic=True,
+                          repository=repo, source_key="test", max_retained_bytes=2000)
+        visible = instance.cycle()
+        assert visible["ingest"]["retained_bytes"] <= 2000
+        assert len(visible["sessions"][0]["requests"]) == 1
+        assert len(repo.load_sessions(source_key="test")[0].requests) == 5
+    finally:
+        repo.engine.dispose()
+
+
+def test_quiet_worker_keeps_last_input_time_separate_from_loop_progress(tmp_path, monkeypatch):
+    clock = [2000]
+    monkeypatch.setattr("bouncer.ingest.worker._retention_now", lambda: clock[0])
+    _write(tmp_path / "access.log", [_rec(1999, "192.0.2.1")], "w")
+    instance = worker(tmp_path, None)
+    instance.window_seconds = 1
+    first = instance.cycle()
+    clock[0] = 2100
+    second = instance.cycle()
+    assert second["sessions"] == []
+    assert second["ingest"]["last_event_at"] == first["ingest"]["last_event_at"]
+    assert second["ingest"]["updated_at"] != first["ingest"]["updated_at"]
+
+
+def test_byte_window_evicts_client_intelligence_without_count_or_time_bound(tmp_path):
+    from bouncer.contracts import IpIntel
+    instance = Worker(tmp_path / "access.log", tmp_path / "offline.json", secret=SECRET,
+                      intel_fn=lambda _: IpIntel(), campaigns_fn=None, synthetic=True,
+                      max_retained_bytes=2000)
+    for index in range(4):
+        row = _rec(1000 + index, f"192.0.2.{index + 1}")
+        row["request"]["headers"]["Accept"] = ["x" * 1000]
+        _write(tmp_path / "access.log", [row], "w" if index == 0 else "a")
+        snapshot = instance.cycle()
+        assert len(instance.records) == 1
+        assert set(instance.intel_cache) == {s["ip"] for s in snapshot["sessions"]}

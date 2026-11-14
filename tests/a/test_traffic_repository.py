@@ -527,7 +527,8 @@ def test_replayed_event_sql_work_is_bounded_per_batch(repository):
         write(checkpoint)
     finally:
         event.remove(repo.engine, "before_cursor_execute", count_statements)
-    assert len(statements) <= 16
+    # Three fixed statements publish the source-checked ingest heartbeat.
+    assert len(statements) <= 19
 
 
 def test_explicit_retention_removes_empty_history_and_labels_without_affecting_other_source(

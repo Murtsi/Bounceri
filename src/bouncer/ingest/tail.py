@@ -13,6 +13,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from bouncer.ingest.sample import storage_safe_record
+
 
 class _SourceMoved(Exception):
     pass
@@ -230,12 +232,14 @@ class LogTail:
             if len(raw) > self.LINE_BYTES:
                 self.bad_lines += 1
                 continue
-            raw = raw.replace(b"\x00", b"").strip()
+            raw = raw.strip(b"\x00 \t\r")
             if not raw:
                 continue
             try:
                 row = json.loads(raw)
-            except ValueError:
+                if isinstance(row, dict):
+                    row = storage_safe_record(row)
+            except (ValueError, RecursionError):
                 self.bad_lines += 1
                 continue
             if isinstance(row, dict) and isinstance(row.get("request"), dict):

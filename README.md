@@ -102,3 +102,5 @@ The SQL traffic path now stores normalized events, sessions and labels with atom
 
 
 Private native log uploads are now available through the authenticated [traffic import API](docs/TRAFFIC_IMPORTS.md). They preserve missing-data/source context, keep archives and cases private by default, and never create gold labels or queue paid reviews automatically.
+
+See [core operations](docs/OPERATIONS.md) for read-only health probes, private backup/restore, explicit source deletion, log rotation and measured worker bounds.

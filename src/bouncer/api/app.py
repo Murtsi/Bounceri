@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from bouncer.api.enforcement import router as enforcement_router
 from bouncer.api.evaluation import router as evaluation_router
+from bouncer.api.health import router as health_router
 from bouncer.api.investigations import admin_context, is_admin, public_legacy, router
 from bouncer.api.overview import enrich_campaigns, overview
 from bouncer.api.traffic_imports import router as traffic_import_router
@@ -43,6 +44,7 @@ async def privacy_context(request: Request, call_next):
 app.include_router(router)
 app.include_router(enforcement_router)
 app.include_router(evaluation_router)
+app.include_router(health_router)
 app.include_router(traffic_import_router)
 
 
@@ -70,11 +72,6 @@ def _row(s: dict[str, Any], v: dict[str, Any], truth: dict[str, str]) -> dict[st
         "action": v.get("action"),
         "sim_class": truth.get(s["id"]),
     }
-
-
-@app.get("/api/healthz")
-def healthz() -> dict[str, str]:
-    return {"status": "ok"}
 
 
 @app.get("/api/summary")

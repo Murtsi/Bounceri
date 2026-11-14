@@ -115,6 +115,7 @@ def compose(
         "PYTHONDONTWRITEBYTECODE": "1",
         "PYTHONUNBUFFERED": "1",
         "BOUNCER_STORE_PATH": "/data/store.json",
+        "BOUNCER_TRAFFIC_SOURCE": "private-simulation",
         "BOUNCER_DATABASE_URL": database,
         "BOUNCERI_DATABASE_URL": database,
         "BOUNCERI_REVIEW_ENABLED": "false",
@@ -123,7 +124,6 @@ def compose(
     if traffic_sql:
         common_env.update({
             "BOUNCER_TRAFFIC_DATABASE_URL": database,
-            "BOUNCER_TRAFFIC_SOURCE": "private-simulation",
             "BOUNCER_TRAFFIC_RETENTION_SECONDS": "86400",
         })
     review_env = {

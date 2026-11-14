@@ -26,11 +26,12 @@ REQUEST_DEFAULTS = {
 
 def _expected_tables():
     # Import lazily: both stores call this runner after defining their metadata.
+    from bouncer.db.health import metadata as health
     from bouncer.db.traffic import metadata as traffic
     from bouncer.enforcement import metadata as enforcement
     from bouncer.investigations.store import metadata as investigations
 
-    return {**traffic.tables, **investigations.tables, **enforcement.tables}
+    return {**traffic.tables, **investigations.tables, **enforcement.tables, **health.tables}
 
 
 def _type_name(column_type, dialect):

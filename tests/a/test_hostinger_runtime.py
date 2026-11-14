@@ -32,10 +32,12 @@ def test_selected_case_keeps_one_entire_session_without_other_actor_truth():
         "verdicts": {"a": {"label": "bad_bot"}, "b": {"label": "uncertain"}},
         "labels": ["not-evidence"],
         "synthetic": True,
+        "traffic_source_id": "physical-source",
     }
     result = selected_session_snapshot(snapshot, 1)
     assert result["sessions"] == [sessions[1]]
     assert result["verdicts"] == {"b": {"label": "uncertain"}}
+    assert result["traffic_source_id"] == "physical-source"
     assert "labels" not in result
     assert snapshot["sessions"] == sessions
 

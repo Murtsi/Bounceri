@@ -7,6 +7,7 @@ of measured evaluation metrics.
 from __future__ import annotations
 
 import json
+import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime, timedelta
@@ -24,6 +25,44 @@ SESSION_IDLE = timedelta(minutes=5)
 #: Demosivu kertoo kirjautumisyrityksen tunnuksen tässä vastausotsakkeessa (päätös 047).
 LOGIN_USER_HEADER = "x-login-user"
 _FROM_ENV = object()
+_INVALID_SIM_AUTH = "[invalid-simulator-auth]"
+
+
+def _validate_json_storage(value: Any) -> None:
+    if isinstance(value, str):
+        if "\0" in value:
+            raise ValueError("JSON text contains a NUL character")
+        value.encode("utf-8")
+    elif isinstance(value, Mapping):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ValueError("JSON object keys must be strings")
+            _validate_json_storage(key)
+            _validate_json_storage(item)
+    elif isinstance(value, list):
+        for item in value:
+            _validate_json_storage(item)
+    elif isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("JSON numbers must be finite")
+
+
+def storage_safe_record(record: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Reject unsafe raw metadata; malformed simulator auth must preserve the request."""
+    raw_request = record.get("request")
+    headers = raw_request.get("headers") if isinstance(raw_request, Mapping) else None
+    if isinstance(headers, Mapping):
+        auth = {key: value for key, value in headers.items()
+                if isinstance(key, str) and key.lower() in
+                (simrun.MARKER_HEADER, simrun.SIG_HEADER)}
+        try:
+            _validate_json_storage(auth)
+        except ValueError:
+            # This sentinel cannot supply a truth label, including in unsigned fixture mode.
+            headers = {key: value for key, value in headers.items() if key not in auth}
+            headers[simrun.MARKER_HEADER] = _INVALID_SIM_AUTH
+            record = dict(record) | {"request": dict(raw_request) | {"headers": headers}}
+    _validate_json_storage(record)
+    return record
 
 
 
@@ -94,6 +133,7 @@ def parse_access_record(
     """
     if secret is _FROM_ENV:
         secret = simrun.secret_from_env()
+    record = storage_safe_record(record)
     raw_request = record.get("request")
     if not isinstance(raw_request, Mapping):
         raise ValueError("Caddy record must contain a request object")
@@ -131,6 +171,10 @@ def parse_access_record(
         stats.records += 1
         stats.login_events += username is not None
     marker = _header_value(raw_headers, simrun.MARKER_HEADER).strip()
+    if marker == _INVALID_SIM_AUTH:
+        if stats is not None:
+            stats.unsigned_markers += 1
+        return request, None
     if not marker:
         return request, None
     if secret and not simrun.verify(marker, _header_value(raw_headers, simrun.SIG_HEADER), secret):

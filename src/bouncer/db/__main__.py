@@ -8,9 +8,11 @@ import os
 import sys
 from datetime import datetime
 
+from sqlalchemy.engine import make_url
+
 from bouncer.db.cutover import backfill_json, export_json
 from bouncer.db.store import clear_store, seed_from_sample, store_path
-from bouncer.db.traffic import TrafficRepository
+from bouncer.db.traffic import SourcePurgeBlocked, TrafficRepository
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -36,6 +38,13 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("--output", required=True, help="new private JSON file; never overwrite")
     export.add_argument("--source")
     export.add_argument("--database-url")
+    purge = sub.add_parser(
+        "purge-source", help="erase source payloads in the selected SQL database"
+    )
+    purge.add_argument("--source", required=True)
+    purge.add_argument("--confirm-source")
+    purge.add_argument("--confirm-writer-stopped", action="store_true")
+    purge.add_argument("--database-url")
     args = ap.parse_args(argv)
 
     database_url = (args.database_url or os.getenv("BOUNCER_TRAFFIC_DATABASE_URL", "")).strip()
@@ -54,6 +63,28 @@ def main(argv: list[str] | None = None) -> int:
     if not database_url:
         print("traffic database URL is required", file=sys.stderr)
         return 2
+    if args.cmd == "purge-source":
+        if args.confirm_source != args.source or not args.confirm_writer_stopped:
+            print("purge requires matching --confirm-source and --confirm-writer-stopped",
+                  file=sys.stderr)
+            return 2
+        case_url = os.getenv("BOUNCER_DATABASE_URL", "").strip()
+        if not case_url:
+            print("purge requires explicit BOUNCER_DATABASE_URL matching the traffic database",
+                  file=sys.stderr)
+            return 2
+        try:
+            selected = make_url(database_url)
+            configured = make_url(case_url)
+            if configured.set(drivername=configured.get_backend_name()) != selected.set(
+                drivername=selected.get_backend_name()
+            ):
+                print("purge refuses a different investigation database; use one shared database",
+                      file=sys.stderr)
+                return 2
+        except Exception:
+            print("purge-source failed; verify database configuration", file=sys.stderr)
+            return 2
     if args.cmd == "prune":
         try:
             cutoff = datetime.fromisoformat(args.before.replace("Z", "+00:00"))
@@ -72,9 +103,15 @@ def main(argv: list[str] | None = None) -> int:
             source = args.source or os.getenv("BOUNCER_TRAFFIC_SOURCE", "monitored")
             if args.cmd == "export-json":
                 report = export_json(repository, source, args.output)
+            elif args.cmd == "purge-source":
+                checkpoint = repository.load_checkpoint(source)
+                report = repository.delete_source(source, expected_checkpoint=checkpoint)
             else:
                 report = {"requests_deleted": repository.prune_before(source, cutoff)}
         print(json.dumps(report, sort_keys=True))
+    except SourcePurgeBlocked as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     except Exception:
         # Driver exceptions can contain credentials, request values and SQL parameters.
         print(f"{args.cmd} failed; verify input and database configuration", file=sys.stderr)

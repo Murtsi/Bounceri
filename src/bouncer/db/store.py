@@ -47,7 +47,10 @@ def traffic_repository():
 
 def read_snapshot(*, path: Path | None = None) -> dict[str, Any]:
     repository = traffic_repository() if path is None else None
-    return repository.load_snapshot(traffic_source()) if repository else _read_raw(path)
+    if repository:
+        # A copied archive's embedded origin must not override its selected storage identity.
+        return repository.load_snapshot(traffic_source()) | {"traffic_source_id": traffic_source()}
+    return _read_raw(path)
 
 
 def _dt(value: Any) -> datetime:
@@ -192,3 +195,11 @@ def is_synthetic(*, path: Path | None = None) -> bool:
     if type(origin) is not bool:
         raise ValueError("traffic source provenance is unknown; classify the source explicitly")
     return origin
+
+
+def write_snapshot_health(path: Path, source_updated_at: str, last_event_at=None) -> None:
+    stat = path.stat()
+    _write_raw({"updated_at": datetime.now(UTC).isoformat(),
+                "source_updated_at": source_updated_at, "last_event_at": last_event_at,
+                "snapshot_mtime_ns": stat.st_mtime_ns, "snapshot_size": stat.st_size},
+               path.with_name(path.name + ".health.json"))
