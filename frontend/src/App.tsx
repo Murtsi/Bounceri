@@ -113,22 +113,21 @@ function NavButton({
       aria-current={active ? "page" : undefined}
       aria-label={compact ? label : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-full text-sm font-medium outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        compact ? "size-12 justify-center" : "h-11 w-full px-4",
-        active ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
+        "group flex items-center gap-3 text-sm font-medium outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        compact ? "size-12 justify-center rounded-full" : "h-10 w-full rounded-lg px-3",
+        compact
+          ? active
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground"
+          : active
+            ? "bg-white/[0.07] text-foreground [&_svg]:text-primary"
+            : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
       )}
     >
       <Icon className="size-[18px] shrink-0" aria-hidden="true" />
       {!compact && <span className="flex-1 text-left">{label}</span>}
       {!compact && count !== undefined && (
-        <span
-          className={cn(
-            "rounded-full px-2 py-0.5 text-xs tabular-nums",
-            active ? "bg-primary-foreground/15" : "bg-white/[0.06] text-muted-foreground",
-          )}
-        >
-          {count}
-        </span>
+        <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
       )}
     </button>
   );
@@ -169,19 +168,19 @@ export default function App() {
       {splash !== "gone" && <SplashOverlay leaving={splash === "leaving"} />}
 
       {/* Sivupalkki (≥ lg): logo, navigaatio, tila alhaalla. */}
-      <aside className="glass fixed inset-y-3 left-3 z-20 hidden w-60 flex-col rounded-3xl border p-4 lg:flex">
-        <div className="px-2 pt-1 pb-6">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[232px] flex-col border-r border-white/[0.07] bg-[#07100b]/80 px-4 py-6 lg:flex">
+        <div className="px-3 pb-8">
           <BouncerLogo mode="static" className="text-2xl" />
           <p className="mt-1 text-xs text-muted-foreground">
             Know who&rsquo;s <em className="font-semibold not-italic text-primary">really</em> at the door
           </p>
         </div>
-        <nav aria-label="Views" className="flex flex-col gap-1">
+        <nav aria-label="Views" className="flex flex-col gap-0.5">
           {NAV.map((n) => (
             <NavButton key={n.id} item={n} active={tab === n.id} count={counts[n.id]} onClick={() => go(n.id)} />
           ))}
         </nav>
-        <div className="mt-auto flex flex-col gap-3 rounded-2xl border bg-white/[0.03] p-3 text-xs">
+        <div className="mt-auto flex flex-col gap-3 border-t border-white/[0.07] px-3 pt-4 text-xs">
           <div className="flex items-center gap-2">
             {activity.live && <LiveDot />}
             <span className="font-medium">{activity.label}</span>
@@ -206,7 +205,7 @@ export default function App() {
       </header>
 
       {live && (
-        <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pt-6 pb-28 lg:ml-[264px] lg:px-6 lg:pb-10">
+        <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pt-6 pb-28 lg:ml-[232px] lg:px-10 lg:pt-9 lg:pb-16">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{TITLE[tab]}</h1>

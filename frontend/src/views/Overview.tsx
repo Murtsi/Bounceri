@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, type CSSProperties } from "react";
-import { ChartColumn, ChevronRight, Scale } from "lucide-react";
+import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { api } from "@/api";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
 import { ActionBadge } from "@/components/badges";
@@ -8,8 +8,6 @@ import { SplashScreen } from "@/components/BouncerLogo";
 import { OverviewSkeleton } from "@/components/Skeletons";
 import { TrafficChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { CardHeading } from "@/components/CardIcon";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { GatehouseScene, type GateMode } from "@/views/GatehouseScene";
 import { LiveFeed } from "@/views/LiveFeed";
 
@@ -43,9 +41,8 @@ export default function Overview({
     ? pts.slice(pts.indexOf(activePoints[0]), pts.indexOf(activePoints[activePoints.length - 1]) + 1)
     : [];
   const requests = pts.reduce((sum, p) => sum + p.human + p.good_bot + p.bad_bot + p.uncertain, 0);
-  const d = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
   return (
-    <div className="flex flex-col gap-5">
+    <div className="overview-stack">
       <div className="overview-context">
         <span><strong>{requests.toLocaleString("en-GB")}</strong> requests</span>
         <span className="overview-context-separator" aria-hidden="true" />
@@ -58,7 +55,7 @@ export default function Overview({
       <section className="showcase" aria-labelledby="showcase-title">
         <div className="showcase-copy">
           <h2 id="showcase-title">
-            Every session meets <span>the doorman.</span>
+            Every session meets <span>the bouncer.</span>
           </h2>
           <p className="showcase-lede">
             Each dot is a real session, sorted by Bouncer as it arrives.
@@ -117,33 +114,36 @@ export default function Overview({
         </div>
       </section>
 
-      <Card className="overview-trend rise min-w-0" style={d(100)}>
-        <CardHeader>
-          <CardHeading Icon={ChartColumn} title="Traffic over time" description="Request volume by local verdict" />
-        </CardHeader>
-        <CardContent>
+      {/* Todisteet: liikenne aikajanalla ja uusimmat sessiot rinnakkain, ilman kortteja. */}
+      <div className="overview-evidence">
+        <section className="overview-section min-w-0" aria-labelledby="traffic-title">
+          <header className="section-head">
+            <h2 id="traffic-title">Traffic over time</h2>
+            <p>Request volume by local verdict</p>
+          </header>
           {chartPoints.length > 0 ? (
             <TrafficChart
               points={chartPoints}
               stepS={o.timeline.step_s}
               emptyIntervalsHidden={chartPoints.length < pts.length}
+              hideTotal
             />
           ) : (
             <p className="text-sm text-muted-foreground">No requests in the available time window.</p>
           )}
-        </CardContent>
-      </Card>
+        </section>
+        <div className="overview-section min-w-0">
+          <LiveFeed onPick={onPick} limit={6} />
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[.9fr_1.1fr]">
-        <Card className="overview-humans rise min-w-0" style={d(160)}>
-          <CardHeader>
-            <CardHeading
-              Icon={Scale}
-              title="Known human sessions"
-              description={h.synthetic ? SYNTHETIC_DATA_NOTICE : "Labelled traffic · outcomes are not identity verification"}
-            />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+      {/* Rehellisyys: tunnetut ihmiset alaviitteenä, ei omana korttina. */}
+      <section className="overview-honesty" aria-labelledby="humans-title">
+        <header className="section-head">
+          <h2 id="humans-title">Known human sessions</h2>
+          <p>{h.synthetic ? SYNTHETIC_DATA_NOTICE : "Labelled traffic · outcomes are not identity verification"}</p>
+        </header>
+        <div className="flex flex-col gap-3">
             {h.n_humans === 0 ? (
               <p className="text-sm">No labelled humans yet.</p>
             ) : h.n_scored === 0 ? (
@@ -176,13 +176,8 @@ export default function Overview({
             <p className="text-sm leading-relaxed text-muted-foreground">
               Target: under 1% false alarms on humans. Establishing that needs about 300 labelled human sessions.
             </p>
-          </CardContent>
-        </Card>
-
-        <div className="overview-live rise min-w-0" style={d(220)}>
-          <LiveFeed onPick={onPick} />
-        </div>
-      </div>
+          </div>
+      </section>
     </div>
   );
 }

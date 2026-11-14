@@ -91,10 +91,13 @@ export function TrafficChart({
   points,
   stepS,
   emptyIntervalsHidden = false,
+  hideTotal = false,
 }: {
   points: Point[];
   stepS: number;
   emptyIntervalsHidden?: boolean;
+  /** Kokonaismäärä näkyy jo sivun kontekstirivillä: ei toista isoa lukua. */
+  hideTotal?: boolean;
 }) {
   const [table, setTable] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
@@ -113,7 +116,9 @@ export function TrafficChart({
     <figure className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("en-GB")}</p>
+          {!hideTotal && (
+            <p className="text-3xl font-semibold tabular-nums tracking-tight">{shown.toLocaleString("en-GB")}</p>
+          )}
           <figcaption className="text-xs text-muted-foreground">
             requests · per {unit}{peak && peak.n > 0 ? ` · peak ${peak.n} at ${peak.label}` : ""}
             {emptyIntervalsHidden ? " · empty intervals hidden" : ""}
