@@ -93,8 +93,10 @@ def capsule(root: Path) -> tuple[str, str]:
     return base64.b64encode(raw).decode(), hashlib.sha256(raw).hexdigest()
 
 
-def compose(root: Path, host: str, environment: dict, *, local: bool = False) -> dict:
-    if not re.fullmatch(r"[a-z0-9.-]+", host):
+def compose(
+    root: Path, host: str, environment: dict, *, local: bool = False, aliases: tuple[str, ...] = ()
+) -> dict:
+    if any(not re.fullmatch(r"[a-z0-9.-]+", value) for value in (host, *aliases)):
         raise ValueError("Invalid deployment host")
     demo_host = "demo-" + host if host.endswith(".hstgr.cloud") else "demo." + host
     encoded, digest = capsule(root)
@@ -251,7 +253,9 @@ def compose(root: Path, host: str, environment: dict, *, local: bool = False) ->
     else:
         services["api"]["labels"] = {
             "traefik.enable": "true",
-            "traefik.http.routers.bounceri.rule": f"Host(`{host}`)",
+            "traefik.http.routers.bounceri.rule": " || ".join(
+                f"Host(`{value}`)" for value in dict.fromkeys((host, *aliases))
+            ),
             "traefik.http.routers.bounceri.entrypoints": "websecure",
             "traefik.http.routers.bounceri.tls.certresolver": "letsencrypt",
             "traefik.http.services.bounceri.loadbalancer.server.port": "8001",
@@ -274,6 +278,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--host", default="bounceri.srv2159025.hstgr.cloud")
+    parser.add_argument(
+        "--alias", action="append", default=[], help="Additional dashboard hostname"
+    )
     parser.add_argument("--local", action="store_true")
     parser.add_argument(
         "--review-config", type=Path, help="Verified server review env as private JSON"
@@ -305,7 +312,10 @@ def main():
             if separator and name.strip() == "FEATHERLESS_API_KEY" and value.strip():
                 env["FEATHERLESS_API_KEY"] = value.strip().strip("\"'")
     target = args.output / "compose.private.json"
-    target.write_text(json.dumps(compose(ROOT, args.host, env, local=args.local)), encoding="utf-8")
+    target.write_text(
+        json.dumps(compose(ROOT, args.host, env, local=args.local, aliases=tuple(args.alias))),
+        encoding="utf-8",
+    )
     print(f"Private deployment bundle written to {target}; secret values are not displayed.")
 
 

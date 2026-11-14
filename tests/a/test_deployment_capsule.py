@@ -62,3 +62,8 @@ def test_required_gateway_config_and_release_restart_marker(tmp_path):
     )
     for service in ("api", "site", "ingest", "review", "simulator", "simulation-gateway"):
         assert a["services"][service] != b["services"][service]
+    routed = compose(tmp_path, "test.example", env, aliases=("bounceri.tech", "www.bounceri.tech"))
+    rule = routed["services"]["api"]["labels"]["traefik.http.routers.bounceri.rule"]
+    assert rule == "Host(`test.example`) || Host(`bounceri.tech`) || Host(`www.bounceri.tech`)"
+    with pytest.raises(ValueError):
+        compose(tmp_path, "test.example", env, aliases=("unsafe`)",))

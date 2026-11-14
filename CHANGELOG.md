@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- [A] Explicit validated dashboard hostname aliases allow the owner-approved bounceri.tech and www.bounceri.tech HTTPS routes alongside the VPS preview URL.
 - [A] Reproducible Hostinger Docker deployment with private source capsule, PostgreSQL, bounded HTTP simulation, ingest/detection, dashboard/API and asynchronous review worker; operator smoke test verifies actual 429/403, benign isolation, expiry and revoke without paid inference.
 - [A] Add an opt-in investigation workspace with source provenance, evidence snapshots, separate assessment history and capability/budget status; preserve the existing dashboard default and navigation.
 - [A] Administrator-approved synthetic demo actor rate-limit/temporary-block policies, HMAC actor authentication, durable expiry/revoke/history and actual HTTP 403/429 counters; normal site/admin routes remain accessible.
