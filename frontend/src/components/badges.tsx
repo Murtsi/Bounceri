@@ -14,11 +14,11 @@ export function LabelBadge({ label }: { label: Label }) {
   );
 }
 
-/** Toimenpide: tilaväri vain kuvakkeessa, aina kuvake + teksti. */
+/** Toimenpide: erotetaan kuvakkeen muodolla + tekstillä, ei värillä (rauhallinen lasi-UI). */
 const ACTION_ICON: Record<Exclude<Action, "none">, { Icon: ComponentType<{ className?: string }>; color: string }> = {
-  block: { Icon: Ban, color: "var(--status-critical)" },
-  rate_limit: { Icon: Gauge, color: "var(--status-serious)" },
-  challenge: { Icon: ShieldQuestion, color: "var(--status-warning)" },
+  block: { Icon: Ban, color: "var(--foreground)" },
+  rate_limit: { Icon: Gauge, color: "var(--foreground)" },
+  challenge: { Icon: ShieldQuestion, color: "var(--muted-foreground)" },
   monitor: { Icon: Eye, color: "var(--muted-foreground)" },
 };
 

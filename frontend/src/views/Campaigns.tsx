@@ -1,15 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
+import type { CSSProperties } from "react";
 import { type Label } from "@/api";
 import { api } from "@/api";
 import { LabelBadge } from "@/components/badges";
-import { SplashScreen } from "@/components/BouncerLogo";
+import { ListSkeleton } from "@/components/Skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Campaigns() {
   const { data, error } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
   if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
-  if (!data) return <SplashScreen />;
+  if (!data) return <ListSkeleton rows={4} />;
   if (data.length === 0)
     return (
       <Card>
@@ -20,9 +21,9 @@ export default function Campaigns() {
     );
   return (
     <ul className="grid gap-4 md:grid-cols-2">
-      {data.map((c) => (
+      {data.map((c, i) => (
         <li key={c.id}>
-          <Card className="h-full">
+          <Card className="rise h-full" style={{ "--d": `${i * 70}ms` } as CSSProperties}>
             <CardHeader>
               <CardDescription className="font-mono text-xs">{c.id}</CardDescription>
               <CardTitle>{(c as { title?: string }).title ?? c.kind}</CardTitle>

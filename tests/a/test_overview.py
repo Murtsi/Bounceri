@@ -2,7 +2,7 @@
 
 import pytest
 
-from bouncer.api.overview import enrich_campaigns, overview, step_for, timeline
+from bouncer.api.overview import MIN_POINTS, enrich_campaigns, overview, step_for, timeline
 from bouncer.session.actions import recommend
 
 
@@ -92,10 +92,13 @@ def test_honesty_counts_labelled_humans_only_and_reports_upper_bound():
 
 
 def test_timeline_adapts_step_to_short_runs():
-    assert step_for(STORE) == 10  # 50 s data → 10 s palkit
+    # Ikkuna 12:00:00 → 12:00:50 (= viimeisen session loppu) → 2 s palkit, tiheä sarja
+    assert step_for(STORE) == 2
+    assert step_for(STORE, buckets=5) == 10  # sama ikkuna harvemmilla palkeilla → 10 s
     tl = timeline(STORE)
-    # 50 s data = 6 palkkia; tyhjät alusta pois, mutta vähintään 8 palkkia näkyy
-    assert tl["step_s"] == 10 and len(tl["points"]) == 8
+    # Tyhjät palkit alusta pois; ensimmäinen palkki sisältää dataa
+    assert tl["step_s"] == 2 and len(tl["points"]) >= MIN_POINTS
+    assert any(tl["points"][0][lab] for lab in ("human", "good_bot", "uncertain", "bad_bot"))
     total = sum(
         p[lab] for p in tl["points"] for lab in ("human", "good_bot", "uncertain", "bad_bot")
     )

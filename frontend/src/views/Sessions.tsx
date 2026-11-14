@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, LABEL_TEXT, type Label } from "@/api";
 import { ActionBadge, LabelBadge } from "@/components/badges";
-import { SplashScreen } from "@/components/BouncerLogo";
+import { ListSkeleton } from "@/components/Skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,7 @@ function SessionCard({ id, onClose }: { id: string; onClose: () => void }) {
   if (!d) return null;
   const v = d.verdict;
   return (
-    <aside ref={ref} aria-label={`Sessio ${d.id}`} className="order-first flex w-full flex-col gap-4 lg:order-none lg:w-[420px] lg:shrink-0">
+    <aside ref={ref} aria-label={`Sessio ${d.id}`} className="rise order-first flex w-full flex-col gap-4 lg:order-none lg:w-[420px] lg:shrink-0">
       <Card>
         <CardHeader>
           <CardDescription className="font-mono text-xs">sessio {d.id}</CardDescription>
@@ -115,12 +115,12 @@ export default function Sessions({ picked, onPick }: { picked: string | null; on
   const [filter, setFilter] = useState<Label | "all">("all");
   const { data, error } = useQuery({ queryKey: ["sessions"], queryFn: api.sessions });
   if (error) return <p className="text-destructive">API ei vastaa: {String(error)}</p>;
-  if (!data) return <SplashScreen />;
+  if (!data) return <ListSkeleton rows={8} />;
   const rows = data.filter((r) => filter === "all" || r.label === filter);
   const count = (l: Label | "all") => (l === "all" ? data.length : data.filter((r) => r.label === l).length);
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-      <Card className="min-w-0 flex-1 gap-3">
+      <Card className="rise min-w-0 flex-1 gap-3">
         <CardHeader>
           <CardTitle>Sessiot</CardTitle>
           <CardDescription>Uusin ensin · klikkaa sessiota nähdäksesi perustelut</CardDescription>
