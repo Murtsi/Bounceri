@@ -16,3 +16,5 @@ Still left:
 - Complete module UI/integration, evaluation and final release gates.
 
 New modules remain unavailable. No automatic blocking or unverified quality claim is enabled.
+
+Submission package: PDF (1.08 MB), paste-ready fields and demo script prepared. Hosted CI could not start because of a GitHub account restriction; local and live verification passed.
