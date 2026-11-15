@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Rows3, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { api, LABEL_TEXT, type Label } from "@/api";
 import { ActionBadge, LabelBadge } from "@/components/badges";
 import { ListSkeleton } from "@/components/Skeletons";
@@ -112,18 +112,38 @@ function SessionCard({ id, onClose }: { id: string; onClose: () => void }) {
   );
 }
 
-export default function Sessions({ picked, onPick }: { picked: string | null; onPick: (id: string | null) => void }) {
-  const [filter, setFilter] = useState<Label | "all">("all");
-  const { data, error } = useQuery({ queryKey: ["sessions"], queryFn: api.sessions });
+export default function Sessions({
+  picked,
+  onPick,
+  labelFilter,
+  campaignFilter,
+  onFiltersChange,
+}: {
+  picked: string | null;
+  onPick: (id: string | null) => void;
+  labelFilter: Label | "all";
+  campaignFilter: string | null;
+  onFiltersChange: (label: Label | "all", campaignId: string | null) => void;
+}) {
+  const { data, error } = useQuery({ queryKey: ["sessions"], queryFn: () => api.sessions() });
+  const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns, enabled: !!campaignFilter });
   if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!data) return <ListSkeleton rows={8} />;
-  const rows = data.filter((r) => filter === "all" || r.label === filter);
-  const count = (l: Label | "all") => (l === "all" ? data.length : data.filter((r) => r.label === l).length);
+  const rows = data.filter(
+    (r) => (labelFilter === "all" || r.label === labelFilter) && (!campaignFilter || r.campaign_id === campaignFilter),
+  );
+  const selectedCampaign = campaigns?.find((campaign) => campaign.id === campaignFilter);
+  const count = (l: Label | "all") =>
+    data.filter((r) => (!campaignFilter || r.campaign_id === campaignFilter) && (l === "all" || r.label === l)).length;
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
       <Card className="rise min-w-0 flex-1 gap-3">
         <CardHeader>
-          <CardHeading Icon={Rows3} title="All sessions" description="Newest first · click a session to see why" />
+          <CardHeading
+            Icon={Rows3}
+            title={campaignFilter ? "Campaign sessions" : "All sessions"}
+            description="Newest first · click a session to see why"
+          />
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div role="group" aria-label="Filter by class" className="flex flex-wrap gap-1.5">
@@ -131,19 +151,54 @@ export default function Sessions({ picked, onPick }: { picked: string | null; on
               <Button
                 key={f}
                 size="sm"
-                variant={filter === f ? "default" : "outline"}
-                aria-pressed={filter === f}
-                onClick={() => setFilter(f)}
+                variant={labelFilter === f ? "default" : "outline"}
+                aria-pressed={labelFilter === f}
+                onClick={() => onFiltersChange(f, campaignFilter)}
               >
                 {f === "all" ? "All" : LABEL_TEXT[f]}
                 <span className="tabular-nums opacity-70">{count(f)}</span>
               </Button>
             ))}
           </div>
+          {campaignFilter && (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white/[0.03] px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1 break-words">
+                Campaign filter: {selectedCampaign?.title ?? selectedCampaign?.kind ?? "Selected campaign"}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => onFiltersChange(labelFilter, null)}>
+                Clear campaign
+              </Button>
+            </div>
+          )}
           {rows.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">No sessions match this filter.</p>
           ) : (
-            <Table className="min-w-[720px]">
+            <>
+            {/* Mobiili: yksi rivi = yksi sessio, kaikki tiedot näkyvissä ilman vaakavieritystä. */}
+            <ol className="session-list md:hidden">
+              {rows.map((r) => (
+                <li key={r.id}>
+                  <button
+                    onClick={() => onPick(r.id)}
+                    aria-label={`Open session ${r.id}`}
+                    aria-current={picked === r.id ? "true" : undefined}
+                    className="session-item"
+                  >
+                    <span className="session-item-top">
+                      <LabelBadge label={r.label} />
+                      <span className="session-item-time">{time(r.started_at)}</span>
+                    </span>
+                    <span className="session-item-reason">{r.reason}</span>
+                    <span className="session-item-meta">
+                      <ActionBadge action={r.action} />
+                      <span className="font-mono">{r.ip}</span>
+                      <span>{r.n_requests} req</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <Table className="hidden min-w-[720px] md:table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Time</TableHead>
@@ -186,6 +241,7 @@ export default function Sessions({ picked, onPick }: { picked: string | null; on
                 ))}
               </TableBody>
             </Table>
+            </>
           )}
         </CardContent>
       </Card>

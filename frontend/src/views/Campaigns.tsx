@@ -6,10 +6,11 @@ import { api } from "@/api";
 import { LabelBadge } from "@/components/badges";
 import { ListSkeleton } from "@/components/Skeletons";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CardHeading } from "@/components/CardIcon";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-export default function Campaigns() {
+export default function Campaigns({ onShowSessions }: { onShowSessions: (campaignId: string) => void }) {
   const { data, error } = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
   if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!data) return <ListSkeleton rows={4} />;
@@ -58,6 +59,9 @@ export default function Campaigns() {
                   ))}
                 </ul>
               )}
+              <Button variant="outline" className="self-start" onClick={() => onShowSessions(c.id)}>
+                View these sessions
+              </Button>
             </CardContent>
           </Card>
         </li>

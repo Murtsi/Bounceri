@@ -307,13 +307,15 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       .locator('nav[aria-label="Views"]:visible')
       .getByRole("button", { name: new RegExp(`^${label}(?:\\s*\\d+)?$`) });
   const reload = async () => {
-    await page.goto(baseURL);
+    const dashboardURL = new URL(baseURL);
+    dashboardURL.searchParams.set("tab", "overview");
+    await page.goto(dashboardURL.href);
     await page.waitForLoadState("networkidle");
     await page.getByText("Analysing traffic\u2026", { exact: true }).waitFor({ state: "hidden" });
-    check(await page.getByRole("img", { name: "Bouncer", exact: true }).first().isVisible(), "Existing header changed");
+    check(await page.getByRole("button", { name: "Bounceri home", exact: true }).filter({ visible: true }).isVisible(), "Dashboard home logo missing");
     check(
       (await nav("Overview").getAttribute("aria-current")) === "page",
-      "Existing overview is no longer the default",
+      "Explicit dashboard route did not open overview",
     );
     for (const name of ["Sessions", "Campaigns", "Metrics"]) {
       check(await nav(name).isVisible(), "Existing navigation changed");
@@ -329,6 +331,27 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
     await page.waitForLoadState("networkidle");
   };
   await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(baseURL);
+  await page.waitForLoadState("networkidle");
+  await page.getByText("Analysing traffic\u2026", { exact: true }).waitFor({ state: "hidden" });
+  const landingTitle = page.getByRole("heading", { name: /Every session meets/ });
+  await landingTitle.waitFor();
+  check((await page.getByRole("navigation", { name: "Views", exact: true }).count()) === 0,
+    "Default landing unexpectedly includes dashboard navigation");
+  check(await page.getByRole("img", { name: /^Animated illustration: a doorman/ }).isVisible(),
+    "Landing gatehouse illustration missing");
+  check(await page.getByRole("status").filter({ hasText: "synthetic traffic" }).isVisible(),
+    "Landing hides API synthetic provenance");
+  await page.getByRole("button", { name: "Open the live dashboard", exact: true }).first().click();
+  await nav("Overview").waitFor();
+  check(new URL(page.url()).searchParams.get("tab") === "overview"
+    && await nav("Overview").getAttribute("aria-current") === "page", "Landing CTA did not open dashboard overview");
+  await page.getByRole("button", { name: "Bounceri home", exact: true }).filter({ visible: true }).click();
+  await landingTitle.waitFor();
+  check(new URL(page.url()).search === "", "Sidebar logo did not restore landing route");
+  await page.getByRole("button", { name: "Open dashboard", exact: true }).click();
+  await nav("Overview").waitFor();
+  check(await nav("Overview").getAttribute("aria-current") === "page", "Landing header CTA did not open overview");
   await reload();
   check(await page.getByText("No investigations published yet", { exact: true }).isVisible(), "Empty state missing");
   check((await page.getByText("Not implemented", { exact: true }).count()) === 3, "Future modules were enabled");
@@ -662,8 +685,9 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   check(errors.length === 0, `Browser errors: ${errors.join(", ")}`);
   return {
     passed: [
-      "existing overview remains default",
-      "existing header and navigation preserved",
+      "landing is default with gatehouse and synthetic provenance",
+      "landing dashboard CTAs and sidebar logo home routing",
+      "explicit dashboard overview route and navigation",
       "PR25 sessions campaigns metrics and overview preserved",
       "PR25 dark-only glass theme preserved",
       "empty state",

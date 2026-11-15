@@ -33,6 +33,7 @@ export interface Campaign {
   session_ids: string[];
   reasons: string[];
   size: number;
+  title?: string;
   labels?: Partial<Record<Label, number>>;
 }
 
@@ -96,7 +97,10 @@ export interface Overview {
   honesty: {
     synthetic: boolean;
     n_humans: number;
+    n_scored: number;
     false_alarms: number;
+    verdicts: Record<Label, number>;
+    model_versions: string[];
     fpr: number | null;
     fpr_ci95_upper: number | null;
   };
@@ -111,7 +115,7 @@ async function get<T>(path: string): Promise<T> {
 export const api = {
   overview: () => get<Overview>("/api/overview"),
   summary: () => get<Summary>("/api/summary"),
-  sessions: () => get<SessionRow[]>("/api/sessions"),
+  sessions: (limit = 500) => get<SessionRow[]>(`/api/sessions?limit=${limit}`),
   session: (id: string) => get<SessionDetail>(`/api/sessions/${encodeURIComponent(id)}`),
   campaigns: () => get<Campaign[]>("/api/campaigns"),
   metrics: () => get<MetricsResponse>("/api/metrics"),
@@ -122,7 +126,7 @@ export const ACTION_TEXT: Record<Action, string> = {
   monitor: "Monitor",
   rate_limit: "Rate-limit",
   challenge: "Challenge",
-  block: "Block",
+  block: "Recommend block",
 };
 
 export const LABEL_TEXT: Record<Label, string> = {

@@ -1,0 +1,243 @@
+/* Etusivu (Landing.tsx). Sama tummanvihreä maailma kuin dashboardissa; suostutteleva rytmi:
+   iso hero, väljät osiot hiusviivoin, yksi korostusväri (lime) toimintakehotteissa. */
+.lp { min-height: 100vh; }
+
+.lp-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px clamp(20px, 5vw, 64px);
+  border-bottom: 1px solid rgba(238, 243, 234, 0.06);
+  background: rgba(7, 16, 11, 0.72);
+  backdrop-filter: blur(14px);
+}
+.lp-brand { color: var(--foreground); }
+.lp-links { display: flex; gap: 4px; margin-left: auto; }
+.lp-links button {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 150ms, background-color 150ms;
+}
+.lp-links button:hover { color: var(--foreground); background: rgba(255, 255, 255, 0.04); }
+
+/* Toimintakehotteet */
+.lp-cta, .lp-ghost, .lp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms, transform 150ms;
+}
+.lp-cta {
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 15px;
+  font-weight: 650;
+  box-shadow: 0 10px 30px -12px rgba(197, 239, 93, 0.55);
+}
+.lp-cta:hover { background: #d4f57a; }
+.lp-cta:active { transform: scale(0.98); }
+.lp-cta svg, .lp-ghost svg, .lp-link svg { width: 17px; height: 17px; }
+.lp-cta-sm { height: 38px; padding: 0 16px; font-size: 14px; box-shadow: none; }
+.lp-ghost {
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 15px;
+  box-shadow: inset 0 0 0 1px rgba(238, 243, 234, 0.18);
+}
+.lp-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+.lp-link { padding: 0; background: none; color: var(--primary); font-size: 14px; font-weight: 600; }
+.lp-link:hover { color: #d4f57a; }
+.lp :is(button, a):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+
+/* Hero */
+.lp-hero {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.25fr);
+  align-items: center;
+  gap: 24px;
+  min-height: min(760px, calc(100vh - 67px));
+  padding: 40px clamp(20px, 5vw, 64px) 56px;
+  background:
+    radial-gradient(ellipse 55% 70% at 72% 58%, rgba(84, 140, 78, 0.3), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 70% 70%, rgba(228, 255, 154, 0.07), transparent 70%);
+}
+.lp-hero-copy { display: flex; flex-direction: column; gap: 22px; }
+.lp-hero h1 {
+  margin: 0;
+  max-width: 11ch;
+  font-size: clamp(2.6rem, 5.6vw, 5.2rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 150ms backwards;
+}
+.lp-hero h1 .lp-h1-brand { color: var(--primary); white-space: nowrap; }
+/* Logo otsikon sisällä: sama kirjasinkoko ja paino kuin otsikolla; ponnahdus alkaa, kun otsikko on näkyvissä. */
+.lp-h1-logo { margin-left: 0.1em; font-size: 1em; font-weight: inherit; letter-spacing: inherit; vertical-align: baseline; }
+.lp-h1-logo.bouncer-play .bouncer-bowl { animation-delay: 650ms; }
+.lp-h1-logo.bouncer-play .bouncer-tail { animation-delay: 1140ms; }
+.lp-lede {
+  margin: 0;
+  max-width: 46ch;
+  color: rgba(226, 236, 220, 0.8);
+  font-size: clamp(16px, 1.4vw, 18px);
+  line-height: 1.55;
+  animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 300ms backwards;
+}
+.lp-actions { display: flex; flex-wrap: wrap; gap: 12px; animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 450ms backwards; }
+.lp-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 1600ms backwards;
+}
+.lp-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-muted); }
+.lp-live.is-live { color: var(--foreground); }
+.lp-live.is-live i { background: var(--primary); animation: showcase-live 1.8s ease-out infinite; }
+.lp-live.is-replay i { background: var(--status-warning); }
+.lp-live span { opacity: 0.75; }
+
+.lp-hero-scene { position: relative; height: clamp(380px, 52vw, 600px); min-width: 0; }
+.lp-hero-scene .gh { position: absolute; inset: 0; }
+.lp-key {
+  position: absolute;
+  left: 8%;
+  bottom: 6%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  animation: lp-in 900ms cubic-bezier(0.16, 1, 0.3, 1) 1700ms backwards;
+}
+.lp-key li { display: flex; align-items: center; gap: 8px; }
+
+@keyframes lp-in { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } }
+
+/* Osiot: väljä rytmi, otsikko vasemmalla, sisältö oikealla. */
+.lp-section {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.6fr);
+  gap: 24px 64px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 88px clamp(20px, 5vw, 64px);
+  border-top: 1px solid rgba(238, 243, 234, 0.08);
+}
+.lp-section h2, .lp-final h2 {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 680;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.lp-prose { display: flex; flex-direction: column; gap: 16px; max-width: 64ch; }
+.lp-prose p { margin: 0; color: rgba(226, 236, 220, 0.78); font-size: 17px; line-height: 1.65; }
+.lp-prose strong { color: var(--foreground); font-weight: 600; }
+
+/* Vaiheet: järjestys on sisältöä → numerot. Rivi hiusviivoin, ei kortteja. */
+.lp-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; margin: 0; padding: 0; list-style: none; }
+.lp-steps li { display: grid; grid-template-columns: 44px 1fr; align-content: start; gap: 6px 0; padding: 22px 0 26px; border-top: 1px solid rgba(238, 243, 234, 0.08); }
+.lp-step-n {
+  grid-row: span 2;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(197, 239, 93, 0.12);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lp-steps h3, .lp-diff h3 { margin: 0; font-size: 17px; font-weight: 640; letter-spacing: -0.015em; }
+.lp-steps p, .lp-diff p { margin: 0; max-width: 52ch; color: rgba(226, 236, 220, 0.72); font-size: 15px; line-height: 1.6; }
+
+.lp-diff { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.lp-diff li { display: grid; grid-template-columns: minmax(200px, 0.75fr) minmax(0, 1.25fr); gap: 6px 32px; padding: 22px 0; border-top: 1px solid rgba(238, 243, 234, 0.08); }
+
+/* Tulokset: lause johtaa, luvut lihavoituina tekstissä; ehdot heti vieressä. */
+.lp-proof-grid { display: flex; flex-direction: column; gap: 24px; }
+.lp-proof-lead { margin: 0; max-width: 34ch; font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.4; letter-spacing: -0.015em; }
+.lp-proof-lead strong { color: var(--primary); font-weight: 680; font-variant-numeric: tabular-nums; }
+.lp-proof-caveat { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; max-width: 62ch; padding-left: 18px; border-left: 1px solid rgba(250, 178, 25, 0.45); }
+.lp-proof-caveat p { margin: 0; color: rgba(226, 236, 220, 0.72); font-size: 15px; line-height: 1.6; }
+
+.lp-modules { grid-column: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 8px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(238, 243, 234, 0.08); }
+.lp-modules li { display: flex; flex-direction: column; gap: 4px; padding: 16px 16px 4px 0; color: var(--muted-foreground); font-size: 13px; }
+.lp-modules li + li { padding-left: 16px; border-left: 1px solid rgba(238, 243, 234, 0.08); }
+.lp-modules strong { color: rgba(238, 243, 234, 0.6); font-size: 15px; font-weight: 600; }
+.lp-modules li.is-live strong { color: var(--foreground); }
+.lp-modules li.is-live span { color: var(--primary); }
+
+.lp-final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 104px clamp(20px, 5vw, 64px) 112px;
+  border-top: 1px solid rgba(238, 243, 234, 0.08);
+  text-align: center;
+  background: radial-gradient(ellipse 50% 80% at 50% 100%, rgba(84, 140, 78, 0.22), transparent 70%);
+}
+.lp-final h2 { max-width: 18ch; }
+
+.lp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 24px clamp(20px, 5vw, 64px) 32px;
+  border-top: 1px solid rgba(238, 243, 234, 0.06);
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+@media (max-width: 960px) {
+  .lp-links { display: none; }
+  .lp-cta-sm { margin-left: auto; }
+  .lp-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-top: 28px; }
+  .lp-hero-scene { order: -1; height: 340px; margin: 0 -12px; }
+  /* Selite kuvan alle omalle rivilleen: ei päällekkäin tauko-painikkeen kanssa. */
+  .lp-hero-scene { height: auto; }
+  .lp-hero-scene .gh { position: relative; height: 320px; }
+  .lp-key { position: static; padding: 4px 16px 0; gap: 6px 14px; }
+  .lp-section { grid-template-columns: minmax(0, 1fr); padding-top: 64px; padding-bottom: 64px; }
+  .lp-steps { grid-template-columns: minmax(0, 1fr); }
+  .lp-diff li { grid-template-columns: minmax(0, 1fr); }
+  .lp-modules { grid-column: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-modules li:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero h1, .lp-lede, .lp-actions, .lp-live, .lp-key, .lp-live.is-live i { animation: none; }
+}

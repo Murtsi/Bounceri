@@ -308,3 +308,23 @@ Two final fidelity checks closed substantive gaps before this increment was comm
 ### 077 — Ship current core and preserve unfinished workflow boundaries
 
 2026-11-15. Owner explicitly requested pushing all current work live and a short remaining-work note. Capture actual native scorer input context privately with exact session/configuration binding and bounded optional metadata; public projections remain allowlisted and offline evaluation stays the default. Additive SQL009 stores independent attack commitments/reveals with private byte retention, pre-preparation timestamp and exact frozen-artifact linkage; declarations remain owner-attested, not independently verified. Registry/controller and captured-profile operator integration remain unfinished and are recorded in PROGRESS.md. No future module is enabled by shipping these foundations. Preserve current live secrets, volumes, spending/accounting and newer remote UI/simulator changes during deployment; verify actual state afterward.
+
+### 078 — Variable private workloads with independent reference intent
+Date: 2026-11-14
+Context: The owner observed that repeating fixed scenarios lets a detector succeed on familiar templates rather than varied behavior.
+Decision: Compose seeded stochastic actor journeys with changing timing, paths, headers, cache behavior, source mix and campaign shape. Choose fresh live entropy on every episode/restart, persist bounded private replay/intent manifests and retain the original fixed generator separately. Limit episodes to 24 actors/240 requests/120 seconds; globally pace actual private HTTP at 4 requests/second, burst 4, with 8 connections. Honor overload cooldowns and stop/deadline. Use role-independent addresses and shared realistic user agents; exclude reference intent, episode/seed identity and simulator tags from ordinary behavior headers. Unknown authorization stays unknown; no simulated DNS verification or fabricated login success is added.
+Consequences: Continuous varying requests exercise the existing detector without changing its thresholds, weights or AI budget. Reference labels stay signed/private and are stripped from detector/provider input. The simulator alone mounts its rotated replay volume; recent session identities are excluded across restarts. Variety does not establish real-world or independently hidden-attack accuracy. Existing PostgreSQL state and review ceilings survive deployment.
+Revisit if: consented real traffic or independently authored adversarial cases reveal gaps not represented by these procedural behaviors.
+### 079 — Dashboard refresh cadence and route loading
+Date: 2026-11-14
+Context: The owner reported slow dashboard performance. Production profiling showed all views loaded in the initial bundle, latest activity requested the full session list, and queries refetched every two seconds.
+Decision: Load non-active views on demand, cap the latest-activity request at eight sessions, refresh dashboard queries every five seconds, and shorten the branded launch overlay to 900 ms.
+Consequences: The current overview keeps its traffic data and activity timestamps fresh within five seconds while transferring less data and doing less startup work. The session page retains its existing 500-row API limit.
+Revisit if: operators need a tighter freshness target or production profiling points to another dominant cost.
+
+### 080 — Landing page as the default home (needs-ack)
+Date: 2026-11-15
+Context: For the Junction pitch, judges and first-time visitors open bounceri.tech without context. The dashboard is built for operators and does not explain what Bounceri is, how it works or what has been measured. Decision-maker: Niko; Murtsi's earlier rule kept the owner overview as the default home.
+Decision: `/` without a `tab` parameter opens a landing page (hero with the live gatehouse, problem, four-step pipeline, differentiators, measured synthetic results with their limits, Hostinger runtime, modules, call to action). The dashboard opens at `?tab=overview`; the sidebar logo returns home. All figures come from EVALUATION.md and are shown with their caveats; no market statistics without a source.
+Consequences: Shared links without `tab` now land on the landing page instead of the overview. Old deep links with `tab`, `session`, `campaign` and `label` work as before.
+Revisit if: the owner prefers the overview as home after the pitch, or a separate marketing domain is added.

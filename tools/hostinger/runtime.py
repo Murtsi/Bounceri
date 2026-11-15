@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
+import secrets
 import signal
 import threading
 import time
 from collections.abc import Sequence
+from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -17,7 +22,9 @@ from bouncer.investigations import InvestigationStore
 from bouncer.network import find_campaigns
 from bouncer.network.live import LiveIntel
 from bouncer.review import ReviewSettings, capabilities
+from tools.sim.player import play_episode
 from tools.sim.run import run
+from tools.sim.state import EpisodeLog, fresh_episode
 
 
 def simulation_target(url: str) -> str:
@@ -151,7 +158,106 @@ def ingest(stop: threading.Event) -> None:
         stop.wait(5)
 
 
+def run_dynamic_episode(
+    state: EpisodeLog,
+    stop: threading.Event,
+    secret: str,
+    *,
+    base="http://simulation-gateway:8080",
+    generator=None,
+    player=None,
+):
+    """Persist private replay/reference metadata before issuing bounded requests."""
+    base = simulation_target(base)
+    if generator is None:
+        from tools.sim.dynamic import generate_episode
+
+        generator = generate_episode
+    player = player or play_episode
+
+    def factory(seed, episode_id, **kwargs):
+        return generator(
+            seed,
+            episode_id,
+            **kwargs,
+            max_actors=int(os.getenv("SIMULATION_MAX_ACTORS", "24")),
+            max_requests=int(os.getenv("SIMULATION_MAX_REQUESTS", "240")),
+            max_duration_seconds=float(os.getenv("SIMULATION_MAX_DURATION_SECONDS", "120")),
+        )
+
+    episode = fresh_episode(factory, state, base=base)
+    manifest = episode.replay_manifest()
+    timestamp = lambda: datetime.now(UTC).isoformat()  # noqa: E731
+    state.append(
+        {
+            "type": "planned",
+            "timestamp": timestamp(),
+            "plan": manifest,
+            "session_keys": [[actor.ip, actor.ua] for actor in episode.actors],
+        }
+    )
+    try:
+        result = player(
+            episode,
+            secret,
+            base=base,
+            stop=stop,
+            requests_per_second=float(os.getenv("SIMULATION_REQUESTS_PER_SECOND", "4")),
+        )
+    except Exception as error:
+        state.append(
+            {
+                "type": "failed",
+                "timestamp": timestamp(),
+                "episode_id": episode.episode_id,
+                "error_type": type(error).__name__,
+            }
+        )
+        raise
+    state.append({"type": "completed", "timestamp": timestamp(), "playback": asdict(result)})
+    fingerprint = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
+    print(
+        "[simulator] "
+        + json.dumps(
+            {
+                "episode": episode.episode_id,
+                "fingerprint": fingerprint[:16],
+                "actors": len(episode.actors),
+                "planned_requests": result.planned_requests,
+                "requests": result.attempted_requests,
+                "responses": result.completed_requests,
+                "network_errors": result.network_errors,
+                "dropped_requests": result.dropped_requests,
+                "elapsed_seconds": round(result.elapsed_seconds, 3),
+                "mode": "dynamic",
+            }
+        ),
+        flush=True,
+    )
+    return result
+
+
 def simulate(stop: threading.Event) -> None:
+    mode = os.getenv("SIMULATION_MODE", "dynamic")
+    if mode == "legacy":
+        _simulate_legacy(stop)
+        return
+    if mode != "dynamic":
+        raise ValueError("Simulation mode must be dynamic or legacy")
+    base = simulation_target(os.getenv("SIMULATION_TARGET", "http://simulation-gateway:8080"))
+    state = EpisodeLog(Path(os.getenv("SIMULATION_STATE_DIR", "/simulation")))
+    secret = os.environ["SIM_RUN_SECRET"]
+    cap = max(0, int(os.getenv("SIMULATION_MAX_ROUNDS", "0")))
+    episodes = 0
+    while not stop.is_set() and (cap == 0 or episodes < cap):
+        run_dynamic_episode(state, stop, secret, base=base)
+        episodes += 1
+        stop.wait(1 + secrets.randbelow(5000) / 1000)
+    while not stop.wait(30):
+        pass
+
+
+def _simulate_legacy(stop: threading.Event) -> None:
     base = simulation_target(os.getenv("SIMULATION_TARGET", "http://simulation-gateway:8080"))
     secret = os.environ["SIM_RUN_SECRET"]
     # At most 21 actors / 235 requests each round; no user-controlled target or arbitrary payload.
