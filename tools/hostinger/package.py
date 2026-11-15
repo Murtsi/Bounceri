@@ -45,6 +45,7 @@ def capsule(root: Path) -> tuple[str, str]:
             "src/bouncer/network/campaign_metrics.json",
             "models/metrics.json",
             "models/evaluation.synthetic.json",
+            "models/evaluation.social_replies.json",
             "models/model.json",
             "tools/datasets/registry.example.json",
         )

@@ -3,6 +3,7 @@ import { TriangleAlert } from "lucide-react";
 import { api } from "@/api";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
 import { ListSkeleton } from "@/components/Skeletons";
+import ReplyResearchPreview from "@/components/ReplyResearchPreview";
 
 const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)}%` : "—");
 
@@ -35,7 +36,7 @@ export default function Metrics() {
           <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-warning)" }} aria-hidden="true" />
           <p>
             {m.stub
-              ? "models/metrics.json is a stub: there is no real labelled traffic yet. No numbers are shown or invented."
+              ? "models/metrics.json is a stub: native production quality is unmeasured. No native quality metrics are shown or invented."
               : SYNTHETIC_DATA_NOTICE}
           </p>
         </div>
@@ -64,6 +65,7 @@ export default function Metrics() {
         <summary className="cursor-pointer">Ingest status</summary>
         <pre className="mt-2 overflow-x-auto rounded-md border bg-muted/30 p-3">{JSON.stringify(m.ingest, null, 2)}</pre>
       </details>
+      <ReplyResearchPreview />
     </div>
   );
 }

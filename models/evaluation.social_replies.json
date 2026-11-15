@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "available": true,
+  "scope": "historical_tweet_targeting_research",
+  "source": {
+    "title": "Coordinated Reply Attacks in Influence Campaigns: Characterization and Detection",
+    "authors": [
+      "Manita Pote (dataset creator)"
+    ],
+    "doi": "10.5281/zenodo.13896309",
+    "url": "https://zenodo.org/records/13896309",
+    "license": "CC-BY-4.0",
+    "file_sha256": "038783083dfad6f8b80949a352044b9eacb65ad1e1cdbbfaebb20e9fd501533f"
+  },
+  "dataset": {
+    "raw_rows": 7816,
+    "unique_posts": 7732,
+    "targeted": 3866,
+    "controls": 3866,
+    "duplicate_id_rows": 84,
+    "numeric_features": 99
+  },
+  "baseline": {
+    "feature": "mean_cosine",
+    "direction": ">=",
+    "threshold": 0.22069597244262695,
+    "selection": "train_only_balanced_accuracy"
+  },
+  "splits": {
+    "train": {
+      "n": 5378,
+      "targeted": 2653,
+      "controls": 2725,
+      "confusion": {
+        "tp": 1511,
+        "fp": 1157,
+        "tn": 1568,
+        "fn": 1142
+      },
+      "precision": {
+        "numerator": 1511,
+        "denominator": 2668,
+        "value": 0.5663418290854573,
+        "ci95_lower": 0.5474549464491858,
+        "ci95_upper": 0.5850379448604093
+      },
+      "recall": {
+        "numerator": 1511,
+        "denominator": 2653,
+        "value": 0.5695439125518281,
+        "ci95_lower": 0.5506155641506941,
+        "ci95_upper": 0.5882711574393061
+      },
+      "false_positive_rate": {
+        "numerator": 1157,
+        "denominator": 2725,
+        "value": 0.42458715596330276,
+        "ci95_lower": 0.40614778622051245,
+        "ci95_upper": 0.44323884682426
+      },
+      "f1": 0.5679383574516068,
+      "abstentions": 0,
+      "abstention_rate": {
+        "numerator": 0,
+        "denominator": 5378,
+        "value": 0.0,
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.000713781490979835
+      }
+    },
+    "validation": {
+      "n": 1139,
+      "targeted": 596,
+      "controls": 543,
+      "confusion": {
+        "tp": 360,
+        "fp": 222,
+        "tn": 321,
+        "fn": 236
+      },
+      "precision": {
+        "numerator": 360,
+        "denominator": 582,
+        "value": 0.6185567010309279,
+        "ci95_lower": 0.578438105580708,
+        "ci95_upper": 0.6571205048969384
+      },
+      "recall": {
+        "numerator": 360,
+        "denominator": 596,
+        "value": 0.6040268456375839,
+        "ci95_lower": 0.564217676794747,
+        "ci95_upper": 0.6425036129336884
+      },
+      "false_positive_rate": {
+        "numerator": 222,
+        "denominator": 543,
+        "value": 0.4088397790055249,
+        "ci95_lower": 0.3682705062749463,
+        "ci95_upper": 0.4506898186910848
+      },
+      "f1": 0.6112054329371817,
+      "abstentions": 0,
+      "abstention_rate": {
+        "numerator": 0,
+        "denominator": 1139,
+        "value": 0.0,
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0033613225973252257
+      }
+    },
+    "test": {
+      "n": 1215,
+      "targeted": 617,
+      "controls": 598,
+      "confusion": {
+        "tp": 373,
+        "fp": 264,
+        "tn": 334,
+        "fn": 244
+      },
+      "precision": {
+        "numerator": 373,
+        "denominator": 637,
+        "value": 0.5855572998430141,
+        "ci95_lower": 0.5469001926305999,
+        "ci95_upper": 0.6231886780248455
+      },
+      "recall": {
+        "numerator": 373,
+        "denominator": 617,
+        "value": 0.6045380875202593,
+        "ci95_lower": 0.5654247013067234,
+        "ci95_upper": 0.6423578141281173
+      },
+      "false_positive_rate": {
+        "numerator": 264,
+        "denominator": 598,
+        "value": 0.4414715719063545,
+        "ci95_lower": 0.4021716685987859,
+        "ci95_upper": 0.48151863060864203
+      },
+      "f1": 0.594896331738437,
+      "abstentions": 0,
+      "abstention_rate": {
+        "numerator": 0,
+        "denominator": 1215,
+        "value": 0.0,
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.003151729696174742
+      }
+    }
+  },
+  "reproducibility": {
+    "algorithm": "one_feature_decision_stump_v1",
+    "python_version": "3.12.8",
+    "evaluator_sha256": "6f8628aa337c071443dea85602da2c84a2751ff77e0862be529cbf1c01f91394",
+    "split_method": "SHA256('bounceri-reply-preview-v1:'+raw_tweet_ID) modulo 100; train <70; validation 70..84; test >=85",
+    "membership_sha256": {
+      "train": "704d90bd5d1c80a08ac8a8b6c5a581234864b1ca1f97c717fb1783059c83511e",
+      "validation": "52556f5a19f271ab7f310c61aa4ea51db2a6029c920a0f6d274e9763c8edff85",
+      "test": "6b34bc6e4460644fafc2131c189e1a8e7906692e61ddb9bc93e2bb0c2dafba93"
+    },
+    "deduplication": "first source row per tweet ID; conflicting labels rejected",
+    "confidence_intervals": "Wilson 95% for binomial rates only; F1 has no interval",
+    "decision_policy": "always decide; zero abstentions; no calibrated probability"
+  },
+  "feature_summaries": {
+    "mean_cosine": {
+      "targeted": {
+        "count": 3866,
+        "median": 0.23305359482765198
+      },
+      "controls": {
+        "count": 3866,
+        "median": 0.20910876244306564
+      }
+    },
+    "50%_diff_min": {
+      "targeted": {
+        "count": 3866,
+        "median": 3.0
+      },
+      "controls": {
+        "count": 3866,
+        "median": 4.0
+      }
+    },
+    "org_reply_count": {
+      "targeted": {
+        "count": 3866,
+        "median": 31.0
+      },
+      "controls": {
+        "count": 3866,
+        "median": 22.0
+      }
+    }
+  },
+  "limitations": [
+    "Conditional tweet-level historical benchmark; not a validated social coordination module.",
+    "Label 1 means targeted by historical influence-operation replies (at least five IO replies), not that the target is a bot or malicious actor.",
+    "Controls are selected posts with at least five replies, not ordinary or independently verified benign traffic.",
+    "Actor and campaign group IDs are unavailable; actor/campaign leakage is unverified. This is not a genuinely hidden test.",
+    "Historical heuristic labels do not establish current coordination, attribution, bot identity or maliciousness.",
+    "One predeclared mean_cosine stump is selected on train only; validation/test are reported separately, with no tuning on them.",
+    "Descriptive medians use all deduplicated posts; they do not select features or thresholds."
+  ]
+}
