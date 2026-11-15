@@ -2,6 +2,10 @@
 
 ## Nykyinen toteutustyö — 2026-11-14
 
+2026-11-15 submission fix: public session explanations now retain fixed safe
+rule/behavior observations. Rules-only normal traffic still has unverified
+identity; a trained real-world model and actual-human evaluation remain open.
+
 Työjärjestys: [modules plan.md](../../modules%20plan.md). Kaistat kuvaavat
 oletusvastuita, eivät muokkauskieltoja (AGENTS.md, päätös 044).
 

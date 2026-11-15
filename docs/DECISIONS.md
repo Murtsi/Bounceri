@@ -334,3 +334,14 @@ Revisit if: the owner prefers the overview as home after the pitch, or a separat
 2026-11-15. Owner set a45-minute submission deadline and atmost30minutes for one additional integration. Keep the working traffic MVP and add a narrow attributed public-data research preview instead of claiming a complete social detector. RQ2 from Zenodo13896309 is CC BY4.0,7.7MB/7816rows/99numericfeatures; first-row post deduplication yields7732posts with3866targeted/3866selectedcontrols. IDs/text/rows are not redistributed. Historical labels identify targeted posts versus selected controls, not bots, maliciousness, operator identity or present-day coordination. Actor/campaign grouping is unavailable.
 
 Freeze SHA256 tweet-ID70/15/15 splits before fitting a predeclared mean_cosine decision stump; direction/threshold use training balanced accuracy only. Test1215:TP373/FP264/TN334/FN244,precision58.56%,recall60.45%,selected-controlFPR44.15%,F159.49%,zeroabstention. Show counts/intervals, selection bias and unverified actor/campaign independence explicitly. This weak baseline is an exploratory supplement, not production quality. Full Spot the Swarm and other future module flags remain unavailable; native production metrics/models stay untouched. The source CSV stays outside Git; only aggregate report/code/UI/source attribution ship. CLEF restricted access is not bypassed. The PDF pitch and form copy distinguish implemented traffic MVP, research preview and remaining work.
+
+### 083 — Explain observed behavior without inventing confident verdicts
+
+2026-11-15. The owner requested a quick reduction in uncertain verdicts before
+submission. Live inspection found rules-only scoring, no trained model, and a
+public projection that erased all useful reasons. Restore fixed, allowlisted
+descriptions of actual rule IDs and aggregate browsing/tool observations. Never
+publish private reasons, arbitrary paths or identifiers. Browser-like traffic is
+described as observed behavior with unverified identity. Classification remains
+uncertain when no decisive rule or calibrated model supports a stronger label;
+no rushed threshold change or simulator truth is used to manufacture confidence.

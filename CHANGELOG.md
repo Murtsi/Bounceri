@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- [A] Public verdict explanations now retain safe observed rule and browsing signals instead of replacing every reason with the label; browser-like activity remains explicitly unverified and private paths/prose stay redacted (decision 083).
 - [X] Live-release integration preserves the newer landing/gatehouse dashboard and continuous private simulator alongside core hardening; browser acceptance follows the current home/dashboard routes while retaining investigation privacy and paging checks.
 - [B] Legacy evaluation can no longer publish production metrics/models by toggling a source's synthetic flag or append a hidden result by matching only a model-version string; write requests fail before loading, DNS, training or file changes, while development reports remain available.
 - [A] Escaped invalid Unicode/NUL input cannot repeatedly stall worker checkpoints or PostgreSQL resume writes; bad records are counted/skipped, while malformed simulator credentials retain otherwise valid traffic without trusted labels.

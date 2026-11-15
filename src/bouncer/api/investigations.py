@@ -69,6 +69,30 @@ def paid_enabled() -> bool:
     return bool(review_configuration()[1]["enabled"])
 
 
+def _public_verdict_reasons(snapshot: dict, sid: str, label: str) -> list[str]:
+    observation = snapshot.get("rule_observations", {}).get(sid, {})
+    safe_rules = {
+        "verified_crawler": "Search crawler verified by forward and reverse DNS.",
+        "trap": "Requested a configured hidden trap path.",
+        "fake_crawler": "Claimed search crawler failed DNS verification.",
+        "vuln_paths": "Probed multiple known vulnerability paths.",
+        "login_attack_campaign": "Linked to a multi-session credential attack.",
+    }
+    reasons = [safe_rules[rule] for rule in observation.get("rule_ids", [])
+               if isinstance(rule, str) and rule in safe_rules]
+    if reasons:
+        return reasons[:3]
+    if label == "uncertain" and observation:
+        features = observation.get("features", {})
+        if features.get("ua_is_tool") is True:
+            return ["Automated-client signal observed; its purpose remains unverified."]
+        if all(type(features.get(key)) in (int, float) and 0 < features[key] <= 1
+               for key in ("static_share", "html_share")):
+            return ["Loaded pages and browser assets; browsing-like activity, identity unverified."]
+        return ["No decisive rule matched; available traffic evidence is insufficient."]
+    return [f"Local detector label: {label}."]
+
+
 def public_legacy(snapshot: dict) -> dict:
     """Project before enrichment so generated prose cannot leak raw identifiers."""
     if snapshot.get("synthetic") is not True:
@@ -129,11 +153,13 @@ def public_legacy(snapshot: dict) -> dict:
         label = verdict.get("label", "uncertain")
         if label not in {"human", "good_bot", "bad_bot", "uncertain"}:
             label = "uncertain"
+        reasons = _public_verdict_reasons(snapshot, sid, label)
         verdicts[sid] = {
             "label": label,
             "score": verdict.get("score"),
-            "reasons": [f"Local detector label: {label}."],
-            "explanation": f"Local detector label: {label}; advisory finding.",
+            "reasons": reasons,
+            "explanation": " ".join(reasons) if snapshot.get("rule_observations", {}).get(sid)
+            else f"Local detector label: {label}; advisory finding.",
             "model_version": "local-detector",
             "campaign_id": campaign_ref(verdict.get("campaign_id")),
             "action": verdict.get("action")
