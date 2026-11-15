@@ -105,4 +105,4 @@ Private native log uploads are now available through the authenticated [traffic 
 
 See [core operations](docs/OPERATIONS.md) for read-only health probes, private backup/restore, explicit source deletion, log rotation and measured worker bounds.
 
-Private [consented collection and session-review records](docs/HUMAN_STUDY.md) keep participant consent separate from observed manual/automated behavior and simulator labels. Enrollment alone does not supply human ground truth; frozen evaluation remains separate work.
+Private [consented collection and session-review records](docs/HUMAN_STUDY.md) keep participant consent separate from observed manual/automated behavior and simulator labels. Enrollment alone does not supply human ground truth. The [frozen native evaluation workflow](docs/FROZEN_EVALUATION.md) reserves complete groups, freezes separate fit/calibration/test contexts, and records one-shot private reports. Actual independent evidence and production publication remain separate gates.

@@ -5,7 +5,6 @@ import pytest
 from bouncer.contracts import SessionLabel
 from bouncer.eval import hidden as hid
 from bouncer.eval.dataset import build_dataset
-from bouncer.eval.metrics import stub_metrics
 from bouncer.eval.train import train_and_evaluate
 
 from .synthetic import corpus, curl_scanner_session, human_session, req, session, shift
@@ -73,51 +72,64 @@ def test_hidden_requires_labels_and_thresholds(frozen):
 def _real_metrics(frozen, tmp_path):
     res, _ = frozen
     m = json.loads(json.dumps(res.metrics))
-    m["data"]["synthetic"] = False  # testiä varten: muuten kuin oikea tulos
+    m["data"]["synthetic"] = False  # A misleading flag is not release evidence.
     p = tmp_path / "metrics.json"
     p.write_text(json.dumps(m), "utf-8")
     return p, m
 
 
-def test_add_to_metrics_only_touches_hidden_split(frozen, tmp_path):
+def test_add_to_metrics_refuses_version_match_without_frozen_receipts(frozen, tmp_path):
     _, model = frozen
-    p, before = _real_metrics(frozen, tmp_path)
+    p, _ = _real_metrics(frozen, tmp_path)
+    before = p.read_bytes()
     sessions, labels = _hidden()
     h = hid.evaluate_hidden(sessions, labels, ["hidden-1"], model, traps=TRAPS)
-    after = hid.add_to_metrics(h, p)
-    assert after["split"]["hidden_attack"]["n"] == 2
-    after["split"]["hidden_attack"] = before["split"]["hidden_attack"]
-    assert after == before
-    with pytest.raises(ValueError, match="ei ylikirjoiteta"):
+    with pytest.raises(ValueError, match="frozen native evaluator"):
         hid.add_to_metrics(h, p)
+    assert p.read_bytes() == before
 
 
 @pytest.mark.parametrize(
-    ("change", "match"),
+    "change",
     [
-        (lambda m: m.update(stub=True), "stub"),
-        (lambda m: m["data"].update(synthetic=True), "synteettisellä"),
-        (lambda m: m.update(model_version="rules-v1"), "samalla mallilla"),
+        lambda m: m.update(stub=True),
+        lambda m: m["data"].update(synthetic=True),
+        lambda m: m.update(model_version="rules-v1"),
     ],
 )
-def test_add_to_metrics_refuses(frozen, tmp_path, change, match):
+def test_add_to_metrics_refuses(frozen, tmp_path, change):
     _, model = frozen
     p, m = _real_metrics(frozen, tmp_path)
     change(m)
     p.write_text(json.dumps(m), "utf-8")
+    before = p.read_bytes()
     sessions, labels = _hidden()
     h = hid.evaluate_hidden(sessions, labels, ["hidden-1"], model, traps=TRAPS)
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(ValueError, match="frozen native evaluator"):
         hid.add_to_metrics(h, p)
+    assert p.read_bytes() == before
 
 
-def test_repo_stub_metrics_is_refused(frozen, tmp_path):
+def test_add_to_metrics_refuses_before_creating_missing_file(tmp_path):
     p = tmp_path / "metrics.json"
-    p.write_text(json.dumps(stub_metrics()), "utf-8")
-    with pytest.raises(ValueError, match="stub"):
+    with pytest.raises(ValueError, match="frozen native evaluator"):
         hid.add_to_metrics({"model_version": "rules-v1"}, p)
+    assert not p.exists()
 
 
-def test_cli_without_saved_model(capsys):
+def test_cli_write_refuses_before_loading_model_or_traffic(monkeypatch, capsys):
+    from bouncer.eval import run as runner
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("legacy write must fail before loading model or traffic")
+
+    monkeypatch.setattr(hid.mdl, "load_model", forbidden)
+    monkeypatch.setattr(runner, "load", forbidden)
+    assert hid.main(["--source", "db", "--run", "hidden-1", "--write"]) == 1
+    assert "frozen native evaluator" in capsys.readouterr().out
+
+
+def test_cli_without_saved_model(monkeypatch, capsys):
+    monkeypatch.setattr(hid.mdl, "load_model", lambda: None)
     assert hid.main(["--source", "sample", "--offline", "--run", "x"]) == 1
     assert "model.json puuttuu" in capsys.readouterr().out

@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy.engine import make_url
-
 from bouncer.db.backup import _path, _private_file
 from bouncer.db.participants import StudyStore
+from bouncer.db.store import shared_database_url
 
 from .native import outside_repository
 
@@ -29,16 +27,7 @@ def _input(path: Path) -> dict:
 
 
 def _database() -> str:
-    traffic = os.getenv("BOUNCER_TRAFFIC_DATABASE_URL", "").strip()
-    cases = os.getenv("BOUNCER_DATABASE_URL", "").strip()
-    if not traffic or not cases:
-        raise ValueError("explicit shared database configuration required")
-    selected, configured = make_url(traffic), make_url(cases)
-    if selected.set(drivername=selected.get_backend_name()) != configured.set(
-        drivername=configured.get_backend_name()
-    ):
-        raise ValueError("study commands require one shared database")
-    return traffic
+    return shared_database_url()
 
 
 def _inspection(path: Path, record: dict) -> None:

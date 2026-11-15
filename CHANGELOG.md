@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- [B] Legacy evaluation can no longer publish production metrics/models by toggling a source's synthetic flag or append a hidden result by matching only a model-version string; write requests fail before loading, DNS, training or file changes, while development reports remain available.
 - [A] Escaped invalid Unicode/NUL input cannot repeatedly stall worker checkpoints or PostgreSQL resume writes; bad records are counted/skipped, while malformed simulator credentials retain otherwise valid traffic without trusted labels.
 - [X] Malformed non-ASCII bearer/signature input now fails authorization safely; invalid simulator signatures discard only truth labels rather than hiding otherwise valid traffic.
 - [A] Malformed or scoped client addresses are rejected per record before PostgreSQL writes, and equivalent IPv6 spellings share canonical addresses without changing opaque session IDs on replay.
@@ -16,6 +17,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] BREAKING: Additive migration 008 records canonical native preparations, global development/holdout assignments, source bindings and immutable artifact/report digests; one-shot claims survive failure/restart, source deletion revokes private payloads, and active evaluations require explicit stopped-worker recovery before purge.
+- [B] Private frozen native rules/logistic evaluation loads current reviewed observations separately from exactly regenerated synthetic references, isolates fit/calibration/test/run context, fits independent network ablations and returns bounded private reports with coverage, class/FPR counts, confidence intervals and actor support. Production and independently withheld quality remain unavailable.
+- [A] Installed wheels now include native fixture/registry runtime code without depending on checkout-only tools; shared operator database selection rejects transient or ambiguous databases, and CI exercises PostgreSQL evaluation receipts and guarded orchestration.
 - [B] Deterministic fit/calibration/test partitioning keeps complete declared actor/run/campaign components together across sources and full time intervals; unknown identities and boundary-straddling components are quarantined with private exact-reference manifests. Frozen orchestration and production-publication gates remain in progress.
 - [A] BREAKING: Additive migration 007 stores private pseudonymous study subjects, consented collection windows and append-only session reviews separately from simulator labels; dedicated-source withdrawal atomically erases collection payloads while preserving financial audit and minimal revocation tombstones.
 - [B] Private operator enrollment, bounded inspection and review commands require the inspected native session digest and annotation revision; changed content, revoked consent and newer rejected reviews cannot enter the current human-reference subset. Automation and intent remain separate observations, with no inferred bot truth or published quality claims.

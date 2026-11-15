@@ -1,11 +1,9 @@
-import json
 from dataclasses import dataclass
 
 import pytest
 
 from bouncer.contracts import IpIntel
 from bouncer.eval import run as runner
-from bouncer.session import model as mdl
 
 from .synthetic import corpus
 
@@ -23,9 +21,9 @@ def test_sample_offline_reports_too_little_data():
 def test_cli_sample_exit_codes(tmp_path, capsys):
     assert runner.main(["--source", "sample", "--offline"]) == 0
     assert "SYNTEETTINEN" in capsys.readouterr().out
-    # --write synteettisellä datalla → virhekoodi, eikä mitään tallenneta models/:iin
+    # Legacy publication is disabled even for sample data.
     assert runner.main(["--source", "sample", "--offline", "--write"]) == 1
-    assert mdl.load_model() is None
+    assert "frozen native evaluator" in capsys.readouterr().out
     rep = tmp_path / "r.md"
     assert runner.main(["--source", "sample", "--offline", "--report", str(rep)]) == 0
     assert rep.read_text("utf-8").startswith("# Piirreraportti")
@@ -74,29 +72,56 @@ def test_network_signals_map_int_campaign_ids_and_dedupe_ips():
 # --- koko ajo --------------------------------------------------------------------
 
 
-def test_run_on_synthetic_corpus_refuses_write():
+def test_run_on_synthetic_corpus_preserves_development_metrics():
     sessions, labels, intel = corpus()
     r = runner.run(
         list(sessions.values()), labels, synthetic=True,
-        intel_fn=lambda ip: intel.get(ip, IpIntel()), write=True,
+        intel_fn=lambda ip: intel.get(ip, IpIntel()),
     )  # fmt: skip
     assert r.metrics is not None and r.metrics["model_version"] == "lr-v1"
-    assert r.saved is False and "synteettistä" in r.error
+    assert r.saved is False and r.error is None
     lines = runner.summary_lines(r)
     assert any(line.startswith("ihmisten FPR") for line in lines)
 
 
-def test_run_on_real_data_writes_metrics_and_model(tmp_path):
-    sessions, labels, intel = corpus()
+@pytest.mark.parametrize("synthetic", [False, True])
+@pytest.mark.parametrize("existing", [False, True])
+def test_run_refuses_publication_before_network_or_training(
+    tmp_path, monkeypatch, synthetic, existing,
+):
+    sessions, labels, _ = corpus()
     mp, mo = tmp_path / "metrics.json", tmp_path / "model.json"
+    if existing:
+        mp.write_text("existing metrics", "utf-8")
+        mo.write_text("existing model", "utf-8")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("legacy write must fail before network or training")
+
+    monkeypatch.setattr(runner, "train_and_evaluate", forbidden)
     r = runner.run(
-        list(sessions.values()), labels, synthetic=False,
-        intel_fn=lambda ip: intel.get(ip, IpIntel()), write=True,
+        list(sessions.values()), labels, synthetic=synthetic,
+        intel_fn=forbidden, campaigns_fn=forbidden, write=True,
         metrics_path=mp, model_path=mo,
     )  # fmt: skip
-    assert r.saved and r.error is None
-    assert json.loads(mp.read_text("utf-8"))["stub"] is False
-    assert mdl.load_model(mo).thresholds["bot"] is not None
+    assert not r.saved and not r.written and r.metrics is None
+    assert "frozen native evaluator" in r.error
+    if existing:
+        assert mp.read_text("utf-8") == "existing metrics"
+        assert mo.read_text("utf-8") == "existing model"
+    else:
+        assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_write_refuses_before_loading_or_writing_report(tmp_path, monkeypatch, capsys):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("legacy write must fail before loading traffic")
+
+    monkeypatch.setattr(runner, "load", forbidden)
+    report = tmp_path / "report.md"
+    assert runner.main(["--source", "db", "--write", "--report", str(report)]) == 1
+    assert "frozen native evaluator" in capsys.readouterr().out
+    assert not report.exists()
 
 
 def test_exclude_runs_drops_hidden_attack():
@@ -136,7 +161,7 @@ def test_incomplete_labeled_data_refuses_training_and_writes(tmp_path, monkeypat
     monkeypatch.setattr(runner, "train_and_evaluate", forbidden_training)
     result = runner.run(
         list(sessions.values()), labels, synthetic=False, allow_site_labels=False,
-        unavailable_fields={session_id: ["bytes"]}, write=True,
+        unavailable_fields={session_id: ["bytes"]},
         metrics_path=tmp_path / "metrics.json", model_path=tmp_path / "model.json",
     )
     assert result.error == (

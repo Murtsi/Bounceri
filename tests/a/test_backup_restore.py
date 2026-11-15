@@ -267,10 +267,20 @@ def test_real_postgres_full_roundtrip_and_occupied_target_refusal(owned_postgres
         study_source(study.traffic)
         enrolled = enroll(study)
         review(study, enrolled)
+        from bouncer.db.evaluations import EvaluationLedger
+
+        ledger = EvaluationLedger(source)
+        prepared = ledger.reserve(descriptor={"fixture": "backup-consumed-holdout"},
+                                  development_units={"1" * 64}, holdout_units={"2" * 64},
+                                  source_keys=["collection-a"])
+        prepared = ledger.set_artifacts(prepared["preparation_id"], artifacts={"fixture": True})
+        ledger.claim(prepared["preparation_id"], artifact_digest=prepared["artifact_digest"])
+        ledger.finish(prepared["preparation_id"], artifact_digest=prepared["artifact_digest"],
+                      report={"fixture": "private-consumed-report"})
         artifact = tmp_path / "database.dump"
         manifest = backup(base + "backup_source", artifact, runner=runner)
         assert artifact.read_bytes().startswith(b"PGDMP")
-        assert manifest["schema"]["version"] >= 7
+        assert manifest["schema"]["version"] >= 8
         report = restore(str(artifact) + ".manifest.json", base + "backup_target", runner=runner)
         assert report["verified"] is True
         with source.connect() as left, target.connect() as right:
@@ -284,6 +294,9 @@ def test_real_postgres_full_roundtrip_and_occupied_target_refusal(owned_postgres
             assert right.exec_driver_sql(
                 "SELECT spent,reserved FROM investigation_budget"
             ).one() == (17, 23)
+        restored_ledger = EvaluationLedger(target)
+        assert restored_ledger.claim(prepared["preparation_id"],
+                                     artifact_digest=prepared["artifact_digest"])["cached"] is True
         for database in ("backup_target", "backup_source"):
             with pytest.raises(ValueError, match="empty|differ"):
                 restore(str(artifact) + ".manifest.json", base + database, runner=runner)

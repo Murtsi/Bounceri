@@ -552,3 +552,19 @@ def test_fresh_postgres_approval_reads_lock_shared_subjects_consistently(engine)
             assert len(left.result(timeout=10)) == len(right.result(timeout=10)) == 2
     finally:
         event.remove(engine, "after_cursor_execute", sources_locked)
+
+
+def test_current_approval_guard_can_share_an_existing_atomic_transaction(study):
+    store, repo = study
+    source(repo)
+    enrolled = enroll(store)
+    review(store, enrolled)
+    with pytest.raises(RuntimeError, match="rollback"), store._transaction() as conn:
+        current = store._load_approved_connection(conn, ["collection-a"])
+        assert len(current) == 1
+        conn.execute(api().subjects.update().where(
+            api().subjects.c.subject_id == enrolled["subject_id"]
+        ).values(status="withdrawn"))
+        assert store._load_approved_connection(conn, ["collection-a"]) == []
+        raise RuntimeError("rollback")
+    assert len(store.load_approved(["collection-a"])) == 1

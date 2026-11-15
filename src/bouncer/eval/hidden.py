@@ -1,25 +1,15 @@
-"""Piilotettu hyökkäys (B-11): jäädytetty malli, ei uudelleenopetusta.
+"""Valittujen ajojen kehitysarviointi (B-11), ilman uudelleenopetusta.
 
-T+34 A paljastaa piilotetun hyökkäyksen ajo-ID:t. Silloin:
-
-    PYTHONPATH=src python -m bouncer.eval.hidden --source db --run <ajo-id> [--run …] --write
-
-1. Ladataan `models/model.json` sellaisenaan (malli + kynnykset). Mitään ei opeteta.
-2. Ajetaan vain piilotetun hyökkäyksen sessiot `score()`:n läpi.
-3. Pääluku tuotannon tavalla eli **ansat päällä**, ja vertailuksi muuhun
-   arviointiin myös **ilman ansoja** (päätös 038).
-4. `--write` lisää tuloksen `metrics.json`:n `split.hidden_attack`-kenttään
-   sellaisenaan eikä muuta muita lukuja.
-
-Ennen T+34 A:n `load_labels()` ei saa palauttaa piilotetun ajon labeleita;
-silloin sessiot ovat B:lle labeloimattomia eivätkä päädy opetukseen.
+Lataa tallennetun mallin ja raportoi valitut ajot ansoilla sekä ilman ansoja.
+Mallin versio ja ajo-ID eivät todista jäädytystä tai riippumatonta hyökkäystä.
+`--write` ei ole käytettävissä; tuotantojulkaisu edellyttää frozen native
+evaluator -polun varmennettuja jäädytys-, sinetöinti- ja paljastuskuitteja.
 """
 
 from __future__ import annotations
 
 import argparse
 import functools
-import json
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -27,7 +17,12 @@ from typing import Any
 
 from bouncer.contracts import Campaign, IpIntel, Session, SessionLabel
 from bouncer.eval.dataset import build_dataset
-from bouncer.eval.evaluate import Thresholds, apply_thresholds, metrics_for
+from bouncer.eval.evaluate import (
+    LEGACY_PUBLICATION_ERROR,
+    Thresholds,
+    apply_thresholds,
+    metrics_for,
+)
 from bouncer.eval.metrics import METRICS_PATH
 from bouncer.session import model as mdl
 from bouncer.session import rules
@@ -44,7 +39,7 @@ def evaluate_hidden(
     campaign_by_session: Mapping[Any, Campaign] | None = None,
     traps: frozenset[str] | None = None,
 ) -> dict[str, Any]:
-    """Piilotetun hyökkäyksen luvut jäädytetyllä mallilla."""
+    """Kehitysluvut muuttamatta mallia; ei todiste riippumattomasta hyökkäyksestä."""
     if model.thresholds.get("bot") is None:
         raise ValueError("mallilla ei ole kalibroitua botti-kynnystä")
     wanted = set(run_ids)
@@ -87,22 +82,8 @@ def evaluate_hidden(
 
 
 def add_to_metrics(hidden: Mapping[str, Any], path: Path = METRICS_PATH) -> dict[str, Any]:
-    """Lisää tuloksen `split.hidden_attack`-kenttään. Muut luvut eivät muutu."""
-    m = json.loads(path.read_text("utf-8"))
-    if m.get("stub"):
-        raise ValueError("metrics.json on stub: aja ensin oikea arviointi (B-7)")
-    if m.get("data", {}).get("synthetic"):
-        raise ValueError("metrics.json on laskettu synteettisellä datalla")
-    if m.get("model_version") != hidden.get("model_version"):
-        raise ValueError(
-            f"mallin versio {hidden.get('model_version')} ≠ metrics.json "
-            f"{m.get('model_version')}: piilotettu hyökkäys pitää ajaa samalla mallilla"
-        )
-    if m.get("split", {}).get("hidden_attack"):
-        raise ValueError("split.hidden_attack on jo täytetty — tulosta ei ylikirjoiteta")
-    m.setdefault("split", {})["hidden_attack"] = dict(hidden)
-    path.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n", "utf-8")
-    return m
+    """Deprecated publication entry point; a model version cannot prove independence."""
+    raise ValueError(LEGACY_PUBLICATION_ERROR)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -114,14 +95,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--source", choices=("sample", "db"), default="db")
     ap.add_argument("--run", action="append", required=True, help="piilotetun hyökkäyksen ajo-ID")
     ap.add_argument("--offline", action="store_true", help="ei C:n DNS-hakuja eikä kampanjoita")
-    ap.add_argument("--write", action="store_true", help="lisää tulos metrics.json:iin")
+    ap.add_argument("--write", action="store_true", help="ei käytettävissä: käytä frozen evaluator")
     a = ap.parse_args(argv)
+    if a.write:
+        print(f"HUOM: {LEGACY_PUBLICATION_ERROR}")
+        return 1
 
     model = mdl.load_model()
     if model is None:
-        print("models/model.json puuttuu: opeta ja tallenna malli ensin (bouncer.eval.run --write)")
+        print("models/model.json puuttuu: tuotantomalli vaatii frozen native evaluator -julkaisun")
         return 1
-    sessions, labels, synthetic = load(a.source)
+    sessions, labels, _ = load(a.source)
     intel_fn = campaigns_fn = None
     if not a.offline:
         from bouncer.network import find_campaigns, ip_intel_contract
@@ -137,20 +121,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"HUOM: {e}")
         return 1
     print(
-        f"piilotettu hyökkäys {h['run_ids']} ({h['model_version']}, ei uudelleenopetusta): "
+        f"kehitysarviointi ajoille {h['run_ids']} ({h['model_version']}, ei uudelleenopetusta): "
         f"n={h['n']}, tunnistettu {h['bot_recall']}, epävarma {h['uncertain_share']}, "
         f"ilman ansoja {h['without_traps']['bot_recall']}"
     )
-    if a.write:
-        if synthetic:
-            print("HUOM: --write ohitettu, data on synteettistä")
-            return 1
-        try:
-            add_to_metrics(h)
-        except ValueError as e:
-            print(f"HUOM: {e}")
-            return 1
-        print("kirjoitettu: models/metrics.json (split.hidden_attack)")
     return 0
 
 

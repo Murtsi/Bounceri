@@ -69,7 +69,8 @@ jobs:
           uv run --no-sync pytest tests/a/test_migrations.py tests/a/test_traffic_repository.py
           tests/a/test_worker_postgres.py tests/a/test_import_persistence.py
           tests/a/test_source_lifecycle.py tests/a/test_backup_restore.py
-          tests/a/test_ingest_json_safety.py tests/a/test_participants.py -q
+          tests/a/test_ingest_json_safety.py tests/a/test_participants.py
+          tests/a/test_evaluation_ledger.py tests/b/test_frozen_evaluation.py -q
       - name: Python lint
         run: uv run --no-sync ruff check src tests notebooks tools/hostinger tools/datasets
 

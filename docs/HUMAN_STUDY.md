@@ -147,10 +147,12 @@ cannot establish that consent remains active.
 `bouncer.eval.study.build_reviewed_corpus()` keeps source/session/content identity,
 subject/collection groups, review revisions and missing-feature masks. It does not
 convert study observations into simulator labels or change the existing learned
-model. This increment does not make the legacy temporal training path safe for
-release evidence. The next phase must freeze participant/campaign/run/time groups,
-keep fit/calibration/test network context separate, and revalidate consent/review
-state before consuming a holdout.
+model. The [private frozen native workflow](FROZEN_EVALUATION.md) now keeps complete
+participant/campaign/run/time groups together, separates fit/calibration/test
+context and revalidates consent/review state before consuming a holdout. Legacy
+timestamp-only publication is disabled. Independently withheld attack provenance,
+actual independent collections and a verified production publisher remain separate
+unfinished gates.
 
 Public robot corpora, simulations, reviewed actual humans and independently
 withheld attacks require separate reports. Real-human false-positive quality,

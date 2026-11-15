@@ -24,11 +24,16 @@ def main(argv=None) -> int:
         from .participants import main as participants_main
 
         return participants_main(argv[1:])
+    if argv[:1] == ["frozen-evaluation"]:
+        from bouncer.eval.frozen_cli import main as frozen_main
+
+        return frozen_main(argv[1:])
     parser = argparse.ArgumentParser(
         description="Offline dataset provenance and native fixtures; no network or model calls."
     )
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("participants", help="Private consent and reviewed-session records.")
+    commands.add_parser("frozen-evaluation", help="Private frozen evaluation receipts and reports.")
     generate = commands.add_parser(
         "generate", help="Create new deterministic native synthetic data outside Git."
     )

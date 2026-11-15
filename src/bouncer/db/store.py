@@ -45,6 +45,36 @@ def traffic_repository():
     return _traffic_database(url) if url else None
 
 
+def shared_database_url(traffic_url: str | None = None) -> str:
+    """Require explicit traffic and investigation URLs identifying the same database."""
+    from sqlalchemy.engine import make_url
+    from sqlalchemy.exc import ArgumentError
+
+    traffic = (traffic_url if traffic_url is not None else os.getenv(
+        "BOUNCER_TRAFFIC_DATABASE_URL", "",
+    )).strip()
+    cases = os.getenv("BOUNCER_DATABASE_URL", "").strip()
+    if not traffic or not cases:
+        raise ValueError("explicit shared database configuration required")
+    try:
+        selected, configured = make_url(traffic), make_url(cases)
+        matches = selected.set(drivername=selected.get_backend_name()) == configured.set(
+            drivername=configured.get_backend_name(),
+        )
+    except (ArgumentError, TypeError, ValueError):
+        raise ValueError("invalid shared database configuration") from None
+    if not matches:
+        raise ValueError("commands require one shared database")
+    backend = selected.get_backend_name()
+    if backend in {"sqlite", "postgresql"} and not (selected.database or "").strip():
+        raise ValueError("an explicit persistent database is required")
+    if backend == "sqlite" and (
+        selected.database == ":memory:" or selected.database.startswith("file:") or selected.query
+    ):
+        raise ValueError("an explicit SQLite file without URL options is required")
+    return traffic
+
+
 def read_snapshot(*, path: Path | None = None) -> dict[str, Any]:
     repository = traffic_repository() if path is None else None
     if repository:

@@ -420,77 +420,80 @@ class StudyStore:
         return result
 
     def load_approved(self, source_keys) -> list[ReviewedSession]:
-        approved = []
         with self._transaction() as conn:
-            keys = sorted({_database_text(key) for key in source_keys})
-            # Acquire every selected source before study rows, matching multi-source withdrawal.
-            source_rows = {
-                row["source_key"]: row
-                for row in conn.execute(
-                    select(sources)
-                    .where(sources.c.source_key.in_(keys))
-                    .order_by(sources.c.source_key)
-                    .with_for_update()
-                ).mappings()
-            }
-            origins = {
-                row["source_key"]: row
-                for row in conn.execute(
-                    select(enrollments).where(enrollments.c.source_key.in_(keys))
-                ).mappings()
-            }
-            # Fresh stores may not have the budget singleton; subject order must stand alone.
-            subject_ids = {row["subject_id"] for row in origins.values()}
-            conn.execute(
-                select(subjects).where(subjects.c.subject_id.in_(subject_ids))
-                .order_by(subjects.c.subject_id).with_for_update()
-            ).all()
-            for key in keys:
-                origin = origins.get(key)
-                if origin is None or origin["status"] != "active":
+            return self._load_approved_connection(conn, source_keys)
+
+    def _load_approved_connection(self, conn, source_keys) -> list[ReviewedSession]:
+        approved = []
+        keys = sorted({_database_text(key) for key in source_keys})
+        # Acquire every selected source before study rows, matching multi-source withdrawal.
+        source_rows = {
+            row["source_key"]: row
+            for row in conn.execute(
+                select(sources)
+                .where(sources.c.source_key.in_(keys))
+                .order_by(sources.c.source_key)
+                .with_for_update()
+            ).mappings()
+        }
+        origins = {
+            row["source_key"]: row
+            for row in conn.execute(
+                select(enrollments).where(enrollments.c.source_key.in_(keys))
+            ).mappings()
+        }
+        # Fresh stores may not have the budget singleton; subject order must stand alone.
+        subject_ids = {row["subject_id"] for row in origins.values()}
+        conn.execute(
+            select(subjects).where(subjects.c.subject_id.in_(subject_ids))
+            .order_by(subjects.c.subject_id).with_for_update()
+        ).all()
+        for key in keys:
+            origin = origins.get(key)
+            if origin is None or origin["status"] != "active":
+                continue
+            try:
+                self._source(conn, key)
+                self._subject(conn, origin["subject_id"])
+                enrollment = self._enrollment(conn, origin["enrollment_id"])
+            except ValueError:
+                continue
+            session_map = {session.id: session for session in self.traffic._sessions(conn, key)}
+            latest = {}
+            for row in conn.execute(
+                select(reviews)
+                .where(reviews.c.enrollment_id == enrollment["enrollment_id"])
+                .order_by(reviews.c.revision)
+            ).mappings():
+                latest[row["external_session_id"]] = row
+            for sid, row in latest.items():
+                if row["status"] != "approved":
                     continue
                 try:
-                    self._source(conn, key)
-                    self._subject(conn, origin["subject_id"])
-                    enrollment = self._enrollment(conn, origin["enrollment_id"])
-                except ValueError:
+                    session = self._check_window(enrollment, session_map[sid])
+                except (ValueError, KeyError):
                     continue
-                session_map = {session.id: session for session in self.traffic._sessions(conn, key)}
-                latest = {}
-                for row in conn.execute(
-                    select(reviews)
-                    .where(reviews.c.enrollment_id == enrollment["enrollment_id"])
-                    .order_by(reviews.c.revision)
-                ).mappings():
-                    latest[row["external_session_id"]] = row
-                for sid, row in latest.items():
-                    if row["status"] != "approved":
-                        continue
-                    try:
-                        session = self._check_window(enrollment, session_map[sid])
-                    except (ValueError, KeyError):
-                        continue
-                    if session_digest(session) != row["digest"]:
-                        continue
-                    source_provenance = _source_provenance(source_rows[key]["snapshot"], sid)
-                    approved.append(
-                        ReviewedSession(
-                            session,
-                            key,
-                            enrollment["subject_id"],
-                            enrollment["enrollment_id"],
-                            row["review_id"],
-                            row["revision"],
-                            row["digest"],
-                            row["behavior"],
-                            row["intent"],
-                            dict(
-                                consent=enrollment["payload"],
-                                review=row["payload"],
-                                source=source_provenance,
-                            ),
-                        )
+                if session_digest(session) != row["digest"]:
+                    continue
+                source_provenance = _source_provenance(source_rows[key]["snapshot"], sid)
+                approved.append(
+                    ReviewedSession(
+                        session,
+                        key,
+                        enrollment["subject_id"],
+                        enrollment["enrollment_id"],
+                        row["review_id"],
+                        row["revision"],
+                        row["digest"],
+                        row["behavior"],
+                        row["intent"],
+                        dict(
+                            consent=enrollment["payload"],
+                            review=row["payload"],
+                            source=source_provenance,
+                        ),
                     )
+                )
         return approved
 
     def withdraw(self, subject_id, *, confirm_subject, writer_stopped) -> dict:

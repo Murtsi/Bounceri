@@ -1,12 +1,10 @@
-"""Mallin opetus + arviointi yhdellä kutsulla (B-6 + B-7).
+"""Mallin opetus + kehitysarviointi yhdellä kutsulla (B-6 + B-7).
 
     result, model = train_and_evaluate(dataset, sessions, synthetic=False, intel_by_ip=…)
-    write_metrics(result)                 # models/metrics.json
-    save_model(model, synthetic=False)    # models/model.json → score() käyttää sitä
 
-Tuotantomalli on täsmälleen se malli, jonka luvut `metrics.json` kertoo (opetettu
-vain opetusosalla, kynnykset kalibrointiosalta). Sitä ei opeteta uudelleen koko
-datalla, koska silloin luvut eivät enää kuvaisi tuotannossa olevaa mallia.
+Ajallinen jako ei varmista riippumattomia toimija-/ajo-/kampanjaryhmiä.
+Palautettu malli ja luvut ovat kehityskäyttöön; tuotantojulkaisu vaatii frozen
+native evaluator -polun lähde-, jäädytys- ja testikulutuskuitit sekä julkaisunäytön.
 """
 
 from __future__ import annotations

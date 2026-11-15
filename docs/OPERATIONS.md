@@ -111,3 +111,5 @@ Before rollout, run the PostgreSQL migration/lifecycle/restore tests, repository
 checks and the packaged private simulation. Check readiness and zero paid calls.
 Local smoke evidence does not establish live Hostinger health, DNS quality or
 real-human detection performance.
+
+Frozen native evaluations also bind their sources. A claimed evaluation blocks purge/withdrawal until its owning process stops and its receipt is explicitly closed as interrupted; completed or unavailable receipts are revoked and scrubbed by source deletion while minimal use hashes remain. See [private frozen evaluation and recovery](FROZEN_EVALUATION.md). Full archives include receipts/assignments; reconcile post-backup consumption and consent withdrawals before using a restored database.

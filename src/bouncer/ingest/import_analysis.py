@@ -270,8 +270,13 @@ def analyze_records(records: list[dict], synthetic: bool) -> dict:
         raise AnalysisError("Import analysis failed") from None
 
 
-def run_analysis(data: bytes, timeout: float) -> bytes:
+def run_analysis(data: bytes, timeout: float, *,
+                 worker_module: str = "bouncer.ingest.import_analysis") -> bytes:
     """Charge startup, process execution and bounded cleanup to one deadline."""
+    if worker_module not in {"bouncer.ingest.import_analysis", "bouncer.eval.frozen_analysis"}:
+        raise ValueError("Unknown offline worker")
+    output_limit = (16 * 1024**2 if worker_module == "bouncer.eval.frozen_analysis"
+                    else MAX_OUTPUT_BYTES)
     deadline = time.monotonic() + timeout
     cleanup_budget = min(.1, timeout / 4)
     # Provider credentials/config never enter this offline worker.
@@ -285,7 +290,7 @@ def run_analysis(data: bytes, timeout: float) -> bytes:
         source.write(data)
         source.seek(0)
         process = subprocess.Popen(
-            [sys.executable, "-m", "bouncer.ingest.import_analysis"],
+            [sys.executable, "-m", worker_module],
             shell=False, stdin=source, stdout=output, stderr=subprocess.DEVNULL, env=env,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
@@ -294,7 +299,7 @@ def run_analysis(data: bytes, timeout: float) -> bytes:
             if remaining <= 0:
                 raise subprocess.TimeoutExpired(process.args, timeout)
             status = process.wait(timeout=remaining)
-        except subprocess.TimeoutExpired:
+        except BaseException:
             process.kill()
             with suppress(subprocess.TimeoutExpired):
                 process.wait(timeout=max(0, min(cleanup_budget, deadline - time.monotonic())))
@@ -302,7 +307,7 @@ def run_analysis(data: bytes, timeout: float) -> bytes:
         if status != 0:
             raise OSError("import analysis child failed")
         output.seek(0)
-        return output.read(MAX_OUTPUT_BYTES + 1)
+        return output.read(output_limit + 1)
 
 
 def analyze_import(

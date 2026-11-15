@@ -383,6 +383,9 @@ class TrafficRepository:
         from bouncer.db.participants import purge_source_connection
 
         purge_source_connection(conn, source_key)
+        from bouncer.db.evaluations import purge_source_connection as purge_evaluations
+
+        purge_evaluations(conn, source_key)
         source_ids = select(sessions.c.id).where(sessions.c.source_key == source_key)
         for name, table, condition in (
             ("labels_deleted", labels, labels.c.session_id.in_(source_ids)),

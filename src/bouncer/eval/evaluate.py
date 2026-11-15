@@ -1,4 +1,4 @@
-"""Arviointi (B-7): kynnykset opetusjoukolla, luvut testijoukolla → S8-muoto.
+"""Kehitysarviointi (B-7): ajallinen jako ja S8-muotoinen kehitysraportti.
 
 Rehellisyyssäännöt (AGENTS.md §7, ARCHITECTURE.md §5), jotka tämä koodi pakottaa:
 
@@ -10,14 +10,15 @@ Rehellisyyssäännöt (AGENTS.md §7, ARCHITECTURE.md §5), jotka tämä koodi p
   `source == "dns"` -rivit jätetään luvuista pois ja niiden määrä raportoidaan.
 - Ihmisten FPR raportoidaan otoskoon ja 95 %:n Wilson-ylärajan kanssa: 0/40 ei
   todista, että FPR < 1 %.
-- Synteettisellä datalla laskettuja lukuja ei voi kirjoittaa `models/metrics.json`:iin.
+- Tämä ajallinen jako ei takaa riippumattomia toimija-/ajo-/kampanjaryhmiä.
+  Tuloksia ei voi julkaista tuotantoon; siihen tarvitaan frozen native evaluator
+  ja varmennetut lähde-, jäädytys- ja testikulutuskuitit.
 
 Päätökset 028–031.
 """
 
 from __future__ import annotations
 
-import json
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -26,13 +27,18 @@ from typing import Any
 
 from bouncer.contracts import Campaign, IpIntel, Label, Session, Verdict
 from bouncer.eval.dataset import Dataset, DatasetRow
-from bouncer.eval.metrics import METRICS_PATH, validate
+from bouncer.eval.metrics import METRICS_PATH
 from bouncer.eval.split import Split, temporal_split
 from bouncer.eval.weaknesses import KNOWN_WEAKNESSES
 
 Scorer = Callable[..., Verdict]
 #: `fit(opetusrivit, network) -> (scorer, malli)`. Malli palautetaan tallennusta varten.
 Fit = Callable[[Sequence[DatasetRow], bool], tuple[Scorer, Any]]
+
+LEGACY_PUBLICATION_ERROR = (
+    "legacy evaluation publication is unavailable: use the frozen native evaluator "
+    "with verified receipts and release evidence"
+)
 
 #: Opetusjakson myöhäisin osa, jolla kynnykset valitaan, kun mallia opetetaan (päätös 035).
 DEFAULT_CALIB_FRACTION = 0.25
@@ -208,7 +214,8 @@ def run_evaluation(
     """Koko B-7-arviointi. `scorer(session, intel, campaign, *, traps)` → Verdict.
 
     `synthetic=True` merkitsee, ettei luvuilla ole todistusarvoa (testidata).
-    `hidden`: piilotetun hyökkäyksen datasetti (B-11) — ei käytetä kynnyksiin.
+    `hidden`: kehityksen erilliset ajot (B-11) — ei käytetä kynnyksiin.
+    Tämä parametri ei todista hyökkäyksen riippumattomuutta tai ennakkosinetöintiä.
     `known_weaknesses=None` → `weaknesses.KNOWN_WEAKNESSES`.
 
     `fit` annettu (malli, B-6): opetusjakso jaetaan ajan mukaan opetukseen ja
@@ -305,16 +312,7 @@ def run_evaluation(
 
 
 def write_metrics(result: EvalResult, path: Path = METRICS_PATH) -> None:
-    """Kirjoittaa S8-tiedoston.
-
-    Kieltäytyy synteettisestä datasta ja kalibroimattomista kynnyksistä.
-    """
+    """Deprecated publication entry point; development results lack release receipts."""
     if result.synthetic:
         raise ValueError("synteettisen datan lukuja ei kirjoiteta metrics.json:iin")
-    if not result.thresholds.calibrated:
-        raise ValueError(f"kynnyksiä ei kalibroitu: {result.thresholds.note}")
-    errors = validate(result.metrics)
-    if errors:
-        raise ValueError(f"skeemavirheet: {errors}")
-    text = json.dumps(result.metrics, indent=2, ensure_ascii=False)
-    path.write_text(text + "\n", "utf-8")
+    raise ValueError(LEGACY_PUBLICATION_ERROR)

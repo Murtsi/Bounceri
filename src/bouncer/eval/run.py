@@ -1,18 +1,17 @@
-"""Yksi komento datasta lukuihin (B-7 + B-6): `python -m bouncer.eval.run`.
+"""Kehitysraportti ja ajallinen arviointi: `python -m bouncer.eval.run`.
 
     # A:n näyte (synteettinen), ilman DNS-hakuja:
     PYTHONPATH=src python -m bouncer.eval.run --source sample --offline
 
-    # Oikea data (A:n S3 `bouncer.db`), C:n IP-tiedot ja kampanjat, tallennus:
-    PYTHONPATH=src python -m bouncer.eval.run --source db --write --report notebooks/b/report.md
+    # Yksityinen kehitysraportti:
+    PYTHONPATH=src python -m bouncer.eval.run --source db --report notebooks/b/report.md
 
 Vaiheet: lataa sessiot + labelit → C:n `ip_intel()` + `find_campaigns()` →
-datasetti → piirreraportti + ihmishälytykset → mallin opetus ja arviointi →
-(`--write`) `models/metrics.json` + `models/model.json`.
+datasetti → piirreraportti + ihmishälytykset → mallin opetus ja kehitysarviointi.
 
-Rehellisyys: `--write` kieltäytyy synteettisestä datasta (näyte on aina
-synteettinen) ja kalibroimattomista kynnyksistä. Piilotetun hyökkäyksen ajot
-jätetään pois `--exclude-run`-valinnalla (B-11).
+`--write` ei ole käytettävissä: tämä polku ei varmista riippumatonta holdoutia.
+Tuotantojulkaisu edellyttää frozen native evaluator -polun varmennettuja kuitteja
+ja julkaisunäyttöä. `--exclude-run` ei yksin todista riippumatonta hyökkäystä.
 """
 
 from __future__ import annotations
@@ -27,10 +26,9 @@ from typing import Any
 
 from bouncer.contracts import IpIntel, Session, SessionLabel
 from bouncer.eval.dataset import build_dataset
-from bouncer.eval.evaluate import write_metrics
+from bouncer.eval.evaluate import LEGACY_PUBLICATION_ERROR
 from bouncer.eval.feature_report import feature_report, human_alarms, to_markdown
 from bouncer.eval.train import train_and_evaluate
-from bouncer.session import model as mdl
 from bouncer.session import rules
 
 #: Vähimmäismäärä kumpaakin luokkaa, jotta opetus/kalibrointi/testi -jako on mahdollinen.
@@ -119,6 +117,8 @@ def run(
     allow_site_labels: bool = True,
     unavailable_fields: Mapping[str, Collection[str]] | None = None,
 ) -> RunResult:
+    if write:
+        return RunResult(synthetic, {}, 0, error=LEGACY_PUBLICATION_ERROR)
     intel_by_ip, campaign_by_session = network_signals(
         sessions, intel_fn if allow_site_labels else None, campaigns_fn
     )
@@ -149,7 +149,7 @@ def run(
         return out
 
     try:
-        res, m = train_and_evaluate(
+        res, _ = train_and_evaluate(
             ds,
             {s.id: s for s in sessions},
             synthetic=synthetic,
@@ -161,17 +161,6 @@ def run(
         return out
     out.metrics = res.metrics
 
-    if write:
-        if synthetic:
-            out.error = "--write ohitettu: data on synteettistä (luvuilla ei todistusarvoa)"
-            return out
-        write_metrics(res, *([metrics_path] if metrics_path else []))
-        mdl.save_model(m, *([model_path] if model_path else []), synthetic=False)
-        out.written = [
-            str(metrics_path or "models/metrics.json"),
-            str(model_path or "models/model.json"),
-        ]
-        out.saved = True
     return out
 
 
@@ -209,9 +198,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--since", type=datetime.fromisoformat, default=None, help="db: alkaen (ISO)")
     ap.add_argument("--offline", action="store_true", help="ei C:n DNS-hakuja eikä kampanjoita")
     ap.add_argument("--exclude-run", action="append", default=[], help="piilotettu ajo (B-11)")
-    ap.add_argument("--write", action="store_true", help="kirjoita metrics.json + model.json")
+    ap.add_argument("--write", action="store_true", help="ei käytettävissä: käytä frozen evaluator")
     ap.add_argument("--report", type=Path, default=None, help="piirreraportti Markdownina")
     a = ap.parse_args(argv)
+    if a.write:
+        print(f"HUOM: {LEGACY_PUBLICATION_ERROR}")
+        return 1
 
     sessions, labels, synthetic = load(a.source, a.since)
     intel_fn = campaigns_fn = None

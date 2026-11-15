@@ -207,9 +207,16 @@ def test_write_metrics_refuses_synthetic(tmp_path):
     assert not (tmp_path / "m.json").exists()
 
 
-def test_write_metrics_writes_real_result(tmp_path):
+@pytest.mark.parametrize("existing", [False, True])
+def test_write_metrics_refuses_simulator_data_with_false_synthetic_flag(tmp_path, existing):
     sessions, ds, intel = _dataset()
     res = run_evaluation(ds, sessions, score, MODEL_VERSION, synthetic=False, intel_by_ip=intel)
     out = tmp_path / "m.json"
-    write_metrics(res, out)
-    assert json.loads(out.read_text("utf-8"))["stub"] is False
+    if existing:
+        out.write_text("existing production metrics", "utf-8")
+    with pytest.raises(ValueError, match="frozen native evaluator"):
+        write_metrics(res, out)
+    if existing:
+        assert out.read_text("utf-8") == "existing production metrics"
+    else:
+        assert not out.exists()

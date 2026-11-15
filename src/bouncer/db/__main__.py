@@ -8,10 +8,8 @@ import os
 import sys
 from datetime import datetime
 
-from sqlalchemy.engine import make_url
-
 from bouncer.db.cutover import backfill_json, export_json
-from bouncer.db.store import clear_store, seed_from_sample, store_path
+from bouncer.db.store import clear_store, seed_from_sample, shared_database_url, store_path
 from bouncer.db.traffic import SourcePurgeBlocked, TrafficRepository
 
 
@@ -68,22 +66,11 @@ def main(argv: list[str] | None = None) -> int:
             print("purge requires matching --confirm-source and --confirm-writer-stopped",
                   file=sys.stderr)
             return 2
-        case_url = os.getenv("BOUNCER_DATABASE_URL", "").strip()
-        if not case_url:
+        try:
+            database_url = shared_database_url(database_url)
+        except ValueError:
             print("purge requires explicit BOUNCER_DATABASE_URL matching the traffic database",
                   file=sys.stderr)
-            return 2
-        try:
-            selected = make_url(database_url)
-            configured = make_url(case_url)
-            if configured.set(drivername=configured.get_backend_name()) != selected.set(
-                drivername=selected.get_backend_name()
-            ):
-                print("purge refuses a different investigation database; use one shared database",
-                      file=sys.stderr)
-                return 2
-        except Exception:
-            print("purge-source failed; verify database configuration", file=sys.stderr)
             return 2
     if args.cmd == "prune":
         try:
