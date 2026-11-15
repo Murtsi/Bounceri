@@ -19,66 +19,93 @@ const MEDIA = `${import.meta.env.BASE_URL}media/`;
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
 /**
- * Tunnelmatausta: demovideon pieni, äänetön versio sumennettuna heron takana.
- * Pysähtyy, kun hero ei ole näkyvissä; vähennetty liike → pelkkä pysäytyskuva.
+ * Demovideo modaalissa (natiivi <dialog>: fokus ja Esc). Aukeaa zoomaamalla
+ * painikkeen kohdalta täyteen kokoon ja palaa sulkiessa takaisin painikkeeseen.
+ * Vähennetty liike: pelkkä häivytys.
  */
-function HeroBackdrop() {
-  const ref = useRef<HTMLVideoElement>(null);
-  const [reduced] = useState(reducedMotion);
-  useEffect(() => {
-    const v = ref.current;
-    if (!v || reduced) return;
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) void v.play().catch(() => {});
-      else v.pause();
-    });
-    io.observe(v);
-    return () => io.disconnect();
-  }, [reduced]);
-  return (
-    <div className="lp-hero-bg" aria-hidden="true">
-      <video
-        ref={ref}
-        src={reduced ? undefined : `${MEDIA}bouncer-demo-bg.mp4`}
-        poster={`${MEDIA}bouncer-demo-poster.jpg`}
-        muted
-        loop
-        playsInline
-        autoPlay={!reduced}
-        preload={reduced ? "none" : "auto"}
-        tabIndex={-1}
-      />
-    </div>
-  );
-}
-
-/** Demovideo modaalissa: natiivi <dialog> (fokus, Esc), ääni ja säätimet päällä. */
-function DemoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function DemoDialog({
+  open,
+  origin,
+  onClose,
+}: {
+  open: boolean;
+  origin: React.RefObject<HTMLElement | null>;
+  onClose: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
+  const closing = useRef(false);
+
+  // Siirtymä painikkeen keskeltä kehyksen keskelle (px) ja pieni alkuskaala.
+  const fromButton = () => {
+    const b = origin.current?.getBoundingClientRect();
+    const f = frame.current?.getBoundingClientRect();
+    if (!b || !f) return "scale(0.9)";
+    const dx = b.left + b.width / 2 - (f.left + f.width / 2);
+    const dy = b.top + b.height / 2 - (f.top + f.height / 2);
+    const s = Math.max(0.06, b.width / f.width);
+    return `translate(${dx}px, ${dy}px) scale(${s})`;
+  };
+
   useEffect(() => {
     const d = dialog.current;
-    if (!d) return;
-    if (open && !d.open) {
-      d.showModal();
-      void video.current?.play().catch(() => {});
-    } else if (!open && d.open) d.close();
+    if (!d || !open || d.open) return;
+    d.showModal();
+    closing.current = false;
+    const anim = reducedMotion()
+      ? frame.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease-out" })
+      : frame.current?.animate(
+          [
+            { transform: fromButton(), opacity: 0.4, borderRadius: "999px" },
+            { transform: "none", opacity: 1, borderRadius: "18px" },
+          ],
+          { duration: 560, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+        );
+    // Video käynnistyy, kun zoomaus on perillä.
+    if (anim) anim.onfinish = () => void video.current?.play().catch(() => {});
+    else void video.current?.play().catch(() => {});
+    // fromButton lukee DOMia avaushetkellä; riippuvuus vain `open`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const close = () => {
+    const d = dialog.current;
+    if (!d?.open || closing.current) return;
+    closing.current = true;
+    video.current?.pause();
+    const anim = reducedMotion()
+      ? frame.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: "ease-in" })
+      : frame.current?.animate(
+          [
+            { transform: "none", opacity: 1, borderRadius: "18px" },
+            { transform: fromButton(), opacity: 0, borderRadius: "999px" },
+          ],
+          { duration: 340, easing: "cubic-bezier(0.7, 0, 0.84, 0)" },
+        );
+    const done = () => {
+      d.close();
+      onClose();
+    };
+    if (anim) anim.onfinish = done;
+    else done();
+  };
+
   return (
     <dialog
       ref={dialog}
       className="lp-dialog"
       aria-label="Bounceri demo video"
-      onClose={() => {
-        video.current?.pause();
-        onClose();
+      onCancel={(e) => {
+        // Esc: suljetaan animaation kautta.
+        e.preventDefault();
+        close();
       }}
       onClick={(e) => {
-        // Klikkaus taustalle (dialogin ulkopuolelle) sulkee.
-        if (e.target === dialog.current) dialog.current?.close();
+        if (e.target === dialog.current) close();
       }}
     >
-      <div className="lp-dialog-frame">
+      <div ref={frame} className="lp-dialog-frame">
         <video
           ref={video}
           src={`${MEDIA}bouncer-demo.mp4`}
@@ -87,7 +114,7 @@ function DemoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
           playsInline
           preload="metadata"
         />
-        <button type="button" className="lp-dialog-close" onClick={() => dialog.current?.close()} aria-label="Close video">
+        <button type="button" className="lp-dialog-close" onClick={close} aria-label="Close video">
           <X aria-hidden="true" />
         </button>
       </div>
@@ -139,6 +166,7 @@ const MODULES = [
 export default function Landing({ open }: { open: (t: Target) => void }) {
   const [mode, setMode] = useState<GateMode>("idle");
   const [demoOpen, setDemoOpen] = useState(false);
+  const demoButton = useRef<HTMLButtonElement>(null);
   // Merkintä "synthetic" vain, kun API kertoo datan olevan synteettistä (ei kovakoodattuna).
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
   const synthetic = summary?.synthetic === true;
@@ -168,7 +196,6 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
       <main>
         {/* Hero: lupaus vasemmalla, elävä porttikoppi oikealla. */}
         <section className="lp-hero" aria-labelledby="lp-title">
-          <HeroBackdrop />
           <div className="lp-hero-copy">
             {/* Otsikon "Bouncer" on sama logo kuin latausruudussa: B:n alakaari ponnauttaa "ouncer"-sanan. */}
             <h1 id="lp-title">
@@ -182,7 +209,7 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
               <button type="button" className="lp-cta" onClick={() => open("overview")}>
                 Open the live dashboard <ArrowRight aria-hidden="true" />
               </button>
-              <button type="button" className="lp-ghost" onClick={() => setDemoOpen(true)}>
+              <button ref={demoButton} type="button" className="lp-ghost" onClick={() => setDemoOpen(true)}>
                 <Play aria-hidden="true" /> Watch the 20-second demo
               </button>
               <button type="button" className="lp-ghost lp-ghost-quiet" onClick={() => jump("how")}>
@@ -303,7 +330,7 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
         </section>
       </main>
 
-      <DemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
+      <DemoDialog open={demoOpen} origin={demoButton} onClose={() => setDemoOpen(false)} />
 
       <footer className="lp-foot">
         <span>Built in 48 hours at Junction 2026 by Murtsi, Niko and Joonas for Hostinger’s Decode the Noise.</span>
