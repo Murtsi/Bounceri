@@ -371,3 +371,12 @@ classifier label, counts, filters and detail verdict retain uncertainty. Explain
 that assets do not prove a human and tool signatures do not prove abuse. This is
 an evidence presentation change, with no trained model or accuracy improvement
 claimed. Keep the current design's neutral badge and existing drill-down.
+
+### 085 — Distinguish activity observations with color
+
+2026-11-15. The owner requested distinct activity colors because every uncertain
+observation looked like missing evidence. Use cyan for browser-like observations,
+violet for automation signals and the existing gray for insufficient evidence.
+Retain existing human/verified-bot/bad-bot colors. Apply the color to the badge's
+dot, text, outline and subtle fill; preserve readable status names and uncertainty
+tooltips. Color conveys observation type, not a stronger classifier verdict.

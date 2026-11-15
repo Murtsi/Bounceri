@@ -2,6 +2,10 @@
 
 ## Nykyinen toteutustyö — 2026-11-14
 
+Post-submission local-only polish: activity badge colors distinguish browsing,
+automation and insufficient evidence. Typecheck/build and desktop/mobile visual
+checks pass; publication remains frozen pending explicit owner instruction.
+
 Final submission: captured-evidence plans are merged into main. Public activity
 badges separate observed browsing/automation from the uncertain classifier label;
 classification counts and model/evidence gates remain unchanged. All 31 branch

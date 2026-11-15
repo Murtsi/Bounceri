@@ -14,6 +14,8 @@ colors:
   verdict-good-bot: "#26a088"
   verdict-bad-bot: "#bf8418"
   verdict-uncertain: "#8a958c"
+  activity-browser-like: "#67c6e3"
+  activity-automation-signal: "#bb9af7"
   status-good: "#4cc764"
   status-warning: "#fab219"
   status-serious: "#ec835a"

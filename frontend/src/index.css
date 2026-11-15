@@ -36,6 +36,8 @@
   --series-good: #26a088;
   --series-bad: #bf8418;
   --series-uncertain: #8a958c;
+  --activity-browser: #67c6e3;
+  --activity-automation: #bb9af7;
   --grid: rgba(255, 255, 255, 0.07);
   --axis: rgba(255, 255, 255, 0.14);
   --ink-muted: rgba(226, 236, 220, 0.55);

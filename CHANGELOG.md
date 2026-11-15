@@ -57,6 +57,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] Preserve the shelved 3D gatehouse experiment in `frontend/src/views/GatehouseConcept.tsx`; it is not rendered or included in the active frontend bundle.
 
 ### Changed
+- [A] Activity tags use cyan for browser-like behavior, violet for automation signals and gray for insufficient evidence; verdict badges retain their existing class colors with matching text, borders and subtle fills (decision 085).
 - [X] Branch audit reconciles all 31 local/remote refs; completed captured-evidence evaluation wiring is merged, and historical branch additions retain their files and all 155 checked test functions in main.
 - [X] Final submission progress records the verified API explanation update and the separately tested captured-evidence branch; live service health and unchanged paid-review ledger were checked.
 - [X] Submission handoff records the live research preview, public source access, prepared PDF/form copy and explicit remaining work; hosted CI availability is distinguished from local/live verification.
