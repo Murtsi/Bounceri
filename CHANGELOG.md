@@ -19,6 +19,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [B] Private frozen evaluation plans can select captured runtime evidence, bind it through preparation and cached replay, and report four network/trap ablations; missing captures remain unavailable and production metrics stay gated (decision 082).
 - [B] Historical reply-targeting research preview uses the attributed CC BY 4.0 Zenodo corpus, first-row post deduplication and a train-only one-feature baseline with frozen tweet-ID partitions. Metrics show selected-control errors and missing actor/campaign independence explicitly; this does not enable the full social-swarm module or change native bot quality.
 - [A] BREAKING: Additive migration 009 records private independent-attack commitments and candidate-bound reveals without claiming verified authorship; scoring/controller integration remains pending. Private bounded runtime-input capture supports exact session evidence, with offline evaluation still the default.
 - [A] BREAKING: Additive migration 008 records canonical native preparations, global development/holdout assignments, source bindings and immutable artifact/report digests; one-shot claims survive failure/restart, source deletion revokes private payloads, and active evaluations require explicit stopped-worker recovery before purge.

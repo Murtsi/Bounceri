@@ -5,6 +5,11 @@
 2026-11-15 submission fix: public session explanations now retain fixed safe
 rule/behavior observations. Rules-only normal traffic still has unverified
 identity; a trained real-world model and actual-human evaluation remain open.
+2026-11-15 isolated follow-up: private frozen plans now wire the captured runtime
+profile through reference binding, four network/trap ablations and cached-report
+revalidation (decision 082). Focused evaluator/CLI checks pass; PostgreSQL checks
+were not rerun. The hackathon live release is unchanged. Independent attack
+scoring/publication and the three full new modules remain unfinished.
 
 Työjärjestys: [modules plan.md](../../modules%20plan.md). Kaistat kuvaavat
 oletusvastuita, eivät muokkauskieltoja (AGENTS.md, päätös 044).

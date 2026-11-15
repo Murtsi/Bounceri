@@ -109,9 +109,23 @@ and calibration. Network and no-network variants have independent fitted models.
 Calibration uses model probabilities; test labels come directly from the shared
 native cascade, including its hard-rule priority. Learned abstention thresholds
 cannot erase a deterministic rule's false alarm from the evaluation.
-Campaign context is computed separately for each role and declared run. DNS and
-project traps are disabled; ambient model files are never loaded. Missing
-evidence is reported unavailable rather than invented.
+Campaign context is computed separately for each role and declared run. The
+default `offline` evidence profile disables DNS and project traps; ambient model
+files are never loaded. Missing evidence is reported unavailable rather than
+invented.
+
+To replay the private runtime evidence captured with approved study sessions,
+add `"evidence_profile": "captured"` to the plan before `prepare`. The same private
+CLI freezes and evaluates this profile; no separate flag is required. It creates
+four network/trap ablations using only the captured effective inputs. It never
+looks up current DNS or substitutes the current site's trap configuration.
+Missing or invalid captures stay unavailable and reduce reported coverage.
+Captured inputs and their digests are revalidated before fitting, holdout scoring
+and cached report replay. A changed capture invalidates the preparation rather
+than silently rescoring it. The worker's artifact profile must match the frozen
+plan. Omitting the key retains the existing offline plan format. This wiring does
+not publish production metrics, establish real participants or complete the
+independent-attack/release gates.
 
 Preparation's child physically receives fit/calibration data only; scoring's
 child receives test data only. Workers have fixed module entrypoints, minimal
