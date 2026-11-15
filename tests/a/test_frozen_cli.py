@@ -214,7 +214,10 @@ def test_output_race_preserves_file_not_owned_by_command(command, monkeypatch, t
     assert not capsys.readouterr().out
 
 
-def test_cli_sqlite_native_fixture_roundtrip_is_private_and_cached(tmp_path, monkeypatch, capsys):
+@pytest.mark.parametrize("profile", [None, "captured"])
+def test_cli_sqlite_native_fixture_roundtrip_is_private_and_cached(
+    tmp_path, monkeypatch, capsys, profile,
+):
     from bouncer.db.participants import StudyStore
     from bouncer.eval import frozen
     from bouncer.eval.frozen_analysis import evaluate_artifacts, prepare_artifacts
@@ -245,6 +248,8 @@ def test_cli_sqlite_native_fixture_roundtrip_is_private_and_cached(tmp_path, mon
             "test": {"from": "2026-01-01T02:00:00Z", "until": "2026-11-16T00:00:00Z"},
         },
     }
+    if profile is not None:
+        plan["evidence_profile"] = profile
     path = tmp_path / "plan.json"
     path.write_text(json.dumps(plan), encoding="utf-8")
     assert frozen_cli.main(["prepare", "--plan", str(path)]) == 0
@@ -264,6 +269,7 @@ def test_cli_sqlite_native_fixture_roundtrip_is_private_and_cached(tmp_path, mon
         assert "collection-a" not in printed.out + printed.err
         envelope = json.loads(report_path.read_text(encoding="utf-8"))
         assert envelope["report"]["production_quality"] is None
+        assert len(envelope["report"]["variants"]) == (4 if profile == "captured" else 2)
         reports.append(envelope["report"])
     assert reports[0] == reports[1]
     assert frozen_cli.main(["status", "--preparation", identifier]) == 0

@@ -104,11 +104,13 @@ def fingerprint() -> dict:
 
 
 def _plan(value):
-    if (type(value) is not dict or set(value) != {
+    if (type(value) is not dict or set(value) - {"evidence_profile"} != {
         "schema_version", "detector", "collections", "synthetic_manifests", "windows",
         } or value["schema_version"] != "frozen-native-plan-v1"
             or type(value["detector"]) is not str
-            or value["detector"] not in {"rules", "logistic"}):
+            or value["detector"] not in {"rules", "logistic"}
+            or type(value.get("evidence_profile", "offline")) is not str
+            or value.get("evidence_profile", "offline") not in {"offline", "captured"}):
         raise ValueError("invalid frozen native plan")
     # Round-trip before reading sources: no aliases, arbitrary objects or non-finite metadata.
     try:
@@ -193,7 +195,8 @@ class FrozenEvaluator:
         sources = [row.get("source_key") for row in collections]
         current = self.study._load_approved_connection(conn, sources)
         references = build_references(current, collections,
-                                      [Path(path) for path in plan["synthetic_manifests"]])
+                                      [Path(path) for path in plan["synthetic_manifests"]],
+                                      evidence_profile=plan.get("evidence_profile", "offline"))
         partition = partition_examples(references.examples, windows)
         if not partition["roles"]["test"]:
             raise ValueError("no eligible native holdout observations")
@@ -239,8 +242,13 @@ class FrozenEvaluator:
         # The reservation commits before fitting; consent/source locks cover the bounded fit.
         with self.study._transaction() as conn:
             references, partition = self._current(conn, record)
-            analysis = prepare_in_worker(references, partition, detector=plan["detector"])
+            analysis = prepare_in_worker(
+                references, partition, detector=plan["detector"],
+                evidence_profile=plan.get("evidence_profile", "offline"),
+            )
             validate_artifacts(analysis)
+            if analysis["config"]["evidence_profile"] != plan.get("evidence_profile", "offline"):
+                raise ValueError("candidate evidence profile changed during preparation")
             if (analysis["detector"] != plan["detector"]
                     or fingerprint() != record["descriptor"]["fingerprint"]):
                 raise ValueError("candidate fingerprint changed during preparation")
@@ -259,7 +267,12 @@ class FrozenEvaluator:
             raise ValueError("frozen evaluation artifact changed")
         if artifacts["analysis"].get("detector") != record["descriptor"]["plan"]["detector"]:
             raise ValueError("frozen evaluation detector changed")
-        return validate_artifacts(artifacts["analysis"])
+        analysis = validate_artifacts(artifacts["analysis"])
+        if analysis["config"]["evidence_profile"] != record["descriptor"]["plan"].get(
+            "evidence_profile", "offline",
+        ):
+            raise ValueError("frozen evaluation evidence profile changed")
+        return analysis
 
     def evaluate(self, preparation_id):
         record = self.ledger.get(preparation_id)

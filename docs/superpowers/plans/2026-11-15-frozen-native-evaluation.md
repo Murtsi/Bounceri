@@ -57,6 +57,9 @@ publisher must validate frozen receipts and actual evidence gates.
 - [ ] Add sealed/reveal metadata for independently authored attacks, including
   pre-freeze commitment and post-freeze reveal checks. Without actual supplied
   author/evidence this report remains unavailable, never simulated as fulfilled.
+- [x] Connect the captured runtime evidence profile through private plan parsing,
+  reference rebuilding, CPU preparation and receipt/cache revalidation. Reject
+  worker profile mismatches; retain offline defaults and unavailable captures.
 - [ ] Report actual-human counts/FPR/uncertainty and independent-subject/run
   support separately from simulation, unknown-intent automation, public ROBOT and
   independently withheld evidence. Production metrics stay null until their

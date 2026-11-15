@@ -334,3 +334,19 @@ Revisit if: the owner prefers the overview as home after the pitch, or a separat
 2026-11-15. Owner set a45-minute submission deadline and atmost30minutes for one additional integration. Keep the working traffic MVP and add a narrow attributed public-data research preview instead of claiming a complete social detector. RQ2 from Zenodo13896309 is CC BY4.0,7.7MB/7816rows/99numericfeatures; first-row post deduplication yields7732posts with3866targeted/3866selectedcontrols. IDs/text/rows are not redistributed. Historical labels identify targeted posts versus selected controls, not bots, maliciousness, operator identity or present-day coordination. Actor/campaign grouping is unavailable.
 
 Freeze SHA256 tweet-ID70/15/15 splits before fitting a predeclared mean_cosine decision stump; direction/threshold use training balanced accuracy only. Test1215:TP373/FP264/TN334/FN244,precision58.56%,recall60.45%,selected-controlFPR44.15%,F159.49%,zeroabstention. Show counts/intervals, selection bias and unverified actor/campaign independence explicitly. This weak baseline is an exploratory supplement, not production quality. Full Spot the Swarm and other future module flags remain unavailable; native production metrics/models stay untouched. The source CSV stays outside Git; only aggregate report/code/UI/source attribution ship. CLEF restricted access is not bypassed. The PDF pitch and form copy distinguish implemented traffic MVP, research preview and remaining work.
+
+### 082 — Explicit captured evidence in frozen native plans
+
+2026-11-15. The worker already captures effective runtime inputs and the bounded
+evaluation CPU supports four network/trap ablations. Connect those existing
+components through the private frozen evaluator using optional plan field
+`evidence_profile: captured`. Omitted profiles remain offline; retain omitted keys
+so old plan normalization does not acquire new metadata implicitly. Freeze the
+profile with the plan, bind captured inputs when rebuilding references, and check
+the worker artifact profile both before freezing and before consuming/replaying
+a holdout. A worker cannot silently downgrade a captured plan to offline.
+
+Missing captures remain unavailable; no fresh DNS, current trap configuration or
+invented human/attack evidence may substitute for them. Production publication
+and independent attack integration remain separate unfinished gates. This work
+is isolated from the hackathon release and does not alter live services.

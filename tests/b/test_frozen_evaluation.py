@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -58,6 +59,64 @@ def test_prepare_freezes_before_test_and_exact_evaluation_replay_is_cached(
     monkeypatch.setattr(frozen, "evaluate_in_worker", lambda *args: pytest.fail("rescored"))
     second = evaluator.evaluate(identifier)
     assert second["cached"] is True and second["report"] == first["report"]
+
+
+def test_captured_plan_replays_bound_context_and_revalidates_cached_results(
+    evaluation, monkeypatch,
+):
+    from bouncer.eval import frozen
+    from tests.b.test_native_references import runtime_wrapper
+
+    evaluator, plan, _ = evaluation
+    plan["evidence_profile"] = "captured"
+    load = evaluator.study._load_approved_connection
+    changed = False
+
+    def captured(conn, sources):
+        rows = load(conn, sources)
+        return [replace(row, provenance=row.provenance | {
+            "source": row.provenance["source"] | {
+                "runtime_context": runtime_wrapper(
+                    row.session, traps=("/changed-private-trap" if changed else "/private-trap",),
+                ),
+            },
+        }) for row in rows]
+
+    monkeypatch.setattr(evaluator.study, "_load_approved_connection", captured)
+    prepared = evaluator.prepare(plan)
+    assert prepared["descriptor"]["plan"]["evidence_profile"] == "captured"
+    analysis = prepared["artifacts"]["analysis"]
+    assert analysis["config"]["evidence_profile"] == "captured"
+    assert len(analysis["variants"]) == 4
+    first = evaluator.evaluate(prepared["preparation_id"])
+    assert first["report"]["production_quality"] is None
+    assert len(first["report"]["variants"]) == 4
+    monkeypatch.setattr(frozen, "evaluate_in_worker", lambda *args: pytest.fail("rescored"))
+    assert evaluator.evaluate(prepared["preparation_id"])["cached"] is True
+    changed = True
+    with pytest.raises(ValueError, match="references changed"):
+        evaluator.evaluate(prepared["preparation_id"])
+
+
+def test_captured_plan_rejects_worker_profile_downgrade(evaluation, monkeypatch):
+    from bouncer.eval import frozen
+    from bouncer.eval.frozen_analysis import prepare_artifacts
+
+    evaluator, plan, _ = evaluation
+    plan["evidence_profile"] = "captured"
+    monkeypatch.setattr(frozen, "prepare_in_worker", lambda refs, part, **kwargs:
+                        prepare_artifacts(refs, part, detector=kwargs["detector"]))
+    with pytest.raises(ValueError, match="profile"):
+        evaluator.prepare(plan)
+
+
+@pytest.mark.parametrize("profile", [None, True, 1, [], {}, "live", "CAPTURED"])
+def test_invalid_evidence_profile_rejected_before_sources(evaluation, profile, monkeypatch):
+    evaluator, plan, _ = evaluation
+    plan["evidence_profile"] = profile
+    monkeypatch.setattr(evaluator, "_references", lambda *args: pytest.fail("loaded sources"))
+    with pytest.raises(ValueError, match="plan"):
+        evaluator.prepare(plan)
 
 
 def test_fingerprint_changes_refuse_test_before_consumption(evaluation, monkeypatch):
