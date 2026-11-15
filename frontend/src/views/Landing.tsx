@@ -1,7 +1,7 @@
 import "./Landing.css";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, Play, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/api";
 import { BouncerLogo } from "@/components/BouncerLogo";
 import { GatehouseScene, type GateMode } from "@/views/GatehouseScene";
@@ -14,6 +14,86 @@ import { GatehouseScene, type GateMode } from "@/views/GatehouseScene";
  */
 
 type Target = "overview" | "metrics" | "sessions";
+
+const MEDIA = `${import.meta.env.BASE_URL}media/`;
+const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+/**
+ * Tunnelmatausta: demovideon pieni, äänetön versio sumennettuna heron takana.
+ * Pysähtyy, kun hero ei ole näkyvissä; vähennetty liike → pelkkä pysäytyskuva.
+ */
+function HeroBackdrop() {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [reduced] = useState(reducedMotion);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || reduced) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) void v.play().catch(() => {});
+      else v.pause();
+    });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [reduced]);
+  return (
+    <div className="lp-hero-bg" aria-hidden="true">
+      <video
+        ref={ref}
+        src={reduced ? undefined : `${MEDIA}bouncer-demo-bg.mp4`}
+        poster={`${MEDIA}bouncer-demo-poster.jpg`}
+        muted
+        loop
+        playsInline
+        autoPlay={!reduced}
+        preload={reduced ? "none" : "auto"}
+        tabIndex={-1}
+      />
+    </div>
+  );
+}
+
+/** Demovideo modaalissa: natiivi <dialog> (fokus, Esc), ääni ja säätimet päällä. */
+function DemoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const d = dialog.current;
+    if (!d) return;
+    if (open && !d.open) {
+      d.showModal();
+      void video.current?.play().catch(() => {});
+    } else if (!open && d.open) d.close();
+  }, [open]);
+  return (
+    <dialog
+      ref={dialog}
+      className="lp-dialog"
+      aria-label="Bounceri demo video"
+      onClose={() => {
+        video.current?.pause();
+        onClose();
+      }}
+      onClick={(e) => {
+        // Klikkaus taustalle (dialogin ulkopuolelle) sulkee.
+        if (e.target === dialog.current) dialog.current?.close();
+      }}
+    >
+      <div className="lp-dialog-frame">
+        <video
+          ref={video}
+          src={`${MEDIA}bouncer-demo.mp4`}
+          poster={`${MEDIA}bouncer-demo-poster.jpg`}
+          controls
+          playsInline
+          preload="metadata"
+        />
+        <button type="button" className="lp-dialog-close" onClick={() => dialog.current?.close()} aria-label="Close video">
+          <X aria-hidden="true" />
+        </button>
+      </div>
+    </dialog>
+  );
+}
 
 const STEPS = [
   {
@@ -58,6 +138,7 @@ const MODULES = [
 
 export default function Landing({ open }: { open: (t: Target) => void }) {
   const [mode, setMode] = useState<GateMode>("idle");
+  const [demoOpen, setDemoOpen] = useState(false);
   // Merkintä "synthetic" vain, kun API kertoo datan olevan synteettistä (ei kovakoodattuna).
   const { data: summary } = useQuery({ queryKey: ["summary"], queryFn: api.summary });
   const synthetic = summary?.synthetic === true;
@@ -87,6 +168,7 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
       <main>
         {/* Hero: lupaus vasemmalla, elävä porttikoppi oikealla. */}
         <section className="lp-hero" aria-labelledby="lp-title">
+          <HeroBackdrop />
           <div className="lp-hero-copy">
             {/* Otsikon "Bouncer" on sama logo kuin latausruudussa: B:n alakaari ponnauttaa "ouncer"-sanan. */}
             <h1 id="lp-title">
@@ -100,7 +182,10 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
               <button type="button" className="lp-cta" onClick={() => open("overview")}>
                 Open the live dashboard <ArrowRight aria-hidden="true" />
               </button>
-              <button type="button" className="lp-ghost" onClick={() => jump("how")}>
+              <button type="button" className="lp-ghost" onClick={() => setDemoOpen(true)}>
+                <Play aria-hidden="true" /> Watch the 20-second demo
+              </button>
+              <button type="button" className="lp-ghost lp-ghost-quiet" onClick={() => jump("how")}>
                 How it works <ChevronDown aria-hidden="true" />
               </button>
             </div>
@@ -217,6 +302,8 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
           </button>
         </section>
       </main>
+
+      <DemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
 
       <footer className="lp-foot">
         <span>Built in 48 hours at Junction 2026 by Murtsi, Niko and Joonas for Hostinger’s Decode the Noise.</span>
