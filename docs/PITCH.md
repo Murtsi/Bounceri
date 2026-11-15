@@ -43,4 +43,3 @@ Our separate synthetic test observed zero false positives among fourteen simulat
 Our team brings together platform engineering, session detection and network analysis. Next, we want a consented pilot with small website owners and Hostinger support teams: real logs, independently reviewed sessions and measured false alarms.
 
 Help us test whether this makes their next traffic decision clearer.
-
