@@ -68,6 +68,7 @@ def _row(s: dict[str, Any], v: dict[str, Any], truth: dict[str, str]) -> dict[st
         "ended_at": s["ended_at"],
         "n_requests": len(s["requests"]),
         "label": v.get("label", "uncertain"),
+        "activity": v.get("activity"),
         "score": v.get("score"),
         "reason": (v.get("reasons") or [""])[0],
         "campaign_id": v.get("campaign_id"),

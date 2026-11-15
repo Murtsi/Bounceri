@@ -2,6 +2,12 @@
 
 ## Nykyinen toteutustyö — 2026-11-14
 
+Final submission: captured-evidence plans are merged into main. Public activity
+badges separate observed browsing/automation from the uncertain classifier label;
+classification counts and model/evidence gates remain unchanged. All 31 branch
+refs were audited for completed missing work; historical additions retain their
+files and all 155 checked test functions. Full new modules remain unfinished.
+
 2026-11-15 submission fix: public session explanations now retain fixed safe
 rule/behavior observations. Rules-only normal traffic still has unverified
 identity; a trained real-world model and actual-human evaluation remain open.

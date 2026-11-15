@@ -1,6 +1,7 @@
 // Tyypit vastaavat bouncer.api.app-vastauksia (MVP). OpenAPI-generointi (päätös 006) myöhemmin.
 
 export type Label = "bad_bot" | "good_bot" | "human" | "uncertain";
+export type Activity = "browser_like" | "automation_signal" | "insufficient_evidence";
 
 export interface Summary {
   updated_at: string | null;
@@ -20,6 +21,7 @@ export interface SessionRow {
   ended_at: string;
   n_requests: number;
   label: Label;
+  activity?: Activity | null;
   score: number | null;
   reason: string;
   campaign_id: string | null;

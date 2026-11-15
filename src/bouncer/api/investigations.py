@@ -93,6 +93,18 @@ def _public_verdict_reasons(snapshot: dict, sid: str, label: str) -> list[str]:
     return [f"Local detector label: {label}."]
 
 
+def _public_activity(snapshot: dict, sid: str, label: str) -> str | None:
+    if label != "uncertain":
+        return None
+    features = snapshot.get("rule_observations", {}).get(sid, {}).get("features", {})
+    if features.get("ua_is_tool") is True:
+        return "automation_signal"
+    if all(type(features.get(key)) in (int, float) and 0 < features[key] <= 1
+           for key in ("static_share", "html_share")):
+        return "browser_like"
+    return "insufficient_evidence"
+
+
 def public_legacy(snapshot: dict) -> dict:
     """Project before enrichment so generated prose cannot leak raw identifiers."""
     if snapshot.get("synthetic") is not True:
@@ -156,6 +168,7 @@ def public_legacy(snapshot: dict) -> dict:
         reasons = _public_verdict_reasons(snapshot, sid, label)
         verdicts[sid] = {
             "label": label,
+            "activity": _public_activity(snapshot, sid, label),
             "score": verdict.get("score"),
             "reasons": reasons,
             "explanation": " ".join(reasons) if snapshot.get("rule_observations", {}).get(sid)

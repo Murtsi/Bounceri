@@ -19,6 +19,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] Session and live-feed badges distinguish observed browser-like activity, automation signals and insufficient evidence, while retaining the uncertain classifier verdict in session details (decision 084).
 - [B] Private frozen evaluation plans can select captured runtime evidence, bind it through preparation and cached replay, and report four network/trap ablations; missing captures remain unavailable and production metrics stay gated (decision 082).
 - [B] Historical reply-targeting research preview uses the attributed CC BY 4.0 Zenodo corpus, first-row post deduplication and a train-only one-feature baseline with frozen tweet-ID partitions. Metrics show selected-control errors and missing actor/campaign independence explicitly; this does not enable the full social-swarm module or change native bot quality.
 - [A] BREAKING: Additive migration 009 records private independent-attack commitments and candidate-bound reveals without claiming verified authorship; scoring/controller integration remains pending. Private bounded runtime-input capture supports exact session evidence, with offline evaluation still the default.
@@ -56,6 +57,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] Preserve the shelved 3D gatehouse experiment in `frontend/src/views/GatehouseConcept.tsx`; it is not rendered or included in the active frontend bundle.
 
 ### Changed
+- [X] Branch audit reconciles all 31 local/remote refs; completed captured-evidence evaluation wiring is merged, and historical branch additions retain their files and all 155 checked test functions in main.
 - [X] Final submission progress records the verified API explanation update and the separately tested captured-evidence branch; live service health and unchanged paid-review ledger were checked.
 - [X] Submission handoff records the live research preview, public source access, prepared PDF/form copy and explicit remaining work; hosted CI availability is distinguished from local/live verification.
 - [X] Submission fields, three-minute pitch and short remaining-work note now reflect the verified live SQL deployment and historical research preview; source access was made public with owner approval, with unfinished modules and validation limits explicit.

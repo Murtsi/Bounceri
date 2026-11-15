@@ -42,7 +42,7 @@ export function LiveFeed({ onPick, limit = 8 }: { onPick: (id: string) => void; 
                 >
                   <span className="text-xs tabular-nums text-muted-foreground">{clock(r.started_at)}</span>
                   <span className="flex min-w-0 items-center gap-2">
-                    <LabelBadge label={r.label} />
+                    <LabelBadge label={r.label} activity={r.activity} />
                     <span className="truncate font-mono text-xs text-muted-foreground">{r.ip}</span>
                   </span>
                   <span className="feed-action"><ActionBadge action={r.action} /></span>

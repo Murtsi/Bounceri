@@ -160,6 +160,10 @@ export default function Sessions({
               </Button>
             ))}
           </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Activity tags describe observed behavior. Browser-like does not prove a human;
+            automation does not prove abuse. Open a session for the classifier verdict and evidence.
+          </p>
           {campaignFilter && (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white/[0.03] px-3 py-2 text-sm">
               <span className="min-w-0 flex-1 break-words">
@@ -185,7 +189,7 @@ export default function Sessions({
                     className="session-item"
                   >
                     <span className="session-item-top">
-                      <LabelBadge label={r.label} />
+                      <LabelBadge label={r.label} activity={r.activity} />
                       <span className="session-item-time">{time(r.started_at)}</span>
                     </span>
                     <span className="session-item-reason">{r.reason}</span>
@@ -225,7 +229,7 @@ export default function Sessions({
                         aria-label={`Open session ${r.id}`}
                         className="rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                       >
-                        <LabelBadge label={r.label} />
+                        <LabelBadge label={r.label} activity={r.activity} />
                       </button>
                     </TableCell>
                     <TableCell>

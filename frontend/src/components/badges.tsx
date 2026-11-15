@@ -1,15 +1,23 @@
 import { Ban, Eye, Gauge, ShieldQuestion } from "lucide-react";
 import type { ComponentType } from "react";
-import { ACTION_TEXT, LABEL_TEXT, type Action, type Label } from "@/api";
+import { ACTION_TEXT, LABEL_TEXT, type Action, type Activity, type Label } from "@/api";
 import { Swatch } from "@/components/charts";
 import { Badge } from "@/components/ui/badge";
 
 /** Luokka: väri tulee ruudusta, teksti pysyy tekstivärissä (dataviz). */
-export function LabelBadge({ label }: { label: Label }) {
+const ACTIVITY_TEXT: Record<Activity, string> = {
+  browser_like: "Browser-like",
+  automation_signal: "Automation signal",
+  insufficient_evidence: "Needs more evidence",
+};
+
+export function LabelBadge({ label, activity }: { label: Label; activity?: Activity | null }) {
+  const observation = label === "uncertain" && activity ? ACTIVITY_TEXT[activity] : null;
   return (
-    <Badge variant="outline" className="gap-1.5 font-medium">
+    <Badge variant="outline" className="gap-1.5 font-medium"
+      title={observation ? `${observation}; human/bot classification remains uncertain.` : undefined}>
       <Swatch label={label} />
-      {LABEL_TEXT[label]}
+      {observation ?? LABEL_TEXT[label]}
     </Badge>
   );
 }

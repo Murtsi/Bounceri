@@ -11,9 +11,17 @@ Done:
 - Historical reply-targeting research preview: real attributed dataset, frozen post-level split and transparent weak baseline; full swarm validation remains unfinished.
 - Public verdicts explain safe browsing, automation and attack observations; API healthy after the focused update (56 checks passed, 6 PostgreSQL checks skipped). Rules-only normal traffic can still be uncertain; no calibrated human model is active.
 
-Separate development branch `b/captured-evidence-plan`: captured runtime profile
-wired into private frozen plans and cached replay (81 focused checks passed,
-18 skipped). Pushed for review; not merged or deployed for submission.
+Captured runtime profile is now merged into main: private frozen plans and cached
+replay are wired (81 focused checks passed, 18 skipped; 52 merged evaluator/API
+checks passed, 19 skipped). No production model or metric was activated.
+
+Final traffic UI distinguishes browser-like activity, automation signals and
+insufficient evidence. Original uncertain classifier labels remain visible in
+details and aggregate counts. This improves evidence presentation, not accuracy.
+
+Branch audit: all 31 local/remote refs checked. Historical additions have no
+missing added files or missing historical test functions (155 names checked).
+Completed captured-evidence work is merged; older superseded branch heads remain.
 
 Still left:
 - Finish captured-runtime/production configuration parity, hidden-attack reveal/scoring and verified publication.

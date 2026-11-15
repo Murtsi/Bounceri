@@ -360,3 +360,14 @@ Missing captures remain unavailable; no fresh DNS, current trap configuration or
 invented human/attack evidence may substitute for them. Production publication
 and independent attack integration remain separate unfinished gates. This work
 is isolated from the hackathon release and does not alter live services.
+
+### 084 — Separate observed activity from uncertain identity
+
+2026-11-15. The owner flagged the high abstention share before submission. Add
+optional, typed activity observations to public synthetic session rows. Existing
+aggregate features distinguish browser-like activity, automation signals and
+insufficient evidence. Session/feed badges show the observation; the original
+classifier label, counts, filters and detail verdict retain uncertainty. Explain
+that assets do not prove a human and tool signatures do not prove abuse. This is
+an evidence presentation change, with no trained model or accuracy improvement
+claimed. Keep the current design's neutral badge and existing drill-down.
