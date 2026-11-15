@@ -1,6 +1,7 @@
 # Progress — 2026-11-15
 
-Deployment: core update live and healthy at https://bounceri.tech; historical research preview being added.
+Live and verified: https://bounceri.tech · public source: https://github.com/Murtsi/Bounceri
+Code release: 3b137e8 · research preview: Metrics. Submission PDF and form text are ready.
 
 Done:
 - Core parsing, privacy, durable SQL/checkpoints, bounded network evidence and private log imports.

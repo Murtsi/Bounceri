@@ -1,73 +1,46 @@
-# Pitch
+# Bounceri — three-minute pitch
 
-Target: **3 minutes** + Q&A. Write it out, then cut 20%.
+Live: https://bounceri.tech · Source: https://github.com/Murtsi/Bounceri
 
-## Structure
+## Three-minute spoken pitch
 
-| Time | Beat | Content |
-|---|---|---|
-| 0:00–0:15 | Hook | One sentence the judges remember. No "hi, we are team..." |
-| 0:15–0:45 | Problem | Who, how often, what it costs. One story. |
-| 0:45–1:45 | Demo | Live flow, 3 clicks, visible outcome. Narrate the value, not the UI. |
-| 1:45–2:15 | How | Architecture in one breath: "web app, API, Postgres, one external model". |
-| 2:15–2:45 | Impact | Market size, one traction signal, what happens Monday. |
-| 2:45–3:00 | Ask | What you want from the judges/partners. Be specific. |
+**Delivery note:** About 380 words, with short pauses for the demo. Rehearse once against the actual screen. The timestamps are pacing guides, not measured delivery times.
 
-## Slide skeleton (max 6)
+### 0:00–0:25 — The owner’s decision
 
-1. Product name + one-liner + screenshot
-2. Problem (one stat, one face)
-3. Solution in one diagram
-4. Live demo (blank slide — the product is the slide)
-5. Traction / validation (even if it is "5 users, 3 said they'd pay")
-6. Team + ask
+Your website gets a burst of traffic. Is it a new customer, a harmless crawler, or someone trying passwords? For a small business owner, the next decision matters. Ignore a real attack and the site suffers. Interrupt an ordinary visitor and you may lose a customer.
 
-## One-liner variants
+Bounceri helps that owner investigate before acting.
 
-- **For judges:** "We turn X into Y in Z seconds."
-- **For a stranger:** "You know how ...? We fix that."
-- **For the track sponsor:** tie directly to their API/business goal.
+### 0:25–0:50 — The product
 
-## Q&A bank
+We turn access logs into sessions, connect related HTTP activity and show the evidence behind each assessment. Request timing, paths, failed logins and shared targets become something the owner can inspect. When the evidence is insufficient, the result can be uncertain.
 
-| Question | Answer (30s max) |
-|---|---|
-| How is this different from <incumbent>? | |
-| How do you make money? | |
-| What is the hardest technical part? | |
-| What breaks at 10k users? | |
-| What did you not have time to do? | Answer honestly, then name the next step. |
-| Why this team? | |
+This is the working product, running on Hostinger.
 
-## Delivery rules
+### 0:50–1:45 — Show the product
 
-- Rehearse twice out loud with a timer; cut anything that does not earn its seconds.
-- Never read slides. Never apologize for what is missing.
-- If the demo fails: switch to the backup video in 5 seconds, keep talking.
+The public demo uses signed synthetic traffic sent through our own service. It exercises the real HTTP pipeline, while keeping simulated traffic separate from real-human evidence.
 
----
+Open a session. Here are the requests and the local reasons behind its assessment. The owner can check what actually happened.
 
-## Kaista C — Joonas (kampanjat + selitykset) · C-11 luonnos
+Now look at a campaign. Several sessions may share a login target or a behavior pattern. That relationship gives the owner another lead to investigate. We do not turn it into a claim about who controls those visitors.
 
-**Spoken beat (~35 s, after session detail in demo):**
+Investigations preserve a redacted evidence snapshot. Optional AI reviews are recorded separately, so an interpretation never replaces the underlying observations.
 
-1. **Swarm:** "One IP is easy. We stitch dozens of IPs into one actor — same username, same path order, same timing window."
-2. **Live wow:** Point at stuffing campaign on the graph (IP → session → campaign). "That is not one bot. That is a campaign."
-3. **Honesty:** "Shared NAT and venue Wi-Fi look like one actor — we detect that pattern, suppress the false campaign, and list it under known weaknesses."
-4. **Explain:** "The LLM never decides. Hostinger AI Router only narrates B and C reasons; if the router is down, you still see the reasons."
+### 1:45–2:10 — How it works
 
-**Slide bullets (C) — one slide:**
-- Campaign = credential stuffing ∪ behavior cluster (header FP + path Jaccard + time overlap)
-- Metrics: purity / coverage vs simulator `campaign_id` (S9) — locked only on labeled traffic
-- Known weakness: shared NAT / venue Wi-Fi / mobile carrier NAT
-- Explain = grounded reasons only (fallback without API key)
+The system runs on a Hostinger VPS: Caddy, a Python and FastAPI pipeline, PostgreSQL and a React dashboard. Local detection works without an AI key. Optional Featherless reviews answer bounded evidence questions and return an advisory assessment. Backend validation and a shared budget bound that process. Any test enforcement requires explicit manual action.
 
-**Integration note for demo (A):** `network_pass(sessions)` → `campaigns_api` + `graph` for UI; B gets `intel_by_ip_contract` + `campaign_by_session`.
+### 2:10–2:40 — What we have proved
 
-**Q&A (C):**
-| Question | Answer |
-|---|---|
-| How is this not just Cloudflare? | We publish FPR + known weaknesses; every decision has ≤3 readable reasons; we recommend, we don't silently block. |
-| What if DNS fails for real Googlebot? | `verified_bot=None` — we do **not** call it fake (S4). |
-| Why two detection lanes? | Ablation: session features alone vs + network/campaign signals — C's value is one number. |
-| Can the LLM invent threats? | Groundedness check rejects text outside the reason tokens; otherwise fallback. |
+We have a working traffic investigation pipeline. We have not yet proved real-world detection accuracy.
+
+Our separate synthetic test observed zero false positives among fourteen simulated-human sessions. That sample is small: its 95 percent upper confidence bound is 21.53 percent. Accepted final AI reviews in the recorded experiment all remained uncertain. We report those limits because an owner needs to know when the evidence runs out.
+
+### 2:40–3:00 — Next step and ask
+
+Our team brings together platform engineering, session detection and network analysis. Next, we want a consented pilot with small website owners and Hostinger support teams: real logs, independently reviewed sessions and measured false alarms.
+
+Help us test whether this makes their next traffic decision clearer.
+

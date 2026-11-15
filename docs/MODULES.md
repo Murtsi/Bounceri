@@ -3,7 +3,7 @@
 Implementation baseline: 14 November 2026. The current capability endpoint in
 `src/bouncer/api/investigations.py` advertises only `clean_the_traffic` as
 implemented/enabled. The other rows describe planned contracts from
-[`modules plan.md`](../modules%20plan.md), not available adapters or measured models.
+[`PROGRESS.md`](../PROGRESS.md), not available adapters or measured models.
 Core hardening precedes those modules. HTTP campaign detection is part of Clean
 the Traffic; Spot the Swarm means a separate social-event pipeline.
 

@@ -1,5 +1,10 @@
 # Hostinger — Decode the Noise
 
+> **Live submission status — 2026-11-15:** https://bounceri.tech is verified healthy with SQL traffic storage, private imports, health/backup/deletion/consent tooling and frozen native evaluation. The public source repository is accessible. Metrics also contains a labelled historical reply-targeting research preview; it is not a validated swarm detector. See [current remaining work](../../PROGRESS.md) and [submission fields](../../docs/SUBMISSION.md).
+
+The older implementation-status discussion below is retained as a historical planning snapshot, not current release status.
+
+
 > **Status 2026-11-14:** Bouncerin synteettinen HTTP-demo, dashboard,
 > investigation-tallennus ja asynkroninen kahden Featherless-roolin arviointi on
 > toteutettu. Hostinger-deploy ja maksullinen synteettinen arviointi on kirjattu
@@ -52,7 +57,7 @@ tuloksia ei yhdistetä eikä mallin arviota muuteta totuuslabeliksi.
 
 ## Seuraavaksi
 
-Nykyinen työ etenee [modules plan.md](../../modules%20plan.md) -järjestyksessä:
+Nykyinen työ etenee [current progress](../../PROGRESS.md) -järjestyksessä:
 vaihe 0 sovittaa dokumentit ja tarkistaa lähtötason; vaihe 1 koventaa nykyisen
 ytimen ennen uusien moduulien toteutusta. [TODO.md](TODO.md) kertoo työtilan.
 
