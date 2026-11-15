@@ -55,6 +55,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - [A] Preserve the shelved 3D gatehouse experiment in `frontend/src/views/GatehouseConcept.tsx`; it is not rendered or included in the active frontend bundle.
 
 ### Changed
+- [X] Final submission progress records the verified API explanation update and the separately tested captured-evidence branch; live service health and unchanged paid-review ledger were checked.
 - [X] Submission handoff records the live research preview, public source access, prepared PDF/form copy and explicit remaining work; hosted CI availability is distinguished from local/live verification.
 - [X] Submission fields, three-minute pitch and short remaining-work note now reflect the verified live SQL deployment and historical research preview; source access was made public with owner approval, with unfinished modules and validation limits explicit.
 - [A] Dashboard pages now load on demand, the latest-activity feed requests only eight sessions, and dashboard queries refresh every five seconds instead of two to reduce initial work and recurring API load (decision 079).
