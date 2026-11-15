@@ -17,6 +17,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] BREAKING: Additive migration 009 records private independent-attack commitments and candidate-bound reveals without claiming verified authorship; scoring/controller integration remains pending. Private bounded runtime-input capture supports exact session evidence, with offline evaluation still the default.
 - [A] BREAKING: Additive migration 008 records canonical native preparations, global development/holdout assignments, source bindings and immutable artifact/report digests; one-shot claims survive failure/restart, source deletion revokes private payloads, and active evaluations require explicit stopped-worker recovery before purge.
 - [B] Private frozen native rules/logistic evaluation loads current reviewed observations separately from exactly regenerated synthetic references, isolates fit/calibration/test/run context, fits independent network ablations and returns bounded private reports with coverage, class/FPR counts, confidence intervals and actor support. Production and independently withheld quality remain unavailable.
 - [A] Installed wheels now include native fixture/registry runtime code without depending on checkout-only tools; shared operator database selection rejects transient or ambiguous databases, and CI exercises PostgreSQL evaluation receipts and guarded orchestration.

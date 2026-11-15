@@ -479,7 +479,9 @@ def test_inspection_returns_actual_content_digest_and_independent_annotation_rev
         "session": _serialize_session(original),
         "digest": api().session_digest(original),
         "expected_revision": 0,
-        "source": {"synthetic": False, "origin": "unavailable", "unavailable_fields": []},
+        "source": {"synthetic": False, "origin": "unavailable", "unavailable_fields": [],
+                   "runtime_context": {"availability": "unavailable",
+                                       "reason": "runtime_context_unavailable"}},
     }
     review(store, enrolled, status="pending", expected_session_digest=first["digest"])
     revised = source(repo, count=2, expected=repo.load_checkpoint("collection-a"))

@@ -28,6 +28,7 @@ def _expected_tables():
     # Import lazily: both stores call this runner after defining their metadata.
     from bouncer.db.evaluations import metadata as evaluations
     from bouncer.db.health import metadata as health
+    from bouncer.db.holdouts import metadata as holdouts
     from bouncer.db.participants import metadata as participants
     from bouncer.db.traffic import metadata as traffic
     from bouncer.enforcement import metadata as enforcement
@@ -40,6 +41,7 @@ def _expected_tables():
         **health.tables,
         **participants.tables,
         **evaluations.tables,
+        **holdouts.tables,
     }
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -140,6 +141,15 @@ def _serialize_session(session: Session) -> dict[str, Any]:
     for req in data["requests"]:
         req["ts"] = _dt(req["ts"]).isoformat()
     return data
+
+
+def session_digest(session: Session) -> str:
+    """Bind observation approval to every serialized field and request multiplicity."""
+    content = json.dumps(
+        _serialize_session(session), sort_keys=True, separators=(",", ":"),
+        ensure_ascii=True, allow_nan=False,
+    )
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 def _serialize_label(label: SessionLabel) -> dict[str, Any]:

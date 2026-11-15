@@ -48,6 +48,7 @@ from bouncer.eval.run import network_signals
 from bouncer.explain import explain
 from bouncer.ingest import simrun
 from bouncer.ingest.continuity import sessionize
+from bouncer.ingest.runtime_context import bound_contexts, capture_configuration, capture_session
 from bouncer.ingest.sample import _timestamp, parse_access_record, storage_safe_record
 from bouncer.ingest.tail import LogTail
 from bouncer.session import rules, score
@@ -253,6 +254,7 @@ class Worker:
         rule_observations = {}
         traps = self.trap_paths if self.trap_paths is not None else rules.load_traps()
         trap_version = hashlib.sha256("\n".join(sorted(traps)).encode()).hexdigest()
+        runtime_configuration = capture_configuration(traps)
         feature_fields = {
             "duration_s", "requests_per_min", "peak_requests_per_min", "static_share",
             "html_share", "vuln_path_hits", "header_inconsistency_share", "ua_is_tool",
@@ -297,6 +299,11 @@ class Worker:
         identity_state = [s for s in identities.values()
                           if s.id in visible_ids or watermark is None
                           or s.ended_at >= watermark - timedelta(minutes=5)]
+        captured_at = datetime.now(UTC).isoformat()
+        runtime_contexts = bound_contexts({s.id: capture_session(
+            s, intel[s.ip], configuration=runtime_configuration, captured_at=captured_at,
+            intel_enabled=self.intel_fn is not None, observation=ip_evidence.get(s.ip),
+        ) for s in sessions})
         payload = {
             # Private continuity state survives eviction of visible request records.
             "session_identity_state": [_serialize_session(s) for s in identity_state],
@@ -310,6 +317,8 @@ class Worker:
             "verdicts": verdicts,
             "ip_evidence": ip_evidence,
             "rule_observations": rule_observations,
+            "runtime_configuration": runtime_configuration,
+            "runtime_contexts": runtime_contexts,
             "campaigns": [_campaign_dict(c) for c in campaigns],
             "ingest": {
                 **stats.as_dict(),
@@ -319,7 +328,7 @@ class Worker:
                 "retained_bytes": self.retained_bytes,
                 "last_event_at": self.last_event_at,
                 "discarded_by_retention": self.discarded_by_retention,
-                "updated_at": datetime.now(UTC).isoformat(),
+                "updated_at": captured_at,
             },  # fmt: skip
         }
         if self.repository is None:

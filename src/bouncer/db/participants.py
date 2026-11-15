@@ -28,8 +28,9 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine
 
 from bouncer.contracts import Session
-from bouncer.db.store import _dt, _serialize_session
+from bouncer.db.store import _dt, _serialize_session, session_digest
 from bouncer.db.traffic import DOCUMENT, TrafficRepository, sources
+from bouncer.ingest.runtime_context import bound_contexts, validate_runtime_context
 
 metadata = MetaData()
 subjects = Table(
@@ -81,18 +82,6 @@ class ReviewedSession:
     provenance: dict
 
 
-def session_digest(session: Session) -> str:
-    """Bind observation approval to every serialized field and request multiplicity."""
-    content = json.dumps(
-        _serialize_session(session),
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-        allow_nan=False,
-    )
-    return hashlib.sha256(content.encode("utf-8")).hexdigest()
-
-
 def _ref(value):
     if (
         not isinstance(value, str)
@@ -121,7 +110,7 @@ def _database_text(value):
     return value
 
 
-def _source_provenance(snapshot, session_id=None):
+def _source_provenance(snapshot, session_id=None, *, session=None, runtime_contexts=None):
     origin = {
         key: snapshot[key]
         for key in ("source", "source_provenance", "import_provenance")
@@ -134,6 +123,24 @@ def _source_provenance(snapshot, session_id=None):
         ).hexdigest()
     if session_id is not None:
         result["unavailable_fields"] = snapshot.get("unavailable_fields", {}).get(session_id, [])
+    if session is not None:
+        runtime = {"availability": "unavailable", "reason": "runtime_context_unavailable"}
+        try:
+            if (snapshot.get("trap_policy") == "unavailable_for_import"
+                    or "import_provenance" in snapshot):
+                raise ValueError("runtime_context_unavailable_for_import")
+            contexts = (bound_contexts(snapshot.get("runtime_contexts"))
+                        if runtime_contexts is None else runtime_contexts)
+            configuration = snapshot.get("runtime_configuration")
+            context = contexts.get(session.id)
+            effective = validate_runtime_context(session, configuration, context)
+            runtime = {"availability": "available", "effective": effective,
+                       "config_digest": configuration["trap_config_version"],
+                       "session_digest": context["session_digest"],
+                       "captured_at": context["captured_at"]}
+        except (ValueError, TypeError, AttributeError, KeyError, OverflowError, RecursionError):
+            pass
+        result["runtime_context"] = runtime
     return result
 
 
@@ -353,7 +360,7 @@ class StudyStore:
             "session": _serialize_session(session),
             "digest": session_digest(session),
             "expected_revision": revision,
-            "source": _source_provenance(source["snapshot"], session.id),
+            "source": _source_provenance(source["snapshot"], session.id, session=session),
         }
 
     def inspect_session(self, *, enrollment_id, external_session_id) -> dict:
@@ -466,6 +473,7 @@ class StudyStore:
                 .order_by(reviews.c.revision)
             ).mappings():
                 latest[row["external_session_id"]] = row
+            runtime_contexts = bound_contexts(source_rows[key]["snapshot"].get("runtime_contexts"))
             for sid, row in latest.items():
                 if row["status"] != "approved":
                     continue
@@ -475,7 +483,10 @@ class StudyStore:
                     continue
                 if session_digest(session) != row["digest"]:
                     continue
-                source_provenance = _source_provenance(source_rows[key]["snapshot"], sid)
+                source_provenance = _source_provenance(
+                    source_rows[key]["snapshot"], sid, session=session,
+                    runtime_contexts=runtime_contexts,
+                )
                 approved.append(
                     ReviewedSession(
                         session,

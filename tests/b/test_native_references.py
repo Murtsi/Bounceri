@@ -14,21 +14,31 @@ from tools.datasets.registry import checksum
 
 
 def collection(source="private-one", *, run="declared-run", campaigns=()):
-    return {"source_key": source, "run_id": run,
-            "campaign_ids": list(campaigns) if campaigns is not None else None}
+    return {
+        "source_key": source,
+        "run_id": run,
+        "campaign_ids": list(campaigns) if campaigns is not None else None,
+    }
 
 
-def references(reviewed=(), collections=(), manifests=()):
+def references(reviewed=(), collections=(), manifests=(), *, evidence_profile="offline"):
     from bouncer.eval.reference import build_references
 
-    return build_references(reviewed, collections, manifests)
+    return build_references(reviewed, collections, manifests, evidence_profile=evidence_profile)
 
 
 def test_study_truth_is_only_manual_benign_and_groups_are_explicit():
-    observations = [observation(source=str(i), behavior=behavior, intent=intent)
-                    for i, (behavior, intent) in enumerate([
-                        ("manual", "benign"), ("automated", "benign"),
-                        ("manual", "abusive"), ("unknown", "unknown")])]
+    observations = [
+        observation(source=str(i), behavior=behavior, intent=intent)
+        for i, (behavior, intent) in enumerate(
+            [
+                ("manual", "benign"),
+                ("automated", "benign"),
+                ("manual", "abusive"),
+                ("unknown", "unknown"),
+            ]
+        )
+    ]
     result = references(observations, [collection(str(i)) for i in range(4)])
     assert len(result.rows) == 1 and len(result.examples) == 4
     row = result.rows[0]
@@ -41,7 +51,11 @@ def test_study_truth_is_only_manual_benign_and_groups_are_explicit():
     assert set(result.sessions) == set(result.metadata) == set(result.unavailable_fields)
     assert all(key == session.id for key, session in result.sessions.items())
     assert sorted(m["truth"] or "unknown" for m in result.metadata.values()) == [
-        "human", "unknown", "unknown", "unknown"]
+        "human",
+        "unknown",
+        "unknown",
+        "unknown",
+    ]
     assert all(m["cohort"] == "human_study" for m in result.metadata.values())
 
 
@@ -60,13 +74,20 @@ def test_unknown_collection_groups_stay_unknown_without_ip_or_session_inference(
     assert result.examples[0].run_id is None and result.examples[0].campaign_ids is None
 
 
-@pytest.mark.parametrize("collections", [
-    [collection(), collection()], [collection("absent")], [],
-    [{"source_key": "private-one", "run_id": "run"}],
-    [{"source_key": "private-one", "campaign_ids": []}],
-    [collection() | {"extra": True}], [collection(run=3)],
-    [collection(campaigns=["x" * 257])], [collection(campaigns=["x"] * 65)],
-])
+@pytest.mark.parametrize(
+    "collections",
+    [
+        [collection(), collection()],
+        [collection("absent")],
+        [],
+        [{"source_key": "private-one", "run_id": "run"}],
+        [{"source_key": "private-one", "campaign_ids": []}],
+        [collection() | {"extra": True}],
+        [collection(run=3)],
+        [collection(campaigns=["x" * 257])],
+        [collection(campaigns=["x"] * 65)],
+    ],
+)
 def test_invalid_or_missing_collection_bindings_fail(collections):
     with pytest.raises(ValueError):
         references([observation()], collections)
@@ -88,9 +109,14 @@ def test_duplicate_native_versions_and_stale_digest_fail():
 
 
 def test_private_provenance_and_missingness_are_hash_bound_without_raw_dump():
-    first = replace(observation(), provenance={
-        "source": {"unavailable_fields": ["target"], "origin_digest": "a" * 64},
-        "review": {"private_note": "secret"}, "consent": {"private": "do-not-copy"}})
+    first = replace(
+        observation(),
+        provenance={
+            "source": {"unavailable_fields": ["target"], "origin_digest": "a" * 64},
+            "review": {"private_note": "secret"},
+            "consent": {"private": "do-not-copy"},
+        },
+    )
     result = references([first], [collection()])
     key = next(iter(result.sessions))
     metadata = result.metadata[key]
@@ -107,8 +133,10 @@ def test_private_provenance_and_missingness_are_hash_bound_without_raw_dump():
 def test_native_bundle_is_parsed_with_verified_truth_and_stable_composite_ids(tmp_path):
     manifest = generate_bundle(tmp_path / "bundle", seed=51, runs_per_partition=1)
     result = references(manifests=[manifest])
-    truth = {r["session_id"]: r for r in
-             map(json.loads, (manifest.parent / "truth.jsonl").read_text().splitlines())}
+    truth = {
+        r["session_id"]: r
+        for r in map(json.loads, (manifest.parent / "truth.jsonl").read_text().splitlines())
+    }
     digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
     assert len(result.sessions) == len(truth) == 72
     assert result.source_ids == ()
@@ -119,8 +147,9 @@ def test_native_bundle_is_parsed_with_verified_truth_and_stable_composite_ids(tm
         assert example.source_id == f"synthetic/{digest}/{reference['run_id']}"
         assert example.actor_id == reference["actor_id"]
         assert example.run_id == reference["run_id"]
-        assert example.campaign_ids == ((reference["campaign_group"],)
-                                        if reference["campaign_group"] else ())
+        assert example.campaign_ids == (
+            (reference["campaign_group"],) if reference["campaign_group"] else ()
+        )
     for key, metadata in result.metadata.items():
         reference = truth[metadata["external_session_id"]]
         assert metadata["truth"] == reference["traffic_truth"]
@@ -155,8 +184,19 @@ def test_snapshot_validation_never_reopens_supplied_bundle(tmp_path, monkeypatch
     assert len(references(manifests=[manifest]).examples) == 72
 
 
-@pytest.mark.parametrize("change", ["checksum", "extra_file", "traversal", "version", "human",
-                                    "hidden", "public_robot", "oversize"])
+@pytest.mark.parametrize(
+    "change",
+    [
+        "checksum",
+        "extra_file",
+        "traversal",
+        "version",
+        "human",
+        "hidden",
+        "public_robot",
+        "oversize",
+    ],
+)
 def test_invalid_native_bundle_is_rejected(tmp_path, change):
     manifest = generate_bundle(tmp_path / "bundle", seed=53, runs_per_partition=1)
     data = json.loads(manifest.read_text())
@@ -193,8 +233,12 @@ def test_reference_input_caps_reject_before_loading():
 
 def test_reference_capacity_supports_351_distinct_fixture_subjects_and_sources():
     observations = [
-        observation(source=f"fixture-source-{index}", subject=f"fixture-subject-{index}",
-                    behavior="automated", intent="unknown")
+        observation(
+            source=f"fixture-source-{index}",
+            subject=f"fixture-subject-{index}",
+            behavior="automated",
+            intent="unknown",
+        )
         for index in range(351)
     ]
     result = references(observations, [collection(row.source_id) for row in observations])
@@ -210,11 +254,18 @@ def test_reference_capacity_supports_351_distinct_fixture_subjects_and_sources()
     assert MAX_COLLECTIONS == MAX_SOURCE_BINDINGS == 1000
 
 
-@pytest.mark.parametrize("field,value", [
-    ("source_id", []), ("behavior", []), ("intent", 42),
-    ("review_id", None), ("revision", True), ("subject_id", "x" * 257),
-    ("digest", None),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source_id", []),
+        ("behavior", []),
+        ("intent", 42),
+        ("review_id", None),
+        ("revision", True),
+        ("subject_id", "x" * 257),
+        ("digest", None),
+    ],
+)
 def test_malformed_reviewed_fields_fail_closed(field, value):
     with pytest.raises(ValueError):
         references([replace(observation(), **{field: value})], [collection()])
@@ -243,11 +294,22 @@ def test_rehashed_unknown_intent_truth_cannot_be_promoted_to_bot_truth(tmp_path)
         references(manifests=[manifest])
 
 
-@pytest.mark.parametrize("change", [
-    "duplicate_runs", "duplicate_runs_and_count", "unknown_run_field", "missing_run_field",
-    "wrong_run_id", "wrong_run_partition", "wrong_run_seed", "reordered_runs", "missing_run",
-    "session_count", "boolean_run_seed",
-])
+@pytest.mark.parametrize(
+    "change",
+    [
+        "duplicate_runs",
+        "duplicate_runs_and_count",
+        "unknown_run_field",
+        "missing_run_field",
+        "wrong_run_id",
+        "wrong_run_partition",
+        "wrong_run_seed",
+        "reordered_runs",
+        "missing_run",
+        "session_count",
+        "boolean_run_seed",
+    ],
+)
 def test_invalid_tiny_snapshot_cannot_trigger_large_regeneration(tmp_path, monkeypatch, change):
     manifest = generate_bundle(tmp_path / "bundle", seed=55, runs_per_partition=1)
     data = json.loads(manifest.read_text())
@@ -290,3 +352,115 @@ def test_invalid_tiny_snapshot_cannot_trigger_large_regeneration(tmp_path, monke
     with pytest.raises(ValueError):
         references(manifests=[manifest])
     assert calls == []
+
+
+def runtime_wrapper(session, *, intel=None, traps=(), observation=None, enabled=True):
+    from dataclasses import asdict
+
+    from bouncer.contracts import IpIntel
+    from bouncer.ingest.runtime_context import capture_configuration, capture_session
+
+    intel = intel or IpIntel()
+    config = capture_configuration(frozenset(traps))
+    captured = capture_session(
+        session,
+        intel,
+        configuration=config,
+        captured_at=session.ended_at.isoformat(),
+        intel_enabled=enabled,
+        observation=observation,
+    )
+    assert captured["available"] is True
+    return {
+        "availability": "available",
+        "effective": {
+            "intel": asdict(intel),
+            "traps": config["trap_paths"],
+            "provenance": {
+                "availability": "available" if observation is not None else "unavailable",
+                "intel_enabled": enabled,
+                "observation": observation,
+            },
+        },
+        "config_digest": config["trap_config_version"],
+        "session_digest": captured["session_digest"],
+        "captured_at": captured["captured_at"],
+    }
+
+
+def test_runtime_reference_binds_exact_session_and_keeps_private_inputs_out_of_metadata():
+    row = observation()
+    wrapper = runtime_wrapper(row.session, traps=("/private-trap",))
+    row = replace(row, provenance={"source": {"runtime_context": wrapper}})
+    refs = references([row], [collection()], evidence_profile="captured")
+    key = next(iter(refs.sessions))
+    assert refs.runtime_contexts[key] == wrapper
+    assert refs.metadata[key]["runtime_context_status"] == "available"
+    assert len(refs.metadata[key]["runtime_context_digest"]) == 64
+    assert "/private-trap" not in json.dumps(refs.metadata)
+    assert "verified_bot" not in json.dumps(refs.metadata)
+
+
+@pytest.mark.parametrize("fault", ["old", "digest", "traps", "intel", "provenance", "truncated"])
+def test_invalid_runtime_reference_is_unavailable_without_guessing(fault):
+    row = observation()
+    wrapper = runtime_wrapper(row.session, traps=("/private-trap",))
+    if fault == "digest":
+        wrapper["session_digest"] = "a" * 64
+    elif fault == "traps":
+        wrapper["effective"]["traps"].append("/tampered")
+    elif fault == "intel":
+        wrapper["effective"]["intel"]["verified_bot"] = 1
+    elif fault == "provenance":
+        wrapper["effective"]["provenance"]["availability"] = "available"
+    elif fault == "truncated":
+        wrapper.pop("captured_at")
+    source = {} if fault == "old" else {"runtime_context": wrapper}
+    refs = references(
+        [replace(row, provenance={"source": source})], [collection()], evidence_profile="captured"
+    )
+    key = next(iter(refs.sessions))
+    assert key not in refs.runtime_contexts
+    assert refs.metadata[key]["runtime_context_status"] == "unavailable"
+
+
+def test_current_generator_context_is_explicitly_offline_simulation(tmp_path):
+    manifest = generate_bundle(tmp_path / "bundle", seed=60, runs_per_partition=1)
+    refs = references(manifests=[manifest])
+    assert refs.runtime_contexts.keys() == refs.sessions.keys()
+    for key, context in refs.runtime_contexts.items():
+        assert (
+            context["availability"]
+            == refs.metadata[key]["runtime_context_status"]
+            == "synthetic_offline"
+        )
+        assert context["effective"]["traps"] == []
+        assert context["effective"]["intel"]["verified_bot"] is None
+        assert context["effective"]["provenance"]["availability"] == "unavailable"
+
+
+def test_offline_references_ignore_unused_runtime_capture_refresh():
+    row = observation()
+    wrapper = runtime_wrapper(row.session, traps=("/private-trap",))
+    first = replace(
+        row, provenance={"source": {"origin_digest": "a" * 64, "runtime_context": wrapper}}
+    )
+    changed = replace(
+        row,
+        provenance={
+            "source": {
+                "origin_digest": "a" * 64,
+                "runtime_context": wrapper | {"captured_at": "2030-01-01T00:00:00+00:00"},
+            }
+        },
+    )
+    from bouncer.eval.reference import build_references
+
+    before = build_references([first], [collection()], [], evidence_profile="offline")
+    after = build_references([changed], [collection()], [], evidence_profile="offline")
+    assert before.metadata == after.metadata
+    assert before.runtime_contexts == after.runtime_contexts == {}
+    assert "runtime_context_digest" not in next(iter(before.metadata.values()))
+    captured_before = build_references([first], [collection()], [], evidence_profile="captured")
+    captured_after = build_references([changed], [collection()], [], evidence_profile="captured")
+    assert captured_before.metadata != captured_after.metadata
