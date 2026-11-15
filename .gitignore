@@ -66,6 +66,8 @@ tmp/
 
 # --- media (keep demos out of git; link them instead) ---
 *.mp4
+# Poikkeus: etusivun demovideo (5 MB, pakattu web-käyttöön) kuuluu sovellukseen.
+!frontend/public/media/bouncer-demo.mp4
 *.mov
 *.webm
 media/raw/
