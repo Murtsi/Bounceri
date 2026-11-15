@@ -380,3 +380,16 @@ violet for automation signals and the existing gray for insufficient evidence.
 Retain existing human/verified-bot/bad-bot colors. Apply the color to the badge's
 dot, text, outline and subtle fill; preserve readable status names and uncertainty
 tooltips. Color conveys observation type, not a stronger classifier verdict.
+
+### 086 — Activity breakdown in the traffic graph
+
+2026-11-15. Session badges exposed browser-like and automation observations, but
+the traffic graph still aggregated all uncertain sessions into gray. Add a
+parallel `timeline.activity_points` projection with mutually exclusive categories:
+confirmed local verdicts retain their class, while uncertain sessions are split
+into browser-like, automation-signal and insufficient-evidence observations.
+Reuse the same observation function for private/public views and the same colors
+for graph segments, legend and badges. Every request contributes once; original
+four-label points, distribution, human-error metrics and classifier outputs stay
+unchanged. The frontend falls back to the original graph for older API responses.
+Graph copy explains that observations do not establish human identity or intent.

@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { ChartColumn, Table2 } from "lucide-react";
-import { LABEL_TEXT, type Label } from "@/api";
+import { ACTIVITY_TEXT, LABEL_TEXT, type Label, type TrafficPoint, type TrafficSeries } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCountUp } from "@/lib/useCountUp";
@@ -8,21 +8,28 @@ import { cn } from "@/lib/utils";
 
 /** Pinoamisjärjestys = validoitu viereisyysjärjestys (dataviz). Alhaalta ylös. */
 export const SERIES: Label[] = ["human", "good_bot", "bad_bot", "uncertain"];
-export const SERIES_VAR: Record<Label, string> = {
+export const ACTIVITY_SERIES: TrafficSeries[] = [
+  "human", "good_bot", "bad_bot", "browser_like", "automation_signal", "insufficient_evidence",
+];
+const TRAFFIC_TEXT = { ...LABEL_TEXT, ...ACTIVITY_TEXT };
+export const SERIES_VAR: Record<TrafficSeries, string> = {
   human: "var(--series-human)",
   good_bot: "var(--series-good)",
   bad_bot: "var(--series-bad)",
   uncertain: "var(--series-uncertain)",
+  browser_like: "var(--activity-browser)",
+  automation_signal: "var(--activity-automation)",
+  insufficient_evidence: "var(--series-uncertain)",
 };
 
 /** Sarjan täyttö: "epävarma" käyttää omaa harmaata sävyä ja selitettyä sarjanimeä. */
-function fill(label: Label): { className: string; style: CSSProperties } {
-  return label === "uncertain"
+function fill(label: TrafficSeries): { className: string; style: CSSProperties } {
+  return label === "uncertain" || label === "insufficient_evidence"
     ? { className: "hatch", style: {} }
     : { className: "", style: { background: SERIES_VAR[label] } };
 }
 
-export function Swatch({ label, className }: { label: Label; className?: string }) {
+export function Swatch({ label, className }: { label: TrafficSeries; className?: string }) {
   const f = fill(label);
   return (
     <span
@@ -33,21 +40,21 @@ export function Swatch({ label, className }: { label: Label; className?: string 
   );
 }
 
-export function Legend({ counts }: { counts?: Partial<Record<Label, number>> }) {
+export function Legend({ counts, series = SERIES }: {
+  counts?: Partial<Record<TrafficSeries, number>>; series?: TrafficSeries[];
+}) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-      {SERIES.map((l) => (
+      {series.map((l) => (
         <li key={l} className="flex items-center gap-1.5">
           <Swatch label={l} />
-          <span className="text-foreground">{LABEL_TEXT[l]}</span>
+          <span className="text-foreground">{TRAFFIC_TEXT[l]}</span>
           {counts && <span className="tabular-nums">{counts[l] ?? 0}</span>}
         </li>
       ))}
     </ul>
   );
 }
-
-type Point = { t: string } & Record<Label, number>;
 
 function clock(iso: string, seconds: boolean) {
   return new Date(iso).toLocaleTimeString("en-GB", {
@@ -57,24 +64,25 @@ function clock(iso: string, seconds: boolean) {
   });
 }
 
-const sumOf = (p: Point) => SERIES.reduce((s, l) => s + (p[l] ?? 0), 0);
+const sumOf = (p: TrafficPoint, series: TrafficSeries[]) =>
+  series.reduce((s, l) => s + (p[l] ?? 0), 0);
 
-function Tip({ p, label }: { p: Point; label: string }) {
+function Tip({ p, label, series }: { p: TrafficPoint; label: string; series: TrafficSeries[] }) {
   return (
     <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 min-w-40 -translate-x-1/2 rounded-2xl border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg backdrop-blur-xl">
       <p className="mb-1.5 font-medium">{label}</p>
       <ul className="flex flex-col gap-1">
-        {[...SERIES].reverse().map((l) => (
+        {[...series].reverse().map((l) => (
           <li key={l} className="flex items-center gap-2">
             <Swatch label={l} />
-            <span className="flex-1 text-muted-foreground">{LABEL_TEXT[l]}</span>
-            <span className="tabular-nums">{p[l]}</span>
+            <span className="flex-1 text-muted-foreground">{TRAFFIC_TEXT[l]}</span>
+            <span className="tabular-nums">{p[l] ?? 0}</span>
           </li>
         ))}
       </ul>
       <p className="mt-1.5 flex justify-between border-t pt-1.5 text-muted-foreground">
         <span>Total</span>
-        <span className="tabular-nums text-foreground">{sumOf(p)}</span>
+        <span className="tabular-nums text-foreground">{sumOf(p, series)}</span>
       </p>
     </div>
   );
@@ -92,8 +100,10 @@ export function TrafficChart({
   stepS,
   emptyIntervalsHidden = false,
   hideTotal = false,
+  series = SERIES,
 }: {
-  points: Point[];
+  points: TrafficPoint[];
+  series?: TrafficSeries[];
   stepS: number;
   emptyIntervalsHidden?: boolean;
   /** Kokonaismäärä näkyy jo sivun kontekstirivillä: ei toista isoa lukua. */
@@ -102,7 +112,7 @@ export function TrafficChart({
   const [table, setTable] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const secs = stepS < 60;
-  const rows = points.map((p) => ({ p, label: clock(p.t, secs), n: sumOf(p) }));
+  const rows = points.map((p) => ({ p, label: clock(p.t, secs), n: sumOf(p, series) }));
   const sum = rows.reduce((s, r) => s + r.n, 0);
   const max = Math.max(1, ...rows.map((r) => r.n));
   const peak = rows.find((r) => r.n === max);
@@ -143,9 +153,9 @@ export function TrafficChart({
             <TableHeader>
               <TableRow>
                 <TableHead>Time</TableHead>
-                {SERIES.map((l) => (
+                {series.map((l) => (
                   <TableHead key={l} className="text-right">
-                    {LABEL_TEXT[l]}
+                    {TRAFFIC_TEXT[l]}
                   </TableHead>
                 ))}
               </TableRow>
@@ -154,9 +164,9 @@ export function TrafficChart({
               {rows.map(({ p, label }) => (
                 <TableRow key={p.t}>
                   <TableCell className="tabular-nums">{label}</TableCell>
-                  {SERIES.map((l) => (
+                  {series.map((l) => (
                     <TableCell key={l} className="text-right tabular-nums">
-                      {p[l]}
+                      {p[l] ?? 0}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -168,7 +178,7 @@ export function TrafficChart({
         <div>
           <div
             role="img"
-            aria-label={`Stacked bar chart: requests per ${unit} by class, ${sum} in total. Exact numbers in the table view.`}
+            aria-label={`Stacked bar chart: requests per ${unit} by displayed category, ${sum} in total. Exact numbers in the table view.`}
             className={cn("flex h-48 items-stretch", GAP)}
             onMouseLeave={() => setHover(null)}
           >
@@ -187,20 +197,20 @@ export function TrafficChart({
                       className="bar-grow flex flex-col-reverse gap-[2px] overflow-hidden rounded-t-[4px] transition-[height] duration-500"
                       style={{ height: `${(n / max) * 100}%`, minHeight: 6, "--i": i } as CSSProperties}
                     >
-                      {SERIES.filter((l) => p[l] > 0).map((l) => {
+                      {series.filter((l) => (p[l] ?? 0) > 0).map((l) => {
                         const f = fill(l);
                         return (
                           <div
                             key={l}
                             className={cn("w-full shrink-0", f.className)}
-                            style={{ ...f.style, flexGrow: p[l], flexBasis: 0, minHeight: 3 }}
+                            style={{ ...f.style, flexGrow: p[l] ?? 0, flexBasis: 0, minHeight: 3 }}
                           />
                         );
                       })}
                     </div>
                   )}
                 </div>
-                {hover === i && <Tip p={p} label={label} />}
+                {hover === i && <Tip p={p} label={label} series={series} />}
               </div>
             ))}
           </div>
@@ -213,7 +223,7 @@ export function TrafficChart({
           </div>
         </div>
       )}
-      <Legend />
+      <Legend series={series} />
     </figure>
   );
 }

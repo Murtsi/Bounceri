@@ -2,6 +2,14 @@
 
 export type Label = "bad_bot" | "good_bot" | "human" | "uncertain";
 export type Activity = "browser_like" | "automation_signal" | "insufficient_evidence";
+export type TrafficSeries = Label | Activity;
+export type TrafficPoint = { t: string } & Partial<Record<TrafficSeries, number>>;
+
+export const ACTIVITY_TEXT: Record<Activity, string> = {
+  browser_like: "Browser-like",
+  automation_signal: "Automation signal",
+  insufficient_evidence: "Needs more evidence",
+};
 
 export interface Summary {
   updated_at: string | null;
@@ -93,7 +101,11 @@ export interface Overview {
   updated_at: string | null;
   n_sessions: number;
   distribution: Record<Label, number>;
-  timeline: { step_s: number; points: ({ t: string } & Record<Label, number>)[] };
+  timeline: {
+    step_s: number;
+    points: ({ t: string } & Record<Label, number>)[];
+    activity_points?: TrafficPoint[];
+  };
   alerts: Alert[];
   actors: Actor[];
   honesty: {

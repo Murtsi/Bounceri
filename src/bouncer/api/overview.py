@@ -13,11 +13,13 @@ from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
 
+from bouncer.api.activity import ACTIVITIES, observed_activity
 from bouncer.eval.evaluate import wilson_upper
 from bouncer.session.actions import ACTION_TEXT, recommend
 from bouncer.session.rules import LOGIN_ATTACK_CAMPAIGNS
 
 LABELS = ("human", "good_bot", "uncertain", "bad_bot")
+ACTIVITY_SERIES = ("human", "good_bot", "bad_bot", *ACTIVITIES)
 #: Kampanja on "käynnissä", jos sen viimeinen pyyntö on näin lähellä uusinta pyyntöä.
 ACTIVE_WINDOW = timedelta(minutes=10)
 
@@ -107,26 +109,36 @@ def timeline(st: dict[str, Any], buckets: int = BUCKETS) -> dict[str, Any]:
     now = _now(st)
     step = step_for(st, buckets)
     if now is None:
-        return {"step_s": step, "points": []}
+        return {"step_s": step, "points": [], "activity_points": []}
     epoch = int(now.timestamp()) // step * step
     starts = [epoch - step * (buckets - 1 - i) for i in range(buckets)]
     counts = {t: Counter() for t in starts}
+    activity_counts = {t: Counter() for t in starts}
     verdicts = st.get("verdicts", {})
     for s in st.get("sessions", []):
         label = verdicts.get(s["id"], {}).get("label", "uncertain")
+        activity = (label if label in {"human", "good_bot", "bad_bot"}
+                    else observed_activity(st, s["id"], "uncertain"))
         for r in s["requests"]:
             t = int(_dt(r["ts"]).timestamp()) // step * step
             if t in counts:
                 counts[t][label] += 1
+                activity_counts[t][activity] += 1
     tz = now.tzinfo
     points = [
         {"t": datetime.fromtimestamp(t, tz).isoformat(), **{lab: c.get(lab, 0) for lab in LABELS}}
         for t, c in counts.items()
     ]
+    activity_points = [
+        {"t": datetime.fromtimestamp(t, tz).isoformat(),
+         **{category: c.get(category, 0) for category in ACTIVITY_SERIES}}
+        for t, c in activity_counts.items()
+    ]
     # Tyhjät palkit alusta pois (lyhyt ajo ei jää kaavion reunaan), vähintään MIN_POINTS.
     while len(points) > MIN_POINTS and not any(points[0][lab] for lab in LABELS):
         points.pop(0)
-    return {"step_s": step, "points": points}
+        activity_points.pop(0)
+    return {"step_s": step, "points": points, "activity_points": activity_points}
 
 
 def actors(st: dict[str, Any], campaigns: list[dict[str, Any]], limit: int = 6) -> list[dict]:

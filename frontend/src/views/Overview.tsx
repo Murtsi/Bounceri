@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { api } from "@/api";
+import { api, type TrafficPoint } from "@/api";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
 import { ActionBadge } from "@/components/badges";
 import { SplashScreen } from "@/components/BouncerLogo";
 import { OverviewSkeleton } from "@/components/Skeletons";
-import { TrafficChart } from "@/components/charts";
+import { ACTIVITY_SERIES, SERIES, TrafficChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { DepthFloor, DepthPanel } from "@/components/Depth";
 import { LiveFeed } from "@/views/LiveFeed";
@@ -33,12 +33,14 @@ export default function Overview({
   if (o.n_sessions === 0)
     return <SplashScreen message="Waiting for traffic… start the simulators: uv run python tools/sim/run.py" />;
   const h = o.honesty;
-  const pts = o.timeline.points;
-  const activePoints = pts.filter((p) => p.human + p.good_bot + p.bad_bot + p.uncertain > 0);
+  const pts: TrafficPoint[] = o.timeline.activity_points ?? o.timeline.points;
+  const series = o.timeline.activity_points ? ACTIVITY_SERIES : SERIES;
+  const total = (point: (typeof pts)[number]) => series.reduce((sum, key) => sum + (point[key] ?? 0), 0);
+  const activePoints = pts.filter((p) => total(p) > 0);
   const chartPoints = activePoints.length
     ? pts.slice(pts.indexOf(activePoints[0]), pts.indexOf(activePoints[activePoints.length - 1]) + 1)
     : [];
-  const requests = pts.reduce((sum, p) => sum + p.human + p.good_bot + p.bad_bot + p.uncertain, 0);
+  const requests = pts.reduce((sum, p) => sum + total(p), 0);
   return (
     <div className="overview-stack">
       <DepthFloor />
@@ -92,17 +94,23 @@ export default function Overview({
         <section className="overview-section min-w-0" aria-labelledby="traffic-title">
           <header className="section-head">
             <h2 id="traffic-title">Traffic over time</h2>
-            <p>Request volume by local verdict</p>
+            <p>Request volume by {o.timeline.activity_points ? "activity and detector finding" : "local verdict"}</p>
           </header>
           {chartPoints.length > 0 ? (
             <TrafficChart
               points={chartPoints}
+              series={series}
               stepS={o.timeline.step_s}
               emptyIntervalsHidden={chartPoints.length < pts.length}
               hideTotal
             />
           ) : (
             <p className="text-sm text-muted-foreground">No requests in the available time window.</p>
+          )}
+          {o.timeline.activity_points && (
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Browser-like and automation signals describe activity; they do not verify human identity or intent.
+            </p>
           )}
         </section>
         <div className="overview-section min-w-0">

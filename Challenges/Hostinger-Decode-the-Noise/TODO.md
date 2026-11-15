@@ -2,6 +2,10 @@
 
 ## Nykyinen toteutustyö — 2026-11-14
 
+Activity graph follow-up: the timeline, legend, tooltip and table now distinguish
+browser-like/automation/insufficient-evidence observations using the badge colors.
+Original classifier totals and evaluation outcomes remain separate (decision 086).
+
 Post-submission local-only polish: activity badge colors distinguish browsing,
 automation and insufficient evidence. Typecheck/build and desktop/mobile visual
 checks pass; publication remains frozen pending explicit owner instruction.

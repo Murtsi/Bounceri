@@ -105,6 +105,35 @@ def test_timeline_adapts_step_to_short_runs():
     assert total == 7  # jokainen pyyntö lasketaan kerran
 
 
+def test_activity_graph_splits_uncertainty_without_changing_classifier_counts():
+    from bouncer.api.investigations import public_legacy
+
+    labels = {"browser": "uncertain", "tool": "uncertain", "missing": "uncertain",
+              "human": "human", "crawler": "good_bot", "attack": "bad_bot"}
+    store = {
+        "synthetic": True,
+        "sessions": [_s(sid, "192.0.2.1", T.format(1)) for sid in labels],
+        "verdicts": {sid: {"label": label} for sid, label in labels.items()},
+        "rule_observations": {
+            "browser": {"features": {"static_share": 0.4, "html_share": 0.6}},
+            "tool": {"features": {"ua_is_tool": True}},
+            "attack": {"features": {"static_share": 0.4, "html_share": 0.6}},
+        },
+    }
+    for snapshot in (store, public_legacy(store)):
+        result = overview(snapshot)
+        assert result["distribution"]["uncertain"] == 3
+        timeline = result["timeline"]
+        assert sum(point["uncertain"] for point in timeline["points"]) == 3
+        activity = timeline["activity_points"]
+        assert [point["t"] for point in activity] == [p["t"] for p in timeline["points"]]
+        for category in ("human", "good_bot", "bad_bot", "browser_like",
+                         "automation_signal", "insufficient_evidence"):
+            assert sum(point[category] for point in activity) == 1
+        assert sum(sum(value for key, value in point.items() if key != "t")
+                   for point in activity) == 6
+
+
 def test_empty_store():
     o = overview({"sessions": [], "verdicts": {}, "campaigns": [], "labels": []})
     assert o["n_sessions"] == 0 and o["alerts"] == [] and o["timeline"]["points"] == []
