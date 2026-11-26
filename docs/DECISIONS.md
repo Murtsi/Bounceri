@@ -393,3 +393,7 @@ for graph segments, legend and badges. Every request contributes once; original
 four-label points, distribution, human-error metrics and classifier outputs stay
 unchanged. The frontend falls back to the original graph for older API responses.
 Graph copy explains that observations do not establish human identity or intent.
+
+### 087 — Make benchmark evidence visible in Metrics
+
+2026-11-26. Inspired by [NoiseMap’s method and traceability view](https://github.com/AlexAnsart/DecodeTheNoise/blob/main/frontend/src/method/Traceability.tsx), reuse Bounceri’s existing published evaluation in Metrics and Investigations. Give readers direct links to the benchmark method, aggregate JSON and exact frozen commit. Keep the synthetic benchmark available when the separate runtime metrics endpoint fails. The dashboard reads the published artifact on request; detector results and evaluation data are unchanged.

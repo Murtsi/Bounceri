@@ -3,6 +3,7 @@ import { TriangleAlert } from "lucide-react";
 import { api } from "@/api";
 import { SYNTHETIC_DATA_NOTICE } from "@/content";
 import { ListSkeleton } from "@/components/Skeletons";
+import EvaluationPanel from "@/components/EvaluationPanel";
 import ReplyResearchPreview from "@/components/ReplyResearchPreview";
 
 const fmt = (x: unknown) => (typeof x === "number" ? `${(x * 100).toFixed(1)}%` : "—");
@@ -20,7 +21,7 @@ function Figure({ title, value, note }: { title: string; value: string; note?: s
   );
 }
 
-export default function Metrics() {
+function RuntimeMetrics() {
   const { data: m, error } = useQuery({ queryKey: ["metrics"], queryFn: api.metrics });
   if (error) return <p className="text-destructive">API not responding: {String(error)}</p>;
   if (!m) return <ListSkeleton rows={4} />;
@@ -65,6 +66,15 @@ export default function Metrics() {
         <summary className="cursor-pointer">Ingest status</summary>
         <pre className="mt-2 overflow-x-auto rounded-md border bg-muted/30 p-3">{JSON.stringify(m.ingest, null, 2)}</pre>
       </details>
+    </div>
+  );
+}
+
+export default function Metrics() {
+  return (
+    <div className="flex flex-col gap-8">
+      <RuntimeMetrics />
+      <EvaluationPanel />
       <ReplyResearchPreview />
     </div>
   );
