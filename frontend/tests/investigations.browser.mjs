@@ -57,6 +57,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   let holdNextPage = false;
   const caseRequests = [];
   let evaluationMode = "published";
+  let runtimeMetricsUnavailable = false;
   const publishedEvaluation = {
     available: true,
     dataset: {
@@ -294,6 +295,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       return route.fulfill({ status: 404, contentType: "application/json", body: "{}" });
     const unavailable =
       mode === "error" ||
+      (runtimeMetricsUnavailable && path === "/api/metrics") ||
       (mode === "history-error" && path.endsWith("/assessments")) ||
       (enforcementMode === "error" && path.endsWith("/enforcements"));
     return route.fulfill({
@@ -431,8 +433,33 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
   await page.getByText("No sessions match this filter.", { exact: true }).waitFor();
   await nav("Campaigns").click();
   await page.getByText("No campaigns:", { exact: false }).waitFor();
-  await nav("Metrics").click();
+  await page.getByRole("button", { name: "Bounceri home", exact: true }).filter({ visible: true }).click();
+  await page.getByRole("button", { name: "See benchmark results and limitations", exact: true }).click();
+  check(new URL(page.url()).search === "?tab=metrics", "Landing benchmark link did not open Metrics");
   await page.getByText("models/metrics.json is a stub:", { exact: false }).waitFor();
+  await evaluation.getByText("Synthetic benchmark", { exact: true }).waitFor();
+  check(await evaluation.getByText("18 / 28", { exact: true }).isVisible(), "Metrics omitted the published benchmark");
+  check(
+    await evaluation.getByRole("link", { name: "Read the benchmark method" }).getAttribute("href") ===
+      "https://github.com/Murtsi/Bounceri/blob/main/docs/EVALUATION.md",
+    "Benchmark method link missing",
+  );
+  await evaluation.getByText("Dataset and detector provenance", { exact: true }).click();
+  check(
+    await evaluation.getByRole("link", { name: publishedEvaluation.detector.freeze_commit }).getAttribute("href") ===
+      `https://github.com/Murtsi/Bounceri/commit/${publishedEvaluation.detector.freeze_commit}`,
+    "Benchmark does not link to the frozen commit",
+  );
+  await page.setViewportSize({ width: 375, height: 812 });
+  check(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    "Expanded benchmark provenance overflows on mobile",
+  );
+  runtimeMetricsUnavailable = true;
+  await page.reload();
+  await page.getByText("API not responding: Error: /api/metrics: 503", { exact: true }).waitFor();
+  await evaluation.getByText("18 / 28", { exact: true }).waitFor();
+  runtimeMetricsUnavailable = false;
   await nav("Overview").click();
   await page.getByText("Waiting for traffic…", { exact: false }).waitFor();
   populatedSessions = true;
@@ -700,6 +727,7 @@ export default async function checkInvestigations(page, baseURL = "http://127.0.
       "empty final page preserves previous navigation",
       "API-backed synthetic benchmark support counts",
       "evaluation confidence intervals and provenance",
+      "landing link opens the benchmark and its sources in Metrics",
       "unpublished evaluation distinct from service error",
       "bounded AI eligibility visible in list and detail",
       "AI eligibility distinct from source completeness",

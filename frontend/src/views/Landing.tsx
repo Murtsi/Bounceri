@@ -283,18 +283,17 @@ export default function Landing({ open }: { open: (t: Target) => void }) {
           <h2 id="lp-proof">Measured, and honest about it.</h2>
           <div className="lp-proof-grid">
             <p className="lp-proof-lead">
-              On a frozen synthetic run that was evaluated once, <strong>10 of 10</strong> bad-bot calls were correct,{" "}
+              Across two reserved synthetic runs evaluated once, <strong>10 of 10</strong> bad-bot calls were correct,{" "}
               <strong>0 of 14</strong> simulated humans were flagged, and <strong>18 of 28</strong> sessions were left
               uncertain instead of guessed.
             </p>
             <div className="lp-proof-caveat">
               <p>
-                That traffic was written by our own team, so the numbers prove the pipeline works, not that it works
-                on your visitors. Zero false alarms in 14 still allows a rate of up to 21.5% (95% upper bound). We do
-                not claim the 1% target until about 300 labelled real human sessions back it.
+                The runs used known traffic templates. Zero false alarms in 14 simulated human sessions still leaves a
+                95% upper confidence bound of 21.5% within this benchmark. Performance on real visitors remains unmeasured.
               </p>
               <button type="button" className="lp-link" onClick={() => open("metrics")}>
-                See metrics and known weaknesses <ArrowRight aria-hidden="true" />
+                See benchmark results and limitations <ArrowRight aria-hidden="true" />
               </button>
             </div>
           </div>

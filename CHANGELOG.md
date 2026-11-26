@@ -20,6 +20,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 
 ### Added
+- [A] Metrics now shows the published synthetic traffic benchmark with sample counts, confidence intervals, limitations, and links to the method and frozen code. The home page links directly to Metrics (decision 087).
 - [X] Etusivulle demovideo: "Watch the 20-second demo" -painike avaa videon modaalissa, joka zoomautuu painikkeen kohdalta täyteen kokoon ja palaa sulkiessa takaisin (ääni ja säätimet; Esc, ruksi tai klikkaus taustalle sulkee; vähennetty liike → häivytys). Video `frontend/public/media/bouncer-demo.mp4` (5 MB, web-pakattu) on `.gitignore`-poikkeus, jotta puhtaasta checkoutista koottu deploy sisältää sen
 - [A] Session and live-feed badges distinguish observed browser-like activity, automation signals and insufficient evidence, while retaining the uncertain classifier verdict in session details (decision 084).
 - [B] Private frozen evaluation plans can select captured runtime evidence, bind it through preparation and cached replay, and report four network/trap ablations; missing captures remain unavailable and production metrics stay gated (decision 082).
